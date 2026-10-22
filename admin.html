@@ -164,7 +164,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-27</span>
+  <span class="ver" id="ver">v261022-29</span>
 </header>
 
 <main>
@@ -203,7 +203,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <span class="mute small">파일명 <code>MLB_품번_20261003.jpg</code> → 브랜드·품명·날짜</span>
     </div>
 
-    <div class="drop" id="drop">사진을 여기에 끌어다 놓거나 클릭 · Ctrl+V 붙여넣기 가능<br><span class="small">브라우저에서 1600px 원본 + 640px 썸네일로 리사이즈 후 업로드 (10만 장 대비)</span>
+    <div class="drop" id="drop">사진을 여기에 끌어다 놓거나 클릭 · Ctrl+V 붙여넣기 가능<br><span class="small">브라우저에서 2048px 원본 + 800px 썸네일로 리사이즈 후 업로드 · 인스타 원본 파일을 바로 넣는 게 가장 선명 (피그마 2x 추출은 해상도가 늘지 않음)</span>
       <input type="file" id="file" multiple accept="image/*" style="display:none"></div>
     <div class="row">
       <button class="pri" id="btnUpload" disabled>업로드</button>
@@ -279,6 +279,8 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
     </div>
     <h2 style="margin-top:22px">시즌 경계 (tx_seasons)</h2>
     <div id="sSeasons" class="small mute"></div>
+    <h2 style="margin-top:22px">썸네일 다시 만들기</h2>
+    <div class="row"><span class="small mute">이전 버전(400·640px)으로 올린 사진의 썸네일을 800px 고품질로 재생성 (원본 2048px은 그대로). 한 번에 최대 300장, 반복 가능</span><button id="btnRethumb">재생성</button><span id="rethumbStat" class="small mute"></span></div>
     <h2 style="margin-top:22px">Storage 휴지통</h2>
     <div class="row"><span id="trashN" class="mute small"></span><button id="btnTrash">휴지통 비우기</button></div>
     <h2 style="margin-top:22px">상태</h2>
@@ -408,7 +410,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-27
+   TAXONOMY AGENT · admin.html  v261022-29
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -416,14 +418,15 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-27';
+const VER = 'v261022-29';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast = (m, err) => { const t = $('#toast'); t.textContent = m; t.className = 'toast on' + (err ? ' err' : ''); clearTimeout(t._t); t._t = setTimeout(() => t.className = 'toast', err ? 6000 : 2500); };
-const pubUrl = p => `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${p}`;
+let THUMB_V = localStorage.getItem('tx_thumb_v') || '';
+const pubUrl = p => `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${p}${THUMB_V && String(p).startsWith('thumbs/') ? '?v=' + THUMB_V : ''}`;
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -597,9 +600,12 @@ $('#btnClear').onclick = () => { QUEUE.forEach(q => URL.revokeObjectURL(q.url));
 
 // ---- image processing
 async function loadBitmap(file) { try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { return await createImageBitmap(file); } }
+// 고품질 축소: 절반씩 단계적으로 줄이고(imageSmoothingQuality=high) 마지막에 목표 크기 — 한 번에 줄일 때 생기는 뭉개짐 방지
 function resizeTo(bmp, max, q) {
-  const s = Math.min(1, max / Math.max(bmp.width, bmp.height)); const w = Math.round(bmp.width * s), h = Math.round(bmp.height * s);
-  const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  let sw = bmp.width, sh = bmp.height; const s = Math.min(1, max / Math.max(sw, sh)); const w = Math.round(sw * s), h = Math.round(sh * s);
+  let src = bmp;
+  while (sw / 2 > w) { const c = document.createElement('canvas'); c.width = Math.round(sw / 2); c.height = Math.round(sh / 2); const x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height); src = c; sw = c.width; sh = c.height; }
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, w, h);
   return new Promise(r => c.toBlob(b => r({ blob: b, w, h }), 'image/jpeg', q));
 }
 async function sha256(buf) { const h = await crypto.subtle.digest('SHA-256', buf); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); }
@@ -629,7 +635,7 @@ $('#btnUpload').onclick = async () => {
     while (idx < todo.length) {
       const q = todo[idx]; const n = idx++; try {
         q.status = '처리중'; renderQueue();
-        const bmp = await loadBitmap(q.file); const big = await resizeTo(bmp, 1600, .9); const th = await resizeTo(bmp, 640, .85); bmp.close?.();
+        const bmp = await loadBitmap(q.file); const big = await resizeTo(bmp, 2048, .9); const th = await resizeTo(bmp, 800, .88); bmp.close?.();
         const meta = buildMeta(q, n);
         const dir = meta.source === 'runway' ? `runway/${meta.period}/${safeKey(meta.brand)}` : meta.source === 'market' ? `market/${meta.period}/${safeKey(meta.brand)}` : `instagram/${meta.period}`;
         const key = `${stamp}_${n}_${safeKey(stripName(q.name)).slice(0, 40)}.jpg`;
@@ -650,8 +656,9 @@ $('#btnUpload').onclick = async () => {
   renderFilters(); loadGallery(true);
 };
 // 날짜/월 표기를 강제 정규화: 20260911 · 2026.9.11 · 2026-09-11 → 2026-09-11, 월은 YYYY-MM
-const normDate = v => { const m = String(v || '').match(/(20\d{2})\D?(\d{1,2})\D?(\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : null; };
-const normMonth = v => { const m = String(v || '').match(/(20\d{2})\D?(\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2, '0')}` : null; };
+// 날짜: 20260920 / 2026-09-20 / 2026.9.20 만 인정 (2026-10 같은 '월'은 날짜가 아님). 월: 202610 / 2026-10 / 2026.10
+const normDate = v => { const t = String(v || '').trim(); let m = t.match(/^(20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)/) || t.match(/^(20\d{2})[-./ ](\d{1,2})[-./ ](\d{1,2})(?!\d)/); if (!m) return null; const mo = +m[2], d = +m[3]; if (mo < 1 || mo > 12 || d < 1 || d > 31) return null; return `${m[1]}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`; };
+const normMonth = v => { const t = String(v || '').trim(); const d = normDate(t); if (d) return d.slice(0, 7); const m = t.match(/^(20\d{2})[-./ ]?(0[1-9]|1[0-2])(?!\d)/) || t.match(/^(20\d{2})[-./ ](\d{1,2})$/); if (!m) return null; const mo = +m[2]; return mo >= 1 && mo <= 12 ? `${m[1]}-${String(mo).padStart(2, '0')}` : null; };
 function buildMeta(q, n) {
   const p = q.parsed; if (p.date) p.date = normDate(p.date); const m = { source: UP_SRC, photo_no: p.no || null, is_celeb: !!q.celeb, celeb_name: q.celeb ? (q.celebName || $('#ig-celebName').value.trim() || null) : null, focus_node_ids: (q.cat ?? upCat()) ? [q.cat ?? upCat()] : [] };
   if (UP_SRC === 'instagram') { m.account = (p.account || $('#ig-account').value.trim().replace(/^@/, '')) || null; m.posted_at = p.date || null; m.period = p.month || (p.date ? p.date.slice(0, 7) : normMonth($('#ig-period').value)); m.city = $('#ig-region').value; }
@@ -1170,6 +1177,21 @@ async function analyzeMany(ids, focusId, hi, hiIds) {
    ===================================================================== */
 $('#sSaveConn').onclick = () => { const k = $('#sAnon').value.trim(); if (k) localStorage.setItem('tx_anon', k); AUTHOR = $('#sAuthor').value; localStorage.setItem('tx_author', AUTHOR); boot(); showView('upload'); toast('연결 재시도'); };
 $('#sSaveAi').onclick = async () => { const rows = [['openai_key', $('#sOpenai').value.trim()], ['model_default', $('#sModel').value.trim() || 'gpt-6-luna'], ['model_hi', $('#sModelHi').value.trim() || 'gpt-6.1-sol'], ['prompt_version', $('#sPromptV').value.trim() || 'v1']].map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() })); const { error } = await sb.from('tx_config').upsert(rows); if (error) return toast(error.message, true); await loadConfig(); toast('저장됨 (팀 공용)'); };
+$('#btnRethumb').onclick = async () => {
+  const btn = $('#btnRethumb'); btn.disabled = true; const st = $('#rethumbStat');
+  try {
+    // width 기록이 있는 사진 중 '재생성 표시'가 없는 것부터 (meta 없으므로 created_at 오래된 순 300장)
+    const { data } = await sb.from('tx_media').select('id,storage_path,thumb_path,bytes').order('id').range(+localStorage.getItem('tx_rethumb_from') || 0, (+localStorage.getItem('tx_rethumb_from') || 0) + 299);
+    if (!data?.length) { st.textContent = '남은 사진 없음 — 처음부터 다시 하려면 아래 "초기화"'; localStorage.removeItem('tx_rethumb_from'); btn.disabled = false; return; }
+    let done = 0, err = 0; let i = 0;
+    const worker = async () => { while (i < data.length) { const m = data[i++]; try { const r = await fetch(pubUrl(m.storage_path)); const bl = await r.blob(); const bmp = await createImageBitmap(bl); const th = await resizeTo(bmp, 800, .88); bmp.close?.(); const { error } = await sb.storage.from(BUCKET).upload(m.thumb_path, th.blob, { contentType: 'image/jpeg', upsert: true }); if (error) throw error; } catch (e) { err++; console.error(m.id, e); } done++; st.textContent = `${done}/${data.length} · 오류 ${err}`; } };
+    await Promise.all([worker(), worker(), worker()]);
+    localStorage.setItem('tx_rethumb_from', String((+localStorage.getItem('tx_rethumb_from') || 0) + data.length));
+    THUMB_V = String(Date.now()); localStorage.setItem('tx_thumb_v', THUMB_V);
+    st.textContent = `완료 ${done - err}장 · 오류 ${err} · 다음 300장은 다시 "재생성"`; toast('썸네일 재생성 완료');
+  } catch (e) { toast('재생성 오류: ' + e.message, true); }
+  btn.disabled = false;
+};
 $('#btnTrash').onclick = async () => { const { data } = await sb.from('tx_storage_trash').select('path').limit(1000); if (!data?.length) return toast('비어 있음'); let n = 0; for (let i = 0; i < data.length; i += 100) { const paths = data.slice(i, i + 100).map(r => r.path); const { error } = await sb.storage.from(BUCKET).remove(paths); if (!error) { await sb.from('tx_storage_trash').delete().in('path', paths); n += paths.length; } else toast(error.message, true); } toast(`${n}개 파일 삭제`); loadConfig(); };
 
 $('#sAnon').value = localStorage.getItem('tx_anon') || '';
