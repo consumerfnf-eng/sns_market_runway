@@ -164,7 +164,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-29</span>
+  <span class="ver" id="ver">v261022-30</span>
 </header>
 
 <main>
@@ -293,6 +293,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 <div class="modal" id="mCard">
   <div class="box">
     <button class="close sm" data-close="mCard">✕</button>
+    <div class="row" style="position:absolute;top:12px;right:52px;gap:6px"><span id="cbStatTop" class="small mute"></span><button id="cbSaveTop" class="pri sm">저장</button></div>
     <h2 id="cbTitle">카드 만들기</h2>
     <div class="cb-grid">
       <div>
@@ -410,7 +411,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-29
+   TAXONOMY AGENT · admin.html  v261022-30
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -418,7 +419,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-29';
+const VER = 'v261022-30';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -761,6 +762,8 @@ $('#selDel').onclick = async () => { if (!confirm(`${G.sel.size}장 삭제? (카
 /* ---------------- lightbox ---------------- */
 let LB = null;
 async function openLightbox(m) {
+  if (!m) return;
+  if (!m.source || !('focus_node_ids' in m)) { const { data } = await sb.from('tx_media').select('*').eq('id', m.id).single(); if (data) m = data; }   // 카드 뷰어·빌더에서 온 축약 행 보강
   LB = m; $('#lbImg').src = pubUrl(m.storage_path);
   $('#lbTitle').textContent = m.source === 'instagram' ? `@${m.account || '?'}` : `${m.brand || '?'}${m.product_name ? ' · ' + m.product_name : ''}`;
   $('#lbMeta').textContent = `${m.source} · ${m.period}${m.season && m.season !== m.period ? ' (' + m.season + ')' : ''} · ${m.posted_at || ''} · #${m.photo_no || ''} · ${m.filename || ''}`;
@@ -967,6 +970,7 @@ async function saveCard() {
   $('#cbStat').textContent = `저장됨 #${id}`; $('#cbDelete').style.display = ''; $('#cbTitle').textContent = '카드 수정';
   return id;
 }
+$('#cbSaveTop').onclick = () => $('#cbSave').onclick();
 $('#cbSave').onclick = async () => { const id = await saveCard(); if (id) { toast(`카드 #${id} 저장됨`); G.sel.clear(); paintSel(); $('#mCard').classList.remove('on'); showView('cards'); loadGallery(true); } };
 $('#cbDelete').onclick = async () => { if (!CB.id || !confirm('카드 삭제? (사진은 갤러리에 남습니다)')) return; await sb.from('tx_entries').delete().eq('id', CB.id); $('#mCard').classList.remove('on'); toast('카드 삭제'); loadCards(); loadGallery(true); };
 
