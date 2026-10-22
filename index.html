@@ -91,6 +91,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .bx b{font-size:13px}
 .bx.celeb-bx{border-color:#bdbdbd;background:linear-gradient(135deg,#fafafa,#ececec)}
 .bx.data-bx{border-color:#1f5fd1;color:#1f5fd1}
+.bx.rank-bx{background:#1f5fd1;color:#fff;border-color:#1f5fd1}.bx.rank-bx small{color:rgba(255,255,255,.8)}.bx.rank-bx b{font-size:16px}
 .bx.empty-bx{color:var(--mute);border-style:dashed}
 .card .hashes{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px;font-size:12px}
 .card .hashes span{color:var(--orange);font-weight:600}
@@ -175,7 +176,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-09</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261022-11</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -216,7 +217,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-09
+   TAXONOMY AGENT · index.html (리포트)  v261022-11
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -348,18 +349,27 @@ function paintCards() {
     const thumbs = c.all_thumbs || c.cover_thumbs || []; const ids = c.all_ids || c.cover_ids || [];
     const imgHTML = thumbs.map((p, i) => { const cn = CELEB[ids[i]]; return `<div class="ph ${cn ? 'celeb' : ''}"><img src="${pubUrl(p)}" loading="lazy" alt="">${cn ? `<span class="star">⭐</span><span class="celeb-tag">${esc(cn)}</span>` : ''}</div>`; }).join('') || '<div class="ph"><img alt=""></div>';
     const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
-    return `<div class="card" data-id="${c.id}"><h3>${esc(c.title)}</h3>${hashes}<div class="desc">${esc(c.description || '')}</div><div class="imgs">${imgHTML}</div>${thumbs.length > 3 ? `<div style="margin:-4px 0 8px"><span class="more">${thumbs.length}장 · 옆으로 스크롤</span></div>` : ''}<div class="boxes">${boxesHTML(c)}</div><div class="pickrow">${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
+    const pr = c.period_min && c.period_max && c.period_min !== c.period_max ? `${c.period_min} ~ ${c.period_max} · 주로 ${c.period_top || c.period}` : (c.period_top || c.period);
+    return `<div class="card" data-id="${c.id}"><div class="pr" style="font-size:11px;color:var(--mute);margin-bottom:4px">${esc(pr)}</div><h3>${esc(c.title)}</h3>${hashes}<div class="desc">${esc(c.description || '')}</div><div class="imgs">${imgHTML}</div>${thumbs.length > 3 ? `<div style="margin:-4px 0 8px"><span class="more">${thumbs.length}장 · 옆으로 스크롤</span></div>` : ''}<div class="boxes">${boxesHTML(c)}</div><div class="pickrow">${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
   };
   $('#cards').innerHTML = gk.map(k => `<div style="grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:6px">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : '미지정'} <span style="color:var(--mute);font-weight:400">${groups[k].length}</span></div>${groups[k].map(cardHTML).join('')}`).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
 }
+const EV_LABEL = { celeb: '셀럽 착용', ranking: '랭킹', runway: 'Runway', metric: '수치', market: 'Market', note: '메모' };
 function boxesHTML(c) {
-  const b = [];
+  // 1행: 셀럽 착용 (사진 셀럽 표시 + 근거의 '셀럽 착용' 항목)
   const names = (c.celeb_names || []).filter(Boolean);
-  if (c.celebs || names.length) b.push(`<div class="bx celeb-bx"><small>⭐ 셀럽 착용</small><b>${esc(names.join(', ') || c.celebs + '명')}</b></div>`); else b.push(`<div class="bx empty-bx"><small>셀럽 착용</small><b>—</b></div>`);
-  const ev = (c.evidence || []).filter(e => ['ranking', 'metric', 'market', 'runway'].includes(e.type) && (e.label || e.value));
-  if (ev.length) for (const e of ev.slice(0, 3)) b.push(`<div class="bx data-bx"><small>${esc(e.type === 'ranking' ? e.label + ' 랭킹' : e.type === 'runway' ? 'Runway' : e.type === 'market' ? 'Market' : e.label || '데이터')}</small><b>${esc(e.type === 'ranking' ? e.value : [e.type === 'metric' ? '' : e.label, e.value].filter(Boolean).join(' '))}</b></div>`);
-  else b.push(`<div class="bx empty-bx"><small>데이터</small><b>—</b></div>`);
-  return b.join('');
+  const evAll = (c.evidence || []).filter(e => e.label || e.value);
+  const evCeleb = evAll.filter(e => e.type === 'celeb').map(e => [e.label, e.value].filter(Boolean).join(' '));
+  const celebTxt = [...names, ...evCeleb.filter(x => !names.includes(x))].join(', ');
+  let h = celebTxt || c.celebs ? `<div class="bx celeb-bx"><small>⭐ 셀럽 착용</small><b>${esc(celebTxt || c.celebs + '명')}</b></div>` : `<div class="bx empty-bx"><small>셀럽 착용</small><b>—</b></div>`;
+  // 2행: 근거 데이터 전부 (랭킹은 크게 강조)
+  const evData = evAll.filter(e => e.type !== 'celeb');
+  h += '<div class="boxes" style="width:100%">';
+  if (evData.length) for (const e of evData) {
+    const rank = e.type === 'ranking' || /\d+\s*위/.test(e.value || '');
+    h += `<div class="bx data-bx ${rank ? 'rank-bx' : ''}"><small>${esc(e.type === 'ranking' ? (e.label || '') + ' 랭킹' : (EV_LABEL[e.type] || e.type) + (e.label && e.type !== 'metric' ? ' · ' + e.label : ''))}</small><b>${esc(e.type === 'ranking' ? e.value : [e.type === 'metric' ? e.label : '', e.value].filter(Boolean).join(' '))}</b></div>`;
+  } else h += `<div class="bx empty-bx"><small>데이터</small><b>—</b></div>`;
+  return h + '</div>';
 }
 function dataLine(c) {
   const parts = [];
@@ -389,7 +399,7 @@ async function openDetail(id) {
   const img = m => `<div class="ph ${m.is_celeb ? 'celeb' : ''}"><img src="${pubUrl(m.thumb_path)}" data-full="${pubUrl(m.storage_path)}" data-id="${m.id}" title="${esc(m.account ? '@' + m.account : m.brand || '')}">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}</div>`;
   const tags = (CARD_TAGS[id] || []).map(i => TAX.byId[i]).filter(Boolean);
   const tot = (cols || []).reduce((s, x) => s + +x.weight, 0);
-  let h = `<div class="dt-head"><h2>${esc(c.title)}</h2>${(c.hashtags || []).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px">${c.hashtags.map(t => `<span style="color:var(--orange);font-weight:600">#${esc(t)}</span>`).join('')}</div>` : ''}<div class="meta">${esc(nodeName(TAX.byId[c.focus_node_id]?.parent_id))} › ${esc(nodeName(c.focus_node_id))} · First spotted ${esc(c.first_spotted || c.period)} · ${esc(c.source)} · ${esc(c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
+  let h = `<div class="dt-head"><h2>${esc(c.title)}</h2>${(c.hashtags || []).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px">${c.hashtags.map(t => `<span style="color:var(--orange);font-weight:600">#${esc(t)}</span>`).join('')}</div>` : ''}<div class="meta">${esc(nodeName(TAX.byId[c.focus_node_id]?.parent_id))} › ${esc(nodeName(c.focus_node_id))} · ${esc(c.source)} · ${c.period_min && c.period_max && c.period_min !== c.period_max ? `${esc(c.period_min)} ~ ${esc(c.period_max)} (주로 ${esc(c.period_top || c.period)}${c.period_top_n ? ', ' + c.period_top_n + '장' : ''})` : esc(c.period)} · First spotted ${esc(c.first_spotted || c.period_min || c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
   h += `<div class="boxes" style="margin:10px 0 14px">${boxesHTML(c)}</div>`;
   if (c.description) h += `<div class="dt-sec"><h4>What it is</h4><div>${esc(c.description)}</div></div>`;
   h += `<div class="dt-strip">${[...covers, ...extras].map(img).join('')}</div>`;
