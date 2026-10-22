@@ -166,7 +166,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-33</span>
+  <span class="ver" id="ver">v261023-01</span>
 </header>
 
 <main>
@@ -278,6 +278,12 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <span class="mute">승격 모델 (대표 사진 소재·디테일)</span><input type="text" id="sModelHi" placeholder="gpt-6.1-sol">
       <span class="mute">프롬프트 버전</span><input type="text" id="sPromptV" placeholder="v1">
       <span></span><button class="pri" id="sSaveAi">저장</button>
+    </div>
+    <h2 style="margin-top:22px">런웨이 시즌 리포트 (리포트 → Runway → Season Report 탭)</h2>
+    <div class="kv">
+      <span class="mute">한 줄에 하나<br><small>시즌 | 파일경로 또는 URL | 제목(선택)</small></span>
+      <textarea id="sReports" rows="4" placeholder="27SS | reports/27SS_RUNWAY_TREND_REPORT.html | 27SS Runway Trend Report&#10;26FW | reports/26FW_RUNWAY_TREND_REPORT.html"></textarea>
+      <span></span><div class="row"><button class="pri" id="sSaveReports">저장</button><span class="small mute">파일은 index.html과 같은 리포의 reports/ 폴더에 올리면 됨. 최신 시즌이 자동으로 맨 앞</span></div>
     </div>
     <h2 style="margin-top:22px">시즌 경계 (tx_seasons)</h2>
     <div id="sSeasons" class="small mute"></div>
@@ -413,7 +419,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-33
+   TAXONOMY AGENT · admin.html  v261023-01
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -421,7 +427,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-33';
+const VER = 'v261023-01';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -475,6 +481,7 @@ async function loadTaxonomy() {
 async function loadSeasons() { const { data } = await sb.from('tx_seasons').select('*').order('sort_order'); SEASONS = data || []; $('#sSeasons').innerHTML = SEASONS.map(s => `${s.code} = ${s.month_from} ~ ${s.month_to}`).join(' · ') || '(없음 — 04_config.sql 확인)'; }
 async function loadConfig() {
   const { data } = await sb.from('tx_config').select('*'); CFG = {}; (data || []).forEach(r => CFG[r.key] = r.value);
+  $('#sReports').value = CFG.runway_reports || '';
   $('#sOpenai').value = CFG.openai_key || ''; $('#sModel').value = CFG.model_default || 'gpt-6-luna'; $('#sModelHi').value = CFG.model_hi || 'gpt-6.1-sol'; $('#sPromptV').value = CFG.prompt_version || 'v1';
   const { count } = await sb.from('tx_storage_trash').select('*', { count: 'exact', head: true }); $('#trashN').textContent = `대기 ${count || 0}건`;
 }
@@ -1200,6 +1207,7 @@ async function analyzeMany(ids, focusId, hi, hiIds) {
    SETTINGS
    ===================================================================== */
 $('#sSaveConn').onclick = () => { const k = $('#sAnon').value.trim(); if (k) localStorage.setItem('tx_anon', k); AUTHOR = $('#sAuthor').value; localStorage.setItem('tx_author', AUTHOR); boot(); showView('upload'); toast('연결 재시도'); };
+$('#sSaveReports').onclick = async () => { const { error } = await sb.from('tx_config').upsert({ key: 'runway_reports', value: $('#sReports').value.trim(), updated_at: new Date().toISOString() }); if (error) return toast(error.message, true); await loadConfig(); toast('시즌 리포트 목록 저장'); };
 $('#sSaveAi').onclick = async () => { const rows = [['openai_key', $('#sOpenai').value.trim()], ['model_default', $('#sModel').value.trim() || 'gpt-6-luna'], ['model_hi', $('#sModelHi').value.trim() || 'gpt-6.1-sol'], ['prompt_version', $('#sPromptV').value.trim() || 'v1']].map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() })); const { error } = await sb.from('tx_config').upsert(rows); if (error) return toast(error.message, true); await loadConfig(); toast('저장됨 (팀 공용)'); };
 $('#btnRethumb').onclick = async () => {
   const btn = $('#btnRethumb'); btn.disabled = true; const st = $('#rethumbStat');

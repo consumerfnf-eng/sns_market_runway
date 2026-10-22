@@ -186,7 +186,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-19</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-02</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -194,6 +194,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-t="coverage">Coverage</button>
     <button data-t="analytics">Analytics</button>
     <button data-t="trends" class="on">Emerging Trends</button>
+    <button data-t="report" id="tabReport" style="display:none">Season Report</button>
   </div>
   <span class="pchip" id="pchip"><select id="pFrom"></select><span style="opacity:.5">~</span><select id="pTo"></select></span>
   <button class="clear" id="clear">Clear Filter</button>
@@ -214,6 +215,12 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <section class="view on" id="v-trends">
       <div class="cards" id="cards"></div>
     </section>
+    <!-- Season Report (Runway) -->
+    <section class="view" id="v-report">
+      <div class="gbar" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap"><div class="cat-tabs" id="rpSeasons" style="margin:0"></div><span style="flex:1"></span><a id="rpOpen" href="#" target="_blank" style="font-size:12px;color:var(--mute);text-decoration:underline">새 창에서 열기 ↗</a></div>
+      <iframe id="rpFrame" style="width:100%;height:calc(100vh - 170px);border:1px solid var(--line);border-radius:14px;background:#fff" title="Season Report"></iframe>
+      <div class="empty" id="rpEmpty" style="display:none">등록된 시즌 리포트가 없습니다 — admin 설정 탭 "런웨이 시즌 리포트"에 추가하세요</div>
+    </section>
     <!-- Analytics -->
     <section class="view" id="v-analytics">
       <div class="an-wrap" id="an"></div>
@@ -229,7 +236,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-19
+   TAXONOMY AGENT · index.html (리포트)  v261023-02
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -250,6 +257,13 @@ const fmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : S
 const ICON = { eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>', pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>', tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>', flag: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 2h2v20H4zM7 3h12l-3 5 3 5H7z"/></svg>' };
 
 let sb; let TAX = { nodes: [], byId: {}, children: {} }; let SEASONS = [];
+// 런웨이 시즌 리포트: 기본값 + tx_config.runway_reports (한 줄 = "시즌 | 경로 | 제목(선택)")
+let RUNWAY_REPORTS = [
+  { season: '27SS', url: 'reports/27SS_RUNWAY_TREND_REPORT.html', title: '27SS Runway Trend Report' },
+  { season: '2627FW', url: 'reports/2627FW_RUNWAY_TREND_REPORT.html', title: '26/27FW Runway Trend Report' },
+];
+// 시즌 정렬 키: 27SS / 26FW / 2627FW / 27-28FW / 2728 FW 모두 인식. FW는 시작 연도 기준 → 26FW(2627FW) < 27SS < 27FW(2728FW) < 28SS. 최신이 앞
+const seasonSort = c => { const t = String(c).toUpperCase().replace(/[^0-9A-Z]/g, ''); const m = t.match(/^(\d{2})(?:\d{2})?(SS|FW)$/) || t.match(/^(?:\d{2})?(\d{2})(SS|FW)$/); if (!m) return -1; const y = +m[1]; return y * 2 + (m[2] === 'FW' ? 1 : 0); };
 let S = { src: 'instagram', anSrc: 'instagram', tab: 'trends', pFrom: '', pTo: '', facet: '', picks: false, periods: [], cov: { page: 0, items: [], q: '' } };
 
 /* ---------------- boot ---------------- */
@@ -260,6 +274,8 @@ async function boot() {
   const { data } = await sb.from('tx_taxonomy_nodes').select('id,facet,kind,parent_id,name_en,name_ko,hex,canonical_id,active,sort_order,meta').eq('active', true).order('sort_order').limit(5000);
   TAX.nodes = data || []; for (const n of TAX.nodes) { TAX.byId[n.id] = n; (TAX.children[n.parent_id || ''] ||= []).push(n); }
   const { data: se } = await sb.from('tx_seasons').select('*').order('sort_order'); SEASONS = se || [];
+  try { const { data: cfg } = await sb.from('tx_config').select('value').eq('key', 'runway_reports').single(); if (cfg?.value) { const list = cfg.value.split(/\n/).map(l => l.split('|').map(x => x.trim())).filter(a => a[0] && a[1]).map(a => ({ season: a[0].toUpperCase(), url: a[1], title: a[2] || a[0] + ' Runway Trend Report' })); if (list.length) RUNWAY_REPORTS = list; } } catch {}
+  RUNWAY_REPORTS.sort((a, b) => seasonSort(b.season) - seasonSort(a.season));
   await loadPeriods(); render();
 }
 const nodeName = id => (TAX.byId[id] || {}).name_en || id || '';
@@ -297,10 +313,12 @@ $$('[data-close]').forEach(b => b.onclick = () => $('#' + b.dataset.close).class
 function render() {
   $$('#tabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === S.tab); b.disabled = S.src === 'ai' && b.dataset.t !== 'analytics'; });
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + S.tab));
-  if (S.tab === 'coverage') { renderCovAside(); loadCoverage(true); }
+  $('#tabReport').style.display = S.src === 'runway' ? '' : 'none'; if (S.tab === 'report' && S.src !== 'runway') S.tab = 'trends';
+  if (S.tab === 'report') { $('#aside').innerHTML = ''; renderReport(); }
+  else if (S.tab === 'coverage') { renderCovAside(); loadCoverage(true); }
   else if (S.tab === 'trends') { renderTrendAside(); loadCards(); }
   else { $('#aside').innerHTML = ''; renderAnalytics(); }
-  $('.layout').classList.toggle('noaside', S.tab === 'analytics');
+  $('.layout').classList.toggle('noaside', S.tab === 'analytics' || S.tab === 'report');
 }
 
 /* =====================================================================
@@ -456,6 +474,20 @@ async function buildDetailHTML(c) {
   for (const s of secs) h += `<div class="dt-sec"><h4>${esc(s.subtitle || '')}</h4><div class="dt-strip">${s.media_ids.map(i => media.find(m => m.id === i)).filter(Boolean).map(img).join('')}</div></div>`;
   h += `<div class="dt-sec"><h4>Color · ${esc(nodeName(c.focus_node_id) || 'focus')}</h4>${(cols || []).length ? cols.map(x => `<span class="sw"><i style="background:${x.hex}"></i>${esc(x.name_en)}<small>${Math.round(x.weight / tot * 100)}%</small></span>`).join('') : '<span style="color:var(--mute);font-size:12px">분석 전</span>'}</div>`;
   return { html: h, media };
+}
+
+/* =====================================================================
+   SEASON REPORT (Runway) — 시즌 칩 → iframe
+   ===================================================================== */
+function renderReport() {
+  if (!RUNWAY_REPORTS.length) { $('#rpSeasons').innerHTML = ''; $('#rpFrame').style.display = 'none'; $('#rpEmpty').style.display = ''; return; }
+  S.rpSeason = RUNWAY_REPORTS.some(r => r.season === S.rpSeason) ? S.rpSeason : RUNWAY_REPORTS[0].season;   // 최신 시즌 기본
+  const cur = RUNWAY_REPORTS.find(r => r.season === S.rpSeason);
+  $('#rpSeasons').innerHTML = RUNWAY_REPORTS.map(r => `<button data-rps="${esc(r.season)}" class="${r.season === S.rpSeason ? 'on' : ''}" title="${esc(r.title)}">${esc(r.season)}</button>`).join('');
+  $('#rpSeasons').onclick = e => { const b = e.target.closest('[data-rps]'); if (!b) return; S.rpSeason = b.dataset.rps; renderReport(); };
+  $('#rpFrame').style.display = ''; $('#rpEmpty').style.display = 'none';
+  if ($('#rpFrame').getAttribute('src') !== cur.url) $('#rpFrame').src = cur.url;
+  $('#rpOpen').href = cur.url;
 }
 
 /* =====================================================================
