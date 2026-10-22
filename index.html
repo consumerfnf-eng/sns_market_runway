@@ -186,7 +186,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-17</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261022-19</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -197,6 +197,8 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
   </div>
   <span class="pchip" id="pchip"><select id="pFrom"></select><span style="opacity:.5">~</span><select id="pTo"></select></span>
   <button class="clear" id="clear">Clear Filter</button>
+  <span style="flex:1"></span>
+  <button id="btnExport" title="현재 소스·기간·카테고리 기준으로 카드 + AI Analytics를 단일 HTML 리포트로 저장">⤓ 리포트 다운로드</button>
 </div>
 
 <div class="layout">
@@ -227,7 +229,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-17
+   TAXONOMY AGENT · index.html (리포트)  v261022-19
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -271,7 +273,8 @@ async function loadPeriods() {
   // S.periods 는 최신순. 시즌 코드(26FW/27SS)는 tx_seasons 순서로 정렬
   if (SEASONS.length && S.periods.some(p => SEASONS.find(x => x.code === p))) S.periods.sort((a, b) => ((SEASONS.find(x => x.code === b) || {}).sort_order ?? 0) - ((SEASONS.find(x => x.code === a) || {}).sort_order ?? 0));
   if (S.pFrom && !S.periods.includes(S.pFrom)) S.pFrom = ''; if (S.pTo && !S.periods.includes(S.pTo)) S.pTo = '';
-  const opts = sel => `<option value="">전체</option>` + S.periods.map(p => `<option value="${p}" ${p === sel ? 'selected' : ''}>${p}</option>`).join('');
+  const asc = [...S.periods].reverse();   // 이른 시기 → 늦은 시기
+  const opts = sel => `<option value="">전체</option>` + asc.map(p => `<option value="${p}" ${p === sel ? 'selected' : ''}>${p}</option>`).join('');
   $('#pFrom').innerHTML = opts(S.pFrom); $('#pTo').innerHTML = opts(S.pTo);
 }
 // 선택 범위에 들어가는 기간 목록 (둘 다 비면 null = 전체). 시작만 고르면 그 이후 전부, 끝만 고르면 그 이전 전부
@@ -282,8 +285,10 @@ function periodList() {
 }
 const periodLabel = () => { const l = periodList(); return !l ? '전체 기간' : l.length === 1 ? l[0] : `${l[0]} ~ ${l[l.length - 1]}`; };
 const withPeriod = q => { const l = periodList(); return l ? q.in('period', l) : q; };
-$('#pFrom').onchange = () => { S.pFrom = $('#pFrom').value; render(); };
-$('#pTo').onchange = () => { S.pTo = $('#pTo').value; render(); };
+// 앞(시작)은 항상 뒤(끝)보다 이르거나 같아야 함 — 어긋나면 상대 쪽을 맞춰줌
+const pIdx = p => [...S.periods].reverse().indexOf(p);
+$('#pFrom').onchange = () => { S.pFrom = $('#pFrom').value; if (S.pFrom && S.pTo && pIdx(S.pFrom) > pIdx(S.pTo)) { S.pTo = S.pFrom; $('#pTo').value = S.pTo; } render(); };
+$('#pTo').onchange = () => { S.pTo = $('#pTo').value; if (S.pFrom && S.pTo && pIdx(S.pTo) < pIdx(S.pFrom)) { S.pFrom = S.pTo; $('#pFrom').value = S.pFrom; } render(); };
 $('#clear').onclick = () => { S.pFrom = ''; S.pTo = ''; S.facet = ''; S.picks = false; S.cov.q = ''; $('#covSearch').value = ''; $('#pFrom').value = ''; $('#pTo').value = ''; render(); };
 $('#srcnav').onclick = async e => { const b = e.target.closest('button'); if (!b) return; S.src = b.dataset.s; S.facet = ''; $$('#srcnav button').forEach(x => x.classList.toggle('on', x === b)); if (S.src === 'ai') S.tab = 'analytics'; await loadPeriods(); render(); };
 $('#tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; render(); };
@@ -367,15 +372,18 @@ function paintCards() {
   let list = CARDS.filter(c => (!S.picks || c.is_pick) && (!S.facet || (c.focus_node_id || '') === S.facet));
   const groups = {}; for (const c of list) (groups[c.focus_node_id || ''] ||= []).push(c);
   const gk = Object.keys(groups).sort((a, b) => ((TAX.byId[a] || {}).sort_order ?? 1e9) - ((TAX.byId[b] || {}).sort_order ?? 1e9));
-  const cardHTML = c => {
+  $('#cards').innerHTML = groupsHTML(groups, gk);
+}
+function groupsHTML(groups, gk) {
+  return gk.map(k => `<div style="grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:6px">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : '미지정'} <span style="color:var(--mute);font-weight:400">${groups[k].length}</span></div>${groups[k].map(cardHTML).join('')}`).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
+}
+function cardHTML(c) {
     const thumbs = c.all_thumbs || c.cover_thumbs || []; const ids = c.all_ids || c.cover_ids || [];
     const labs = c.all_labels || [];
     const imgHTML = thumbs.map((p, i) => { const cn = CELEB[ids[i]]; const L = Array.isArray(labs[i]) ? labs[i] : []; return `<div class="ph ${cn ? 'celeb' : ''}"><img src="${pubUrl(p)}" loading="lazy" alt="">${cn ? `<span class="star">⭐</span><span class="celeb-tag">${esc(cn)}</span>` : ''}${L.length ? `<div class="plabel">${L.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`; }).join('') || '<div class="ph"><img alt=""></div>';
     const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
     const pr = c.period_min && c.period_max && c.period_min !== c.period_max ? `${c.period_min}~${c.period_max}` : (c.period_top || c.period);
     return `<div class="card" data-id="${c.id}"><h3>${esc(c.title)}<small>${esc(pr)}${thumbs.length > 3 ? ' · ' + thumbs.length + '장 ›' : ''}</small></h3>${hashes}<div class="imgs">${imgHTML}</div>${c.description ? `<div class="desc">${esc(c.description)}</div>` : ''}<div class="foot"><div class="pl">${pillsHTML(c)}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
-  };
-  $('#cards').innerHTML = gk.map(k => `<div style="grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:6px">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : '미지정'} <span style="color:var(--mute);font-weight:400">${groups[k].length}</span></div>${groups[k].map(cardHTML).join('')}`).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
 }
 const EV_LABEL = { celeb: '셀럽 착용', ranking: '랭킹', runway: 'Runway', metric: '수치', market: 'Market', note: '메모' };
 function pillsHTML(c) {
@@ -420,6 +428,12 @@ $('#cards').onclick = e => { const c = e.target.closest('.card'); if (c) openDet
 /* ---------------- card detail (더보기) ---------------- */
 async function openDetail(id) {
   const c = CARDS.find(x => x.id === id); if (!c) return; $('#mDetail').classList.add('on'); $('#detail').innerHTML = '<div class="empty">불러오는 중…</div>';
+  const { html, media } = await buildDetailHTML(c);
+  $('#detail').innerHTML = html;
+  $('#detail').onclick = async e => { const dl = e.target.closest('[data-dl]'); if (dl) { e.stopPropagation(); try { const r = await fetch(dl.dataset.dl); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = dl.dataset.name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000); } catch { window.open(dl.dataset.dl, '_blank'); } return; } const im = e.target.closest('img[data-full]'); if (im) openLightbox(media.find(m => m.id === +im.dataset.id)); };
+}
+async function buildDetailHTML(c) {
+  const id = c.id;
   const [{ data: em }, { data: cols }, { data: fsb }] = await Promise.all([
     sb.from('tx_entry_media').select('media_id,role,sort_order,labels').eq('entry_id', id).order('sort_order'),
     sb.from('tx_v_entry_colors').select('*').eq('entry_id', id).order('weight', { ascending: false }).limit(5),
@@ -441,15 +455,66 @@ async function openDetail(id) {
   const secs = (c.sections || []).filter(s => (s.media_ids || []).length);
   for (const s of secs) h += `<div class="dt-sec"><h4>${esc(s.subtitle || '')}</h4><div class="dt-strip">${s.media_ids.map(i => media.find(m => m.id === i)).filter(Boolean).map(img).join('')}</div></div>`;
   h += `<div class="dt-sec"><h4>Color · ${esc(nodeName(c.focus_node_id) || 'focus')}</h4>${(cols || []).length ? cols.map(x => `<span class="sw"><i style="background:${x.hex}"></i>${esc(x.name_en)}<small>${Math.round(x.weight / tot * 100)}%</small></span>`).join('') : '<span style="color:var(--mute);font-size:12px">분석 전</span>'}</div>`;
-  $('#detail').innerHTML = h;
-  $('#detail').onclick = async e => { const dl = e.target.closest('[data-dl]'); if (dl) { e.stopPropagation(); try { const r = await fetch(dl.dataset.dl); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = dl.dataset.name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000); } catch { window.open(dl.dataset.dl, '_blank'); } return; } const im = e.target.closest('img[data-full]'); if (im) openLightbox(media.find(m => m.id === +im.dataset.id)); };
+  return { html: h, media };
 }
+
+/* =====================================================================
+   EXPORT — 현재 필터(소스·기간·카테고리) 기준 단일 HTML 리포트
+   ===================================================================== */
+$('#btnExport').onclick = exportReport;
+async function exportReport() {
+  if (S.src === 'ai') { toast('Runway / Instagram / Market 소스에서 내보내세요', true); return; }
+  const btn = $('#btnExport'); btn.disabled = true; btn.textContent = '리포트 생성 중…';
+  try {
+    if (!CARDS.length) await loadCards();
+    const list = CARDS.filter(c => (!S.picks || c.is_pick) && (!S.facet || (c.focus_node_id || '') === S.facet));
+    const groups = {}; for (const c of list) (groups[c.focus_node_id || ''] ||= []).push(c);
+    const gk = Object.keys(groups).sort((a, b) => ((TAX.byId[a] || {}).sort_order ?? 1e9) - ((TAX.byId[b] || {}).sort_order ?? 1e9));
+    // 카드 상세 (전부 미리 렌더)
+    const details = []; for (const c of list) { const { html } = await buildDetailHTML(c); details.push(`<div class="modal" id="d-${c.id}"><div class="box"><button class="close" data-close="d-${c.id}">✕</button>${html}</div></div>`); }
+    // AI Analytics: 전체 + (카테고리 선택 시) 그 카테고리
+    const keep = { colorCat: S.colorCat, cat: S.cat, facetCat: S.facetCat, fam: S.fam };
+    S.colorCat = ''; S.facetCat = ''; S.fam = null; const anAll = await buildAnalyticsHTML();
+    let anCat = '';
+    if (S.facet && isCat(S.facet)) { S.colorCat = S.facet; S.cat = S.facet; S.fam = null; anCat = await buildAnalyticsHTML(); }
+    Object.assign(S, keep);
+    const css = [...document.querySelectorAll('style')].map(x => x.textContent).join('\n');
+    const catLabel = S.facet ? (nodeName(TAX.byId[S.facet]?.parent_id) + ' › ' + nodeName(S.facet)) : '전체 카테고리';
+    const title = `Fashion Analysis · ${S.src.toUpperCase()} · ${periodLabel()} · ${catLabel}`;
+    const doc = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${css}
+.rep-head{padding:22px 26px 6px}.rep-head h1{margin:0;font-size:22px}.rep-head .m{color:var(--mute);font-size:12px;margin-top:4px}.rep-sec{padding:10px 26px 30px}.rep-sec h2.t{font-size:16px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+.cards{grid-template-columns:repeat(3,minmax(0,1fr))}@media print{.modal{display:none!important}.card{break-inside:avoid}}</style></head><body>
+<div class="rep-head"><h1>Fashion Analysis <small style="font-size:11px;color:var(--mute);font-weight:500">소비자분석팀</small></h1><div class="m">${esc(S.src.toUpperCase())} · 기간 ${esc(periodLabel())} · ${esc(catLabel)}${S.picks ? ' · HOT만' : ''} · 카드 ${list.length}개 · 생성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}</div></div>
+<div class="rep-sec"><h2 class="t">Emerging Trends</h2><div class="cards" id="cards">${groupsHTML(groups, gk)}</div></div>
+<div class="rep-sec"><h2 class="t">AI Analytics · 전체</h2><div class="an-wrap">${anAll}</div>${anCat ? `<h2 class="t">AI Analytics · ${esc(catLabel)}</h2><div class="an-wrap">${anCat}</div>` : ''}</div>
+${details.join('')}
+<div class="modal" id="mLb"><div class="box"><button class="close" data-close="mLb">✕</button><div class="lb"><div><img id="lbImg" alt=""></div><div id="lbInfo"></div></div></div></div>
+<script>
+document.addEventListener('click', e => {
+  const cl = e.target.closest('[data-close]'); if (cl) { document.getElementById(cl.dataset.close).classList.remove('on'); return; }
+  const dl = e.target.closest('[data-dl]'); if (dl) { e.stopPropagation(); window.open(dl.dataset.dl, '_blank'); return; }
+  const im = e.target.closest('img[data-full]'); if (im) { document.getElementById('lbImg').src = im.dataset.full; document.getElementById('lbInfo').innerHTML = '<div class="small" style="color:#6f6f6f">' + (im.title || '') + '</div>'; document.getElementById('mLb').classList.add('on'); return; }
+  const c = e.target.closest('.card'); if (c) { const d = document.getElementById('d-' + c.dataset.id); if (d) d.classList.add('on'); }
+});
+document.querySelectorAll('.cat-tabs button,.fambar div').forEach(b => b.style.cursor = 'default');
+<\/script></body></html>`;
+    const name = `FashionAnalysis_${S.src}_${(periodLabel() === '전체 기간' ? 'all' : periodLabel()).replace(/[^0-9A-Za-z~-]/g, '')}_${S.facet ? nodeName(S.facet).replace(/\W+/g, '') : 'ALL'}.html`;
+    const b = new Blob([doc], { type: 'text/html' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000);
+    toast(`리포트 저장: ${name}`);
+  } catch (e) { console.error(e); toast('리포트 생성 오류: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = '⤓ 리포트 다운로드';
+}
+const isCat = id => { const n = TAX.byId[id]; return !!n && n.kind === 'category' && n.facet === 'product'; };
 
 /* =====================================================================
    ANALYTICS
    ===================================================================== */
 async function renderAnalytics() {
   const an = $('#an'); an.innerHTML = '<div class="empty">계산 중…</div>';
+  const h = await buildAnalyticsHTML();
+  return h;
+}
+async function buildAnalyticsHTML() {
   const src = S.src === 'ai' ? S.anSrc : S.src;
   let rows = [], totals = {}, denom = 0, label = ''; let byFocus = null;
   if (src === 'fs') {
@@ -498,11 +563,17 @@ async function renderAnalytics() {
   S.cat = tabs.some(t => t.id === S.cat) ? S.cat : tabs[0].id;
   h += `<div class="an-sec"><h2>Category Statistics</h2><div class="sub">Top ten per category.</div><div class="cat-tabs">${tabs.map(t => `<button data-cat="${t.id}" class="${S.cat === t.id ? 'on' : ''}">${esc(t.label)}</button>`).join('')}</div>`;
   // rows for current tab
-  let items = [], base = 0, title = '';
+  let items = [], base = 0, title = ''; let subTabs = '';
   if (['pattern', 'material', 'detail'].includes(S.cat)) {
     title = tabs.find(t => t.id === S.cat).label;
-    items = TAX.nodes.filter(n => n.facet === S.cat && (n.kind === 'value' || (S.cat === 'pattern' && n.kind === 'sub')) && !n.canonical_id && cnt[n.id]).map(n => ({ n, v: cnt[n.id] }));
-    base = src === 'fs' ? items.reduce((s, x) => s + x.v, 0) : denom;
+    // 카테고리 선택 줄 (전체 / 데이터 있는 카테고리) — 패턴·소재·디테일이 어떤 아이템에서 나왔는지
+    const fcats = []; if (byFocus) { const cc = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (n && n.facet === S.cat && f) cc[f] = (cc[f] || 0) + v; } for (const [f, v] of Object.entries(cc)) fcats.push({ id: f, n: v }); fcats.sort((a, b) => ((TAX.byId[a.id] || {}).sort_order ?? 1e9) - ((TAX.byId[b.id] || {}).sort_order ?? 1e9)); }
+    S.facetCat = fcats.some(c => c.id === S.facetCat) ? S.facetCat : '';
+    if (fcats.length) subTabs = `<div class="cat-tabs" style="margin:-4px 0 12px"><span class="note" style="margin:0 6px 0 0;align-self:center">카테고리별</span><button data-fcat="" class="${S.facetCat ? '' : 'on'}">전체</button>${fcats.map(c => `<button data-fcat="${c.id}" class="${S.facetCat === c.id ? 'on' : ''}">${esc(nodeName(c.id))} <span style="opacity:.6">${c.n}</span></button>`).join('')}</div>`;
+    const fcnt = {}; if (S.facetCat && byFocus) { for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); if (f === S.facetCat) fcnt[nid] = (fcnt[nid] || 0) + v; } } else Object.assign(fcnt, cnt);
+    items = TAX.nodes.filter(n => n.facet === S.cat && (n.kind === 'value' || (S.cat === 'pattern' && n.kind === 'sub')) && !n.canonical_id && fcnt[n.id]).map(n => ({ n, v: fcnt[n.id] }));
+    base = src === 'fs' ? items.reduce((s, x) => s + x.v, 0) : (S.facetCat ? (totals[S.facetCat] || 0) : denom);
+    if (S.facetCat) title += ' · ' + nodeName(S.facetCat);
   } else {
     const cat = TAX.byId[S.cat]; title = cat.name_en;
     if (src === 'fs') { for (const ax of (TAX.children[cat.id] || [])) for (const v of (TAX.children[ax.id] || [])) if (cnt[v.id]) items.push({ n: v, v: cnt[v.id], ax: ax.name_en }); base = cnt[cat.id] || 0; }
@@ -513,14 +584,16 @@ async function renderAnalytics() {
       base = totals[cat.id] || 0;
     }
   }
+  { const byName = {}; for (const x of items) { const k = x.n.name_en.toLowerCase(); if (!byName[k] || byName[k].v < x.v) byName[k] = x; } items = Object.values(byName); }   // 같은 이름 중복 제거 (Pleated: Style + Details)
   items.sort((a, b) => b.v - a.v); const top10 = items.slice(0, 10); const mx = top10[0]?.v || 1;
   const rowHTML = (x, i) => `<div class="row"><span style="color:var(--mute);font-size:11px">${i + 1}</span><div class="b"><i style="width:${x.v / mx * 100}%"></i><span>${esc(x.n.name_en)}</span></div><div class="n">${fmt(x.v)} (${pct(x.v, base)}%)</div></div>`;
   let thumb = '';
   if (src !== 'fs' && top10[0]) { const { data } = await sb.from('tx_media_tags').select('media_id').eq('node_id', top10[0].n.id).limit(1); if (data && data[0]) { const { data: m } = await sb.from('tx_media').select('thumb_path').eq('id', data[0].media_id).single(); if (m) thumb = `<img src="${pubUrl(m.thumb_path)}" alt="">`; } }
-  h += `<div class="panel"><h3>${esc(title)}</h3>${top10.length ? `<div class="top10"><div>${thumb || '<div style="aspect-ratio:3/4;background:#e6e6e3;border-radius:8px"></div>'}</div><div class="col">${top10.slice(0, 5).map(rowHTML).join('')}</div><div class="col">${top10.slice(5, 10).map((x, i) => rowHTML(x, i + 5)).join('')}</div></div><div class="note">Percentages represent each style's share of all ${esc(title)} items${src === 'fs' ? ' (FS 집계, 복수 태그라 합계 100% 초과 가능)' : ''}.</div>` : '<div class="empty">데이터 없음</div>'}</div></div>`;
+  h += subTabs + `<div class="panel"><h3>${esc(title)}</h3>${top10.length ? `<div class="top10"><div>${thumb || '<div style="aspect-ratio:3/4;background:#e6e6e3;border-radius:8px"></div>'}</div><div class="col">${top10.slice(0, 5).map(rowHTML).join('')}</div><div class="col">${top10.slice(5, 10).map((x, i) => rowHTML(x, i + 5)).join('')}</div></div><div class="note">Percentages represent each style's share of all ${esc(title)} items${src === 'fs' ? ' (FS 집계, 복수 태그라 합계 100% 초과 가능)' : ''}.</div>` : '<div class="empty">데이터 없음</div>'}</div></div>`;
   an.innerHTML = h;
   an.querySelectorAll('.fambar div').forEach(d => d.onclick = () => { S.fam = d.dataset.fam; renderAnalytics(); });
   an.querySelectorAll('.cat-tabs button[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; renderAnalytics(); });
+  an.querySelectorAll('[data-fcat]').forEach(b => b.onclick = () => { S.facetCat = b.dataset.fcat; renderAnalytics(); });
   an.querySelectorAll('[data-ansrc]').forEach(b => b.onclick = async () => { S.anSrc = b.dataset.ansrc; await loadPeriods(); renderAnalytics(); });
   an.querySelectorAll('[data-ccat]').forEach(b => b.onclick = () => { S.colorCat = b.dataset.ccat; S.fam = null; renderAnalytics(); });
 }
