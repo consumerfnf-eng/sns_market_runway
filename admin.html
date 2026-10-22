@@ -127,6 +127,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .sec .ph img{width:44px;aspect-ratio:3/4;object-fit:cover;border-radius:4px;border:2px solid transparent;cursor:pointer}
 .sec .ph img.on{border-color:var(--accent)}
 .cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
+#cvGrid{display:block}
 .cv-grid .ph{position:relative;border-radius:10px;overflow:hidden;cursor:zoom-in}
 .cv-grid .ph img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
 .cv-grid .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:3px 8px}
@@ -164,7 +165,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-30</span>
+  <span class="ver" id="ver">v261022-31</span>
 </header>
 
 <main>
@@ -358,7 +359,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="box" style="width:min(1400px,100%)">
     <button class="close sm" data-close="mView">✕</button>
     <div id="cvHead"></div>
-    <div class="cv-grid" id="cvGrid"></div>
+    <div id="cvGrid"></div>
   </div>
 </div>
 <!-- ============ LIGHTBOX ============ -->
@@ -411,7 +412,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-30
+   TAXONOMY AGENT · admin.html  v261022-31
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -419,7 +420,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-30';
+const VER = 'v261022-31';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -1017,7 +1018,12 @@ async function openCardView(id) {
     <div class="small mute">${esc(e.source)} · ${esc(e.period)} · ${esc(nodeName(e.focus_node_id) || 'focus 미지정')} · 사진 ${media.length}장 (대표 ${covers.size}) · 분석 ${media.filter(m => m.status === 'analyzed').length}장${(e.hashtags || []).length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div>
     ${e.description ? `<div style="margin-top:6px">${esc(e.description)}</div>` : ''}
     <div class="row" style="margin-top:10px"><button class="sm" id="cvEdit">수정 (사진 추가·대표 변경)</button><button class="sm" id="cvAn">분석 실행</button></div>`;
-  $('#cvGrid').innerHTML = media.map(m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}${(LAB[m.id] || []).length ? `<div class="plabel">${LAB[m.id].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`).join('') || '<div class="mute">사진 없음</div>';
+  const phHTML = m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}${(LAB[m.id] || []).length ? `<div class="plabel">${LAB[m.id].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`;
+  // 소제목 섹션별로 묶어서 표시 (카드 수정 → 소제목 섹션에서 배정). 미배정은 '기타'
+  const secs = (e.sections || []).filter(x => (x.media_ids || []).length); const used = new Set(secs.flatMap(x => x.media_ids));
+  const grid = ph => `<div class="cv-grid" style="margin-top:6px">${ph.map(phHTML).join('')}</div>`;
+  if (secs.length) $('#cvGrid').innerHTML = secs.map(x => `<h3 style="margin:14px 0 0">${esc(x.subtitle || '(소제목 없음)')} <span class="mute" style="font-weight:400">${x.media_ids.length}</span></h3>${grid(x.media_ids.map(i => media.find(m => m.id === i)).filter(Boolean))}`).join('') + (media.some(m => !used.has(m.id)) ? `<h3 style="margin:14px 0 0">기타 <span class="mute" style="font-weight:400">${media.filter(m => !used.has(m.id)).length}</span></h3>${grid(media.filter(m => !used.has(m.id)))}` : '');
+  else $('#cvGrid').innerHTML = grid(media) + (media.length ? '<div class="small mute" style="margin-top:8px">세부 구분이 필요하면 수정 → 소제목 섹션에서 사진을 나눠 배정하세요</div>' : '<div class="mute">사진 없음</div>');
   $('#cvGrid').onclick = ev => { const ph = ev.target.closest('.ph'); if (!ph) return; const m = media.find(x => x.id === +ph.dataset.id); if (m) openLightbox(m); };
   $('#cvEdit').onclick = () => { $('#mView').classList.remove('on'); openCardBuilder(id, []); };
   $('#cvAn').onclick = async () => { await analyzeMany(ids, analysisFocus(e.focus_node_id), false, [...covers]); openCardView(id); };
