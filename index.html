@@ -186,7 +186,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261023-02</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-03</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -236,7 +236,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261023-02
+   TAXONOMY AGENT · index.html (리포트)  v261023-03
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -274,7 +274,7 @@ async function boot() {
   const { data } = await sb.from('tx_taxonomy_nodes').select('id,facet,kind,parent_id,name_en,name_ko,hex,canonical_id,active,sort_order,meta').eq('active', true).order('sort_order').limit(5000);
   TAX.nodes = data || []; for (const n of TAX.nodes) { TAX.byId[n.id] = n; (TAX.children[n.parent_id || ''] ||= []).push(n); }
   const { data: se } = await sb.from('tx_seasons').select('*').order('sort_order'); SEASONS = se || [];
-  try { const { data: cfg } = await sb.from('tx_config').select('value').eq('key', 'runway_reports').single(); if (cfg?.value) { const list = cfg.value.split(/\n/).map(l => l.split('|').map(x => x.trim())).filter(a => a[0] && a[1]).map(a => ({ season: a[0].toUpperCase(), url: a[1], title: a[2] || a[0] + ' Runway Trend Report' })); if (list.length) RUNWAY_REPORTS = list; } } catch {}
+  try { const { data: cfg } = await sb.from('tx_config').select('value').eq('key', 'runway_reports').single(); if (cfg?.value) { const list = cfg.value.split(/\n/).map(l => l.split('|').map(x => x.trim())).filter(a => a[0] && a[1]).map(a => ({ season: a[0].toUpperCase(), url: a[1], title: a[2] || a[0] + ' Runway Trend Report' })); for (const r of list) { const i = RUNWAY_REPORTS.findIndex(x => x.season === r.season); if (i >= 0) RUNWAY_REPORTS[i] = r; else RUNWAY_REPORTS.push(r); } } } catch {}   // 기본값(27SS·2627FW)에 설정 목록을 합침, 같은 시즌은 설정이 우선
   RUNWAY_REPORTS.sort((a, b) => seasonSort(b.season) - seasonSort(a.season));
   await loadPeriods(); render();
 }

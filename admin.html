@@ -166,7 +166,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261023-01</span>
+  <span class="ver" id="ver">v261023-02</span>
 </header>
 
 <main>
@@ -280,11 +280,18 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <span></span><button class="pri" id="sSaveAi">저장</button>
     </div>
     <h2 style="margin-top:22px">런웨이 시즌 리포트 (리포트 → Runway → Season Report 탭)</h2>
-    <div class="kv">
-      <span class="mute">한 줄에 하나<br><small>시즌 | 파일경로 또는 URL | 제목(선택)</small></span>
-      <textarea id="sReports" rows="4" placeholder="27SS | reports/27SS_RUNWAY_TREND_REPORT.html | 27SS Runway Trend Report&#10;26FW | reports/26FW_RUNWAY_TREND_REPORT.html"></textarea>
-      <span></span><div class="row"><button class="pri" id="sSaveReports">저장</button><span class="small mute">파일은 index.html과 같은 리포의 reports/ 폴더에 올리면 됨. 최신 시즌이 자동으로 맨 앞</span></div>
+    <div class="row" style="margin-bottom:8px">
+      <label>시즌<input type="text" id="rpSeasonIn" placeholder="2728FW / 27SS" style="width:110px"></label>
+      <label>제목 (선택)<input type="text" id="rpTitleIn" placeholder="27/28FW Runway Trend Report" style="width:240px"></label>
+      <label>리포트 HTML 파일<input type="file" id="rpFileIn" accept=".html,.htm"></label>
+      <button class="pri" id="rpUpload">업로드 + 등록</button>
+      <span class="small mute" id="rpStat"></span>
     </div>
+    <div id="rpList" class="small" style="margin-bottom:8px"></div>
+    <details><summary class="small mute" style="cursor:pointer">목록 직접 편집 (시즌 | 파일 URL | 제목)</summary>
+      <textarea id="sReports" rows="4" style="width:100%;margin-top:6px"></textarea>
+      <div class="row" style="margin-top:6px"><button class="sm" id="sSaveReports">저장</button><span class="small mute">파일을 GitHub reports/ 폴더에 둔 경우엔 상대경로(reports/파일.html)도 됨</span></div>
+    </details>
     <h2 style="margin-top:22px">시즌 경계 (tx_seasons)</h2>
     <div id="sSeasons" class="small mute"></div>
     <h2 style="margin-top:22px">썸네일 다시 만들기</h2>
@@ -419,7 +426,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261023-01
+   TAXONOMY AGENT · admin.html  v261023-02
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -427,7 +434,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261023-01';
+const VER = 'v261023-02';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -481,7 +488,7 @@ async function loadTaxonomy() {
 async function loadSeasons() { const { data } = await sb.from('tx_seasons').select('*').order('sort_order'); SEASONS = data || []; $('#sSeasons').innerHTML = SEASONS.map(s => `${s.code} = ${s.month_from} ~ ${s.month_to}`).join(' · ') || '(없음 — 04_config.sql 확인)'; }
 async function loadConfig() {
   const { data } = await sb.from('tx_config').select('*'); CFG = {}; (data || []).forEach(r => CFG[r.key] = r.value);
-  $('#sReports').value = CFG.runway_reports || '';
+  $('#sReports').value = CFG.runway_reports || ''; renderReportList();
   $('#sOpenai').value = CFG.openai_key || ''; $('#sModel').value = CFG.model_default || 'gpt-6-luna'; $('#sModelHi').value = CFG.model_hi || 'gpt-6.1-sol'; $('#sPromptV').value = CFG.prompt_version || 'v1';
   const { count } = await sb.from('tx_storage_trash').select('*', { count: 'exact', head: true }); $('#trashN').textContent = `대기 ${count || 0}건`;
 }
@@ -1207,7 +1214,23 @@ async function analyzeMany(ids, focusId, hi, hiIds) {
    SETTINGS
    ===================================================================== */
 $('#sSaveConn').onclick = () => { const k = $('#sAnon').value.trim(); if (k) localStorage.setItem('tx_anon', k); AUTHOR = $('#sAuthor').value; localStorage.setItem('tx_author', AUTHOR); boot(); showView('upload'); toast('연결 재시도'); };
-$('#sSaveReports').onclick = async () => { const { error } = await sb.from('tx_config').upsert({ key: 'runway_reports', value: $('#sReports').value.trim(), updated_at: new Date().toISOString() }); if (error) return toast(error.message, true); await loadConfig(); toast('시즌 리포트 목록 저장'); };
+function renderReportList() {
+  const list = ($('#sReports').value || '').split(/\n/).map(l => l.split('|').map(x => x.trim())).filter(a => a[0] && a[1]);
+  $('#rpList').innerHTML = list.length ? list.map((a, i) => `<div class="row" style="padding:4px 0;border-bottom:1px solid var(--line)"><b style="width:70px">${esc(a[0])}</b><a href="${esc(a[1])}" target="_blank" style="color:var(--mute);text-decoration:underline;max-width:520px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a[2] || a[1])}</a><button class="sm" data-rpdel="${i}">삭제</button></div>`).join('') : '<span class="mute">등록된 리포트 없음 (index.html 기본값 27SS·2627FW만 표시됨)</span>';
+}
+$('#rpList').onclick = async e => { const b = e.target.closest('[data-rpdel]'); if (!b) return; const lines = $('#sReports').value.split(/\n/).filter(l => l.trim()); lines.splice(+b.dataset.rpdel, 1); $('#sReports').value = lines.join('\n'); await $('#sSaveReports').onclick(); };
+$('#rpUpload').onclick = async () => {
+  const season = $('#rpSeasonIn').value.trim().toUpperCase().replace(/[^0-9A-Z]/g, ''); const f = $('#rpFileIn').files[0];
+  if (!season || !/^\d{2,4}(SS|FW)$/.test(season)) return toast('시즌을 27SS / 2728FW 형식으로 입력', true); if (!f) return toast('리포트 HTML 파일을 선택하세요', true);
+  const st = $('#rpStat'); st.textContent = '업로드 중…';
+  const path = `reports/${season}_${Date.now()}.html`;
+  const { error } = await sb.storage.from(BUCKET).upload(path, f, { contentType: 'text/html; charset=utf-8', upsert: false }); if (error) { st.textContent = ''; return toast(error.message, true); }
+  const url = pubUrl(path); const title = $('#rpTitleIn').value.trim() || `${season} Runway Trend Report`;
+  const lines = ($('#sReports').value || '').split(/\n/).filter(l => l.trim()).filter(l => l.split('|')[0].trim().toUpperCase() !== season);   // 같은 시즌은 교체
+  lines.push(`${season} | ${url} | ${title}`); $('#sReports').value = lines.join('\n');
+  await $('#sSaveReports').onclick(); $('#rpFileIn').value = ''; $('#rpSeasonIn').value = ''; $('#rpTitleIn').value = ''; st.textContent = '등록됨 — 리포트 화면 Season Report 탭에서 확인';
+};
+$('#sSaveReports').onclick = async () => { const { error } = await sb.from('tx_config').upsert({ key: 'runway_reports', value: $('#sReports').value.trim(), updated_at: new Date().toISOString() }); if (error) return toast(error.message, true); await loadConfig(); renderReportList(); toast('시즌 리포트 목록 저장'); };
 $('#sSaveAi').onclick = async () => { const rows = [['openai_key', $('#sOpenai').value.trim()], ['model_default', $('#sModel').value.trim() || 'gpt-6-luna'], ['model_hi', $('#sModelHi').value.trim() || 'gpt-6.1-sol'], ['prompt_version', $('#sPromptV').value.trim() || 'v1']].map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() })); const { error } = await sb.from('tx_config').upsert(rows); if (error) return toast(error.message, true); await loadConfig(); toast('저장됨 (팀 공용)'); };
 $('#btnRethumb').onclick = async () => {
   const btn = $('#btnRethumb'); btn.disabled = true; const st = $('#rethumbStat');
