@@ -54,13 +54,14 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 @keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 .celeb{position:relative}
 .celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:var(--ig);background-size:100% 100%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
-.star{position:absolute;top:6px;right:6px;font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));z-index:4;pointer-events:none}
+.star{display:none;position:absolute;top:6px;right:6px;font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));z-index:4;pointer-events:none}
 .card .imgs .ph{position:relative;border-radius:6px}
 .celeb-tag{position:absolute;left:8px;bottom:8px;background:var(--ig);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
 /* upload */
 .drop{border:2px dashed #cfc9bb;border-radius:var(--r);padding:28px;text-align:center;color:var(--mute);background:#fbfaf7;margin:12px 0}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
-.pv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.pv label{display:flex;gap:4px;align-items:center;font-size:10px;white-space:nowrap}.pv label input[type=text]{flex:1;min-width:0;width:auto}
 .pv{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:11px}
 .pv img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
 .pv .f{padding:6px 7px;display:grid;gap:3px}
@@ -163,7 +164,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-21</span>
+  <span class="ver" id="ver">v261022-22</span>
 </header>
 
 <main>
@@ -177,9 +178,10 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
     </div>
 
     <div class="row" id="upf-instagram">
-      <label>수집월 (파일명 날짜가 있으면 자동)<input type="month" id="ig-period"></label>
+      <label>수집월 (파일명에 날짜 없을 때 사용)<input type="month" id="ig-period"></label>
       <label>계정 기본값 (파일명에서 못 읽을 때)<input type="text" id="ig-account" placeholder="@account"></label>
       <label>시장<select id="ig-region"><option>GLOBAL</option><option>KR</option><option>CN</option><option>JP</option></select></label>
+      <label>카테고리 (이 묶음 전체 · 사진별 수정 가능)<select id="up-cat"></select></label>
       <label>셀럽 착장<span><input type="checkbox" id="ig-celeb"> 이 묶음 전체</span></label>
       <label>셀럽 이름<input type="text" id="ig-celebName" placeholder="예: 제니" style="width:110px"></label>
       <span class="mute small">파일명 규칙 <code>계정_YYYYMMDD_번호.jpg</code> 또는 인스타 다운로더 <code>계정__타임스탬프_ID_ID 1.png</code> → 계정·날짜·번호 자동</span>
@@ -188,6 +190,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <label>시즌<select id="rw-season"></select></label>
       <label>도시<select id="rw-city"><option>Paris</option><option>Milan</option><option>London</option><option>New York</option><option>Copenhagen</option><option>Seoul</option><option>Shanghai</option><option>Tokyo</option><option>Other</option></select></label>
       <label>브랜드 기본값<input type="text" id="rw-brand" placeholder="파일명에서 자동 추출"></label>
+      <label>카테고리<select id="up-cat-rw"></select></label>
       <span class="mute small">파일명 <code>Brand_Name_27SS_12.jpg</code> 또는 <code>Brand_Name_12.jpg</code> → 브랜드·시즌·번호</span>
     </div>
     <div class="row" id="upf-market" style="display:none">
@@ -196,10 +199,11 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <label>품명<input type="text" id="mk-name" placeholder="선택"></label>
       <label>가격<input type="number" id="mk-price" placeholder="원"></label>
       <label>상품 URL<input type="text" id="mk-url" placeholder="https://" style="width:260px"></label>
+      <label>카테고리<select id="up-cat-mk"></select></label>
       <span class="mute small">파일명 <code>MLB_품번_20261003.jpg</code> → 브랜드·품명·날짜</span>
     </div>
 
-    <div class="drop" id="drop">사진을 여기에 끌어다 놓거나 클릭 · Ctrl+V 붙여넣기 가능<br><span class="small">브라우저에서 1600px 원본 + 400px 썸네일로 리사이즈 후 업로드 (10만 장 대비)</span>
+    <div class="drop" id="drop">사진을 여기에 끌어다 놓거나 클릭 · Ctrl+V 붙여넣기 가능<br><span class="small">브라우저에서 1600px 원본 + 640px 썸네일로 리사이즈 후 업로드 (10만 장 대비)</span>
       <input type="file" id="file" multiple accept="image/*" style="display:none"></div>
     <div class="row">
       <button class="pri" id="btnUpload" disabled>업로드</button>
@@ -363,6 +367,17 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <div>
         <h2 id="lbTitle"></h2>
         <div class="small mute" id="lbMeta"></div>
+        <details style="margin:8px 0"><summary class="small mute" style="cursor:pointer">✎ 정보 수정 (소스 · 수집월 · 계정/브랜드 · 게시일 · 카테고리)</summary>
+          <div class="row" style="margin-top:6px">
+            <label>소스<select id="lbSrc"><option value="instagram">INSTAGRAM</option><option value="runway">RUNWAY</option><option value="market">MARKET</option></select></label>
+            <label>수집월/시즌<input type="text" id="lbPeriod" style="width:100px" placeholder="2026-10 / 27SS"></label>
+            <label>계정<input type="text" id="lbAccount" style="width:120px"></label>
+            <label>브랜드<input type="text" id="lbBrand" style="width:110px"></label>
+            <label>게시일<input type="text" id="lbPosted" style="width:100px" placeholder="YYYY-MM-DD"></label>
+            <label>품명<input type="text" id="lbProduct" style="width:120px"></label>
+            <label>카테고리<select id="lbCat"></select></label>
+            <button class="sm pri" id="lbSave">저장</button>
+          </div></details>
         <h3>분석 결과 — ✕로 지우고, 아래 검색으로 추가 — 수정한 내용은 집계에 반영되고 재분석해도 유지됨</h3>
         <div id="lbTags"><span class="mute small">아직 분석 안 됨</span></div>
         <div class="row" style="margin-top:8px"><input type="text" id="lbTagSearch" placeholder="태그 추가 (영문 · 컬러 이름도 가능)" style="width:260px"><div class="chips" id="lbTagHits"></div></div>
@@ -393,7 +408,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-21
+   TAXONOMY AGENT · admin.html  v261022-22
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -401,7 +416,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-21';
+const VER = 'v261022-22';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -432,7 +447,7 @@ async function boot() {
   if (!connect()) return;
   try {
     await Promise.all([loadTaxonomy(), loadSeasons(), loadConfig()]);
-    fillSeasonSelects(); fillCascade();
+    fillSeasonSelects(); fillCascade(); fillUpCats();
     $('#ig-period').value = thisMonth(); $('#mk-period').value = thisMonth();
     renderFilters(); loadGallery(true);
     $('#sStat').textContent = `분류체계 ${TAX.nodes.length}개 노드 · 시즌 ${SEASONS.map(s => s.code).join(' ')}`;
@@ -461,6 +476,9 @@ function fillSeasonSelects() {
   const opts = SEASONS.map(s => `<option>${s.code}</option>`).join('');
   $('#rw-season').innerHTML = opts; const cur = seasonOf(thisMonth()); if (cur) $('#rw-season').value = cur;
 }
+function catOptions(cur) { const cats = TAX.nodes.filter(n => n.kind === 'category' && n.facet === 'product'); let g = '', h = '<option value="">(미지정)</option>'; for (const c of cats) { const gn = nodeName(c.parent_id); if (gn !== g) { g = gn; h += `<optgroup label="${esc(gn)}">`; } h += `<option value="${c.id}" ${c.id === cur ? 'selected' : ''}>${esc(c.name_en)}</option>`; } return h; }
+function fillUpCats() { ['#up-cat', '#up-cat-rw', '#up-cat-mk'].forEach(id => { const el = $(id); if (el) el.innerHTML = catOptions(''); }); }
+const upCat = () => ($(UP_SRC === 'instagram' ? '#up-cat' : UP_SRC === 'runway' ? '#up-cat-rw' : '#up-cat-mk').value || '');
 const seasonOf = m => (SEASONS.find(s => m >= s.month_from && m <= s.month_to) || {}).code || null;
 const catOf = id => { let n = TAX.byId[id]; while (n && n.kind !== 'category' && n.parent_id) n = TAX.byId[n.parent_id]; return n && n.kind === 'category' ? n : null; };
 const nodeName = id => (TAX.byId[id] || {}).name_en || id;
@@ -541,7 +559,7 @@ document.addEventListener('paste', e => {
 function addFiles(files) {
   files = files.filter(f => f.type.startsWith('image/'));
   const celeb = UP_SRC === 'instagram' && $('#ig-celeb').checked, celebName = $('#ig-celebName').value.trim();
-  for (const f of files) QUEUE.push({ file: f, name: f.name, parsed: parseName(f.name, UP_SRC), url: URL.createObjectURL(f), status: '대기', celeb, celebName });
+  for (const f of files) QUEUE.push({ file: f, name: f.name, parsed: parseName(f.name, UP_SRC), url: URL.createObjectURL(f), status: '대기', celeb, celebName, cat: upCat() });
   renderQueue();
 }
 function renderQueue() {
@@ -549,9 +567,10 @@ function renderQueue() {
   $('#upStat').textContent = QUEUE.length ? `${QUEUE.length}장 · 대기 ${QUEUE.filter(q => q.status === '대기').length}` : '';
   $('#pv').innerHTML = QUEUE.map((q, i) => {
     const p = q.parsed; let fields = '';
-    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD"><input data-k="no" value="${p.no || ''}" placeholder="#"><label style="display:flex;gap:4px;align-items:center;font-size:11px"><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> 셀럽 <input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="이름" style="flex:1"></label>`;
+    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정 (비면 기본값)"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD"><input data-k="no" value="${p.no || ''}" placeholder="#"><label style="display:flex;gap:4px;align-items:center;font-size:11px"><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> 셀럽 <input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="이름" style="flex:1"></label>`;
     else if (UP_SRC === 'runway') fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="season" value="${esc(p.season || '')}" placeholder="시즌(비면 상단값)"><input data-k="no" value="${p.no || ''}" placeholder="#">`;
     else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD">`;
+    fields += `<select data-k="cat" style="font-size:11px;padding:2px 4px;border-radius:5px;border:1px solid var(--line)">${catOptions(q.cat ?? upCat())}</select>`;
     const cls = q.status === '중복' ? 'dup' : q.status.startsWith('오류') ? 'err' : q.status === '완료' ? 'done' : '';
     return `<div class="pv ${cls} ${q.celeb ? 'celeb' : ''}" data-i="${i}"><span class="rm" data-rm="${i}" title="목록에서 제거${q.status === '완료' ? ' (업로드된 사진도 삭제)' : ''}">✕</span><img src="${q.url}" loading="lazy"><div class="f">${fields}<div class="st" title="${esc(q.name)}">${esc(q.status)} · ${esc(q.name)}</div></div></div>`;
   }).join('');
@@ -561,7 +580,9 @@ $('#pv').onclick = async e => {
   if (q.status === '완료' && q.hash) { if (!confirm(`업로드된 사진을 삭제할까요?\n${q.name}`)) return; const { error } = await sb.from('tx_media').delete().eq('hash', q.hash); if (error) return toast(error.message, true); toast('삭제됨 (Storage는 휴지통)'); renderFilters(); }
   URL.revokeObjectURL(q.url); QUEUE.splice(i, 1); renderQueue();
 };
+$('#pv').onchange = e => { const sel = e.target.closest('select[data-k=cat]'); if (!sel) return; QUEUE[+sel.closest('.pv').dataset.i].cat = sel.value; };
 $('#pv').oninput = e => { const inp = e.target.closest('input'); if (!inp) return; const i = +inp.closest('.pv').dataset.i; if (inp.dataset.k === 'celeb') { QUEUE[i].celeb = inp.checked; inp.closest('.pv').classList.toggle('celeb', inp.checked); return; } if (inp.dataset.k === 'celebName') { QUEUE[i].celebName = inp.value.trim(); return; } let v = inp.value.trim(); if (inp.dataset.k === 'no') v = +v || null; QUEUE[i].parsed[inp.dataset.k] = v || null; };
+['#up-cat', '#up-cat-rw', '#up-cat-mk'].forEach(id => { $(id).onchange = () => { QUEUE.forEach(q => { if (q.status === '대기') q.cat = $(id).value; }); renderQueue(); }; });
 $('#ig-celeb').onchange = () => { QUEUE.forEach(q => { if (q.status === '대기') q.celeb = $('#ig-celeb').checked; }); renderQueue(); };
 $('#btnClear').onclick = () => { QUEUE.forEach(q => URL.revokeObjectURL(q.url)); QUEUE = []; renderQueue(); $('#upProg').style.width = '0'; };
 
@@ -578,6 +599,9 @@ const safeKey = s => String(s || '').normalize('NFKD').replace(/[^\w.-]+/g, '-')
 // ---- upload run
 $('#btnUpload').onclick = async () => {
   if (!sb) return; const items = QUEUE.filter(q => q.status === '대기'); if (!items.length) return;
+  // 파일명에서 날짜를 못 읽은 사진은 상단 수집월(시즌)이 꼭 있어야 함 — 비어 있으면 중단
+  const needPeriod = items.some(q => !(q.parsed.date || q.parsed.season)); const pv = UP_SRC === 'instagram' ? $('#ig-period').value : UP_SRC === 'runway' ? $('#rw-season').value : $('#mk-period').value;
+  if (needPeriod && !pv) { toast('파일명에 날짜가 없는 사진이 있습니다 — 상단 수집월(시즌)을 먼저 입력하세요', true); return; }
   $('#btnUpload').disabled = true; let done = 0; const total = items.length; const t0 = Date.now();
   const prog = () => { $('#upProg').style.width = (done / total * 100) + '%'; $('#upStat').textContent = `${done}/${total} · ${Math.round((Date.now() - t0) / 1000)}s`; };
   // 1) hash all + dedupe against DB (batches of 200)
@@ -596,7 +620,7 @@ $('#btnUpload').onclick = async () => {
     while (idx < todo.length) {
       const q = todo[idx]; const n = idx++; try {
         q.status = '처리중'; renderQueue();
-        const bmp = await loadBitmap(q.file); const big = await resizeTo(bmp, 1600, .86); const th = await resizeTo(bmp, 400, .8); bmp.close?.();
+        const bmp = await loadBitmap(q.file); const big = await resizeTo(bmp, 1600, .9); const th = await resizeTo(bmp, 640, .85); bmp.close?.();
         const meta = buildMeta(q, n);
         const dir = meta.source === 'runway' ? `runway/${meta.period}/${safeKey(meta.brand)}` : meta.source === 'market' ? `market/${meta.period}/${safeKey(meta.brand)}` : `instagram/${meta.period}`;
         const key = `${stamp}_${n}_${safeKey(stripName(q.name)).slice(0, 40)}.jpg`;
@@ -617,7 +641,7 @@ $('#btnUpload').onclick = async () => {
   renderFilters(); loadGallery(true);
 };
 function buildMeta(q, n) {
-  const p = q.parsed; const m = { source: UP_SRC, photo_no: p.no || null, is_celeb: !!q.celeb, celeb_name: q.celeb ? (q.celebName || $('#ig-celebName').value.trim() || null) : null };
+  const p = q.parsed; const m = { source: UP_SRC, photo_no: p.no || null, is_celeb: !!q.celeb, celeb_name: q.celeb ? (q.celebName || $('#ig-celebName').value.trim() || null) : null, focus_node_ids: (q.cat ?? upCat()) ? [q.cat ?? upCat()] : [] };
   if (UP_SRC === 'instagram') { m.account = (p.account || $('#ig-account').value.trim().replace(/^@/, '')) || null; m.posted_at = p.date || null; m.period = p.date ? p.date.slice(0, 7) : $('#ig-period').value; m.city = $('#ig-region').value; }
   else if (UP_SRC === 'runway') { m.period = p.season || $('#rw-season').value; m.brand = p.brand || $('#rw-brand').value.trim() || null; m.city = $('#rw-city').value; }
   else { m.period = p.date ? p.date.slice(0, 7) : $('#mk-period').value; m.posted_at = p.date || null; m.brand = p.brand || $('#mk-brand').value.trim() || null; m.product_name = p.product || $('#mk-name').value.trim() || null; m.price = +$('#mk-price').value || null; m.product_url = $('#mk-url').value.trim() || null; }
@@ -627,7 +651,7 @@ function buildMeta(q, n) {
 /* =====================================================================
    GALLERY
    ===================================================================== */
-let G = { src: 'instagram', period: '', owner: '', date: '', status: '', q: '', page: 0, items: [], sel: new Set(), facets: [] };
+let G = { src: 'instagram', period: '', owner: '', date: '', cat: null, status: '', q: '', page: 0, items: [], sel: new Set(), facets: [] };
 $('#galSrc').onclick = e => { const b = e.target.closest('button'); if (!b) return; G.src = b.dataset.s; G.period = ''; G.owner = ''; G.date = ''; $$('#galSrc button').forEach(x => x.classList.toggle('on', x === b)); renderFilters(); loadGallery(true); };
 $('#gStatus').onchange = () => { G.status = $('#gStatus').value; loadGallery(true); };
 $('#gSearch').oninput = debounce(() => { G.q = $('#gSearch').value.trim(); loadGallery(true); }, 300);
@@ -643,14 +667,18 @@ async function renderFilters() {
   for (const f of G.facets) { per[f.period] = (per[f.period] || 0) + f.photos; if (f.owner) own[f.owner] = (own[f.owner] || 0) + f.photos; tot += f.photos; an += f.analyzed; }
   const perList = Object.keys(per).sort().reverse(); const ownList = Object.entries(own).sort((a, b) => b[1] - a[1]).slice(0, 80);
   const lab = G.src === 'runway' ? '시즌' : '수집월'; const olab = G.src === 'instagram' ? '계정' : '브랜드';
-  const dateHTML = '';
+  // 카테고리(사진 focus 첫 값) 집계 — 선택된 소스·수집월 안에서
+  let cq = sb.from('tx_media').select('focus_node_ids').eq('source', G.src); if (G.period) cq = cq.eq('period', G.period); if (G.owner) cq = cq.eq(G.src === 'instagram' ? 'account' : 'brand', G.owner);
+  const { data: cd } = await cq.limit(5000); const cc = {}; (cd || []).forEach(r => { const k = (r.focus_node_ids || [])[0] || ''; cc[k] = (cc[k] || 0) + 1; });
+  const ck = Object.keys(cc).sort((a, b) => ((TAX.byId[a] || {}).sort_order ?? 1e9) - ((TAX.byId[b] || {}).sort_order ?? 1e9));
+  const dateHTML = `<div class="grp"><div class="t">카테고리</div>${ck.map(k => `<div class="it ${G.cat === k ? 'on' : ''}" data-f="cat" data-v="${esc(k)}">${k ? esc(nodeName(k)) : '미지정'}<b>${cc[k]}</b></div>`).join('')}</div>`;
   $('#filters').innerHTML = `
-    <div class="grp"><div class="t">전체</div><div class="it ${!G.period && !G.owner && !G.date ? 'on' : ''}" data-f="all">${G.src.toUpperCase()}<b>${tot} · 분석 ${an}</b></div></div>
+    <div class="grp"><div class="t">전체</div><div class="it ${!G.period && !G.owner && !G.date && G.cat === null ? 'on' : ''}" data-f="all">${G.src.toUpperCase()}<b>${tot} · 분석 ${an}</b></div></div>
     <div class="grp"><div class="t">${lab}</div>${perList.map(p => `<div class="it ${G.period === p ? 'on' : ''}" data-f="period" data-v="${esc(p)}">${esc(p)}<b>${per[p]}</b></div>`).join('')}</div>
     ${dateHTML}
     <div class="grp"><div class="t">${olab}</div>${ownList.map(([o, c]) => `<div class="it ${G.owner === o ? 'on' : ''}" data-f="owner" data-v="${esc(o)}">${esc(o)}<b>${c}</b></div>`).join('')}</div>`;
 }
-$('#filters').onclick = e => { const it = e.target.closest('.it'); if (!it) return; if (it.dataset.f === 'all') { G.period = ''; G.owner = ''; G.date = ''; } else if (it.dataset.f === 'period') { G.period = G.period === it.dataset.v ? '' : it.dataset.v; G.date = ''; } else if (it.dataset.f === 'date') G.date = G.date === it.dataset.v ? '' : it.dataset.v; else G.owner = G.owner === it.dataset.v ? '' : it.dataset.v; renderFilters(); loadGallery(true); };
+$('#filters').onclick = e => { const it = e.target.closest('.it'); if (!it) return; if (it.dataset.f === 'all') { G.period = ''; G.owner = ''; G.date = ''; G.cat = null; } else if (it.dataset.f === 'period') { G.period = G.period === it.dataset.v ? '' : it.dataset.v; G.date = ''; } else if (it.dataset.f === 'date') G.date = G.date === it.dataset.v ? '' : it.dataset.v; else if (it.dataset.f === 'cat') G.cat = G.cat === it.dataset.v ? null : it.dataset.v; else G.owner = G.owner === it.dataset.v ? '' : it.dataset.v; renderFilters(); loadGallery(true); };
 
 async function loadGallery(reset) {
   if (!sb) return;
@@ -658,6 +686,7 @@ async function loadGallery(reset) {
   let q = sb.from('tx_media').select('id,source,period,season,posted_at,account,brand,city,product_name,price,photo_no,thumb_path,storage_path,status,filename,is_celeb,celeb_name,focus_node_ids').eq('source', G.src);
   if (G.period) q = q.eq('period', G.period);
   if (G.date) q = q.eq('posted_at', G.date);
+  if (G.cat !== null) q = G.cat ? q.contains('focus_node_ids', [G.cat]) : q.eq('focus_node_ids', '{}');
   if (G.owner) q = G.src === 'instagram' ? q.eq('account', G.owner) : q.eq('brand', G.owner);
   if (G.status) q = q.eq('status', G.status);
   if (G.q) q = q.or(`account.ilike.%${G.q}%,brand.ilike.%${G.q}%,product_name.ilike.%${G.q}%,filename.ilike.%${G.q}%`);
@@ -676,7 +705,8 @@ function cellHTML(m, inCard) {
   const cap = m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b> · ${esc(m.period)} #${m.photo_no || ''}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b> · ${esc(m.city || '')} · ${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b> · ${esc(m.product_name || '')} · ${esc(m.period)}`;
   const bd = m.status === 'analyzed' ? `<span class="bd an">분석됨</span>` : m.status === 'error' ? `<span class="bd" style="color:var(--accent)">오류</span>` : '';
   const cd = inCard ? `<span class="bd cd" style="top:28px">카드</span>` : '';
-  return `<div class="cell ${G.sel.has(m.id) ? 'sel' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}" draggable="true">${m.is_celeb ? `<span class="star" style="top:auto;bottom:34px">⭐</span><span class="celeb-tag" style="bottom:34px">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="rm" data-del="${m.id}" title="이 사진 삭제">✕</span><span class="chk">${G.sel.has(m.id) ? '✓' : ''}</span>${bd}${cd}<img src="${pubUrl(m.thumb_path)}" loading="lazy" alt=""><div class="cap">${cap}</div></div>`;
+  const catb = (m.focus_node_ids || [])[0] ? `<span class="bd" style="top:34px;left:8px;right:auto;background:rgba(17,17,17,.85);color:#fff">${esc(nodeName(m.focus_node_ids[0]))}${m.focus_node_ids.length > 1 ? ' +' + (m.focus_node_ids.length - 1) : ''}</span>` : '';
+  return `<div class="cell ${G.sel.has(m.id) ? 'sel' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}" draggable="true">${m.is_celeb ? `<span class="star" style="top:auto;bottom:34px">⭐</span><span class="celeb-tag" style="bottom:34px">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="rm" data-del="${m.id}" title="이 사진 삭제">✕</span><span class="chk">${G.sel.has(m.id) ? '✓' : ''}</span>${bd}${cd}${catb}<img src="${pubUrl(m.thumb_path)}" loading="lazy" alt=""><div class="cap">${cap}</div></div>`;
 }
 $('#grid').onclick = e => {
   const cell = e.target.closest('.cell'); if (!cell) return; const id = +cell.dataset.id;
@@ -716,6 +746,7 @@ async function openLightbox(m) {
   $('#lbTitle').textContent = m.source === 'instagram' ? `@${m.account || '?'}` : `${m.brand || '?'}${m.product_name ? ' · ' + m.product_name : ''}`;
   $('#lbMeta').textContent = `${m.source} · ${m.period}${m.season && m.season !== m.period ? ' (' + m.season + ')' : ''} · ${m.posted_at || ''} · #${m.photo_no || ''} · ${m.filename || ''}`;
   fillFocusSelect($('#lbFocus'), null); $('#mLb').classList.add('on'); renderLbTags(); renderLbFocus();
+  $('#lbSrc').value = m.source; $('#lbPeriod').value = m.period || ''; $('#lbAccount').value = m.account || ''; $('#lbBrand').value = m.brand || ''; $('#lbPosted').value = m.posted_at || ''; $('#lbProduct').value = m.product_name || ''; $('#lbCat').innerHTML = catOptions((m.focus_node_ids || [])[0] || '');
 }
 async function renderLbTags() {
   const { data } = await sb.from('tx_media_tags').select('node_id,origin,confidence,dominance,focus_node_id').eq('media_id', LB.id);
@@ -745,6 +776,14 @@ $('#lbTagSearch').oninput = debounce(() => { const q = $('#lbTagSearch').value.t
 $('#lbTagHits').onclick = async e => { const c = e.target.closest('[data-ladd]'); if (!c) return; const n = TAX.byId[c.dataset.ladd]; const focus = (LB.focus_node_ids && LB.focus_node_ids[0]) || null; const { error } = await sb.from('tx_media_tags').upsert({ media_id: LB.id, node_id: n.id, origin: 'human', confidence: 1, dominance: n.facet === 'color' ? 0.5 : null, focus_node_id: focus }, { onConflict: 'media_id,node_id,origin' }); if (error) return toast(error.message, true); await sb.from('tx_media').update({ status: 'analyzed' }).eq('id', LB.id); $('#lbTagSearch').value = ''; $('#lbTagHits').innerHTML = ''; renderLbTags(); };
 $('#lbFocusChips').onclick = async e => { const x = e.target.closest('[data-lfx]'); if (!x) return; LB.focus_node_ids = (LB.focus_node_ids || []).filter(f => f !== x.dataset.lfx); await sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id); renderLbFocus(); };
 $('#lbFocusAdd').onclick = () => { const v = $('#lbFocus').value; if (!v) { toast('아래 focus 드롭다운에서 카테고리를 먼저 고르세요'); return; } const cur = LB.focus_node_ids || []; if (cur.includes(v)) return; if (cur.length >= 3) { toast('focus는 3개까지'); return; } LB.focus_node_ids = [...cur, v]; sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id).then(() => renderLbFocus()); };
+$('#lbSave').onclick = async () => {
+  const per = $('#lbPeriod').value.trim(); if (!per) return toast('수집월/시즌은 비울 수 없습니다', true);
+  const cat = $('#lbCat').value; const rest = (LB.focus_node_ids || []).slice(1).filter(f => f !== cat);   // 첫 값 = 카테고리, 나머지 focus 유지
+  const focus = (cat ? [cat, ...rest] : rest).slice(0, 3);
+  const row = { source: $('#lbSrc').value, period: per, account: $('#lbAccount').value.trim().replace(/^@/, '') || null, brand: $('#lbBrand').value.trim() || null, posted_at: $('#lbPosted').value.trim() || null, product_name: $('#lbProduct').value.trim() || null, focus_node_ids: focus };
+  const { error } = await sb.from('tx_media').update(row).eq('id', LB.id); if (error) return toast(error.message, true);
+  Object.assign(LB, row); toast('저장됨'); renderLbFocus(); renderFilters(); loadGallery(true);
+};
 $('#lbAnalyze').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, false); renderLbTags(); };
 $('#lbAnalyzeHi').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, true); renderLbTags(); };
 // 사람 수정 보호: AI 재분석이 human 행을 건드리지 않도록 analyzeOne은 origin='ai'만 교체함 (이미 그렇게 동작)
@@ -883,7 +922,7 @@ $('#cbTagSearch').oninput = debounce(() => { const q = $('#cbTagSearch').value.t
 $('#cbTagHits').onclick = e => { const c = e.target.closest('[data-add]'); if (!c) return; CB.tags.set(c.dataset.add, { origin: 'human', confirmed: true }); $('#cbTagSearch').value = ''; $('#cbTagHits').innerHTML = ''; renderCB(); };
 
 async function renderCBColors() {
-  if (!CB || !CB.id) { $('#cbColors').innerHTML = '<span class="mute small">저장 + 분석 후 자동</span>'; return; }
+  if (!CB || !CB.id) { $('#cbColors').innerHTML = '<span class="mute small">저장 후 분석하면 자동</span>'; return; }
   const { data } = await sb.from('tx_v_entry_colors').select('*').eq('entry_id', CB.id).order('weight', { ascending: false }).limit(5);
   if (!data || !data.length) { $('#cbColors').innerHTML = '<span class="mute small">분석 대기</span>'; return; }
   const tot = data.reduce((s, c) => s + +c.weight, 0);
