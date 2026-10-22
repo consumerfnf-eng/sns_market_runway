@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TAXONOMY AGENT · admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{
+  /* FS 팔레트: 흰 배경 · 연회색 카드 · 주황 Pick */
+  --paper:#ffffff; --card:#f4f4f2; --ink:#111111; --mute:#6f6f6f; --line:#e6e6e3; --soft:#e9e9e6;
+  --accent:#f05a1e; --accent-soft:#fde6dc; --ok:#2c7a4b; --ok-soft:#e3f2e8; --warn:#9a6b00; --warn-soft:#fff3d6;
+  --r:12px; --fs:13px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:var(--fs)/1.5 -apple-system,"Pretendard","Noto Sans KR",Segoe UI,Helvetica,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px}
+button:hover{border-color:#bbb}
+button.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.acc{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.sm{padding:3px 9px;font-size:12px;border-radius:6px}
+button:disabled{opacity:.45;cursor:default}
+input[type=text],input[type=month],input[type=number],input[type=password],select,textarea{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #ddd6c5;outline-offset:0}
+textarea{resize:vertical}
+header{display:flex;align-items:center;gap:18px;padding:12px 22px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20}
+header .logo{font-weight:800;letter-spacing:.04em}
+header .logo small{font-weight:500;color:var(--mute);margin-left:6px}
+header nav{display:flex;gap:4px}
+header nav button{border:none;background:none;padding:6px 10px;border-radius:8px;color:var(--mute);font-weight:600}
+header nav button.on{background:var(--soft);color:var(--ink)}
+header .sp{flex:1}
+header .ver{color:var(--mute);font-size:11px}
+main{padding:18px 22px 80px;max-width:1500px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+.panel{background:var(--card);border-radius:var(--r);padding:16px}
+.pv,.cell,.card,.box{border-color:transparent}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mute)}
+.row>label>*{font-size:13px;color:var(--ink)}
+h2{font-size:15px;margin:0 0 10px}
+h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.mute{color:var(--mute)}.small{font-size:11px}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:2px 9px;font-size:11px;white-space:nowrap}
+.chip.ai{background:#fff;border-style:dashed}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.acc{background:var(--accent-soft);border-color:#f0c9bb;color:var(--accent)}
+.chip .x{cursor:pointer;opacity:.6}.chip .x:hover{opacity:1}
+.src-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.src-tabs button{border:none;background:none;border-radius:0;padding:8px 12px;border-bottom:2px solid transparent;color:var(--mute);font-weight:600}
+.src-tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+/* upload */
+.drop{border:2px dashed #cfc9bb;border-radius:var(--r);padding:28px;text-align:center;color:var(--mute);background:#fbfaf7;margin:12px 0}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.pv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pv{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:11px}
+.pv img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
+.pv .f{padding:6px 7px;display:grid;gap:3px}
+.pv input{padding:2px 5px;font-size:11px;border-radius:5px;width:100%}
+.pv .st{color:var(--mute)}.pv.dup{opacity:.5}.pv.err .st{color:var(--accent)}.pv.done .st{color:var(--ok)}
+.prog{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:10px 0}
+.prog i{display:block;height:100%;background:var(--ink);width:0;transition:width .2s}
+/* gallery */
+.gal{display:grid;grid-template-columns:230px 1fr;gap:16px}
+.filters{position:sticky;top:64px;align-self:start;max-height:calc(100vh - 80px);overflow:auto}
+.filters .grp{margin-bottom:12px}
+.filters .grp .t{font-size:11px;color:var(--mute);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+.filters .it{display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:6px;cursor:pointer;font-size:12px}
+.filters .it:hover{background:var(--soft)}.filters .it.on{background:var(--ink);color:#fff}
+.filters .it b{font-weight:500;opacity:.6;font-size:11px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.cell{position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer}
+.cell img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
+.cell .cap{padding:6px 8px;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .cap b{color:var(--ink);font-weight:600}
+.cell .chk{position:absolute;top:8px;left:8px;width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.9);border:1px solid #bbb;display:flex;align-items:center;justify-content:center;font-size:12px}
+.cell.sel{outline:3px solid var(--accent)}.cell.sel .chk{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell .bd{position:absolute;top:8px;right:8px;font-size:10px;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.92)}
+.cell .bd.an{color:var(--ok)}.cell .bd.cd{color:var(--accent)}
+.cell .grp-head{position:absolute;left:0;right:0;bottom:30px;background:rgba(0,0,0,.4);color:#fff;font-size:10px;padding:2px 8px}
+.selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:var(--ink);color:#fff;border-radius:999px;padding:8px 10px 8px 18px;display:none;gap:8px;align-items:center;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.selbar.on{display:flex}
+.selbar button{background:#fff;color:var(--ink);border:none}
+.selbar button.acc{background:var(--accent);color:#fff}
+.gbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(20,18,14,.55);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:30px 16px}
+.modal.on{display:flex}
+.box{background:var(--card);border-radius:16px;width:min(1100px,100%);padding:20px;position:relative}
+.box .close{position:absolute;top:12px;right:12px}
+.cb-grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
+.cb-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.cb-photos .p{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent}
+.cb-photos .p img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.cb-photos .p.cover{border-color:var(--accent)}
+.cb-photos .p .n{position:absolute;top:4px;left:4px;background:var(--accent);color:#fff;font-size:10px;padding:0 6px;border-radius:999px}
+.cb-photos .p .ac{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:10px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.field{display:grid;gap:4px;margin-bottom:10px}
+.field>span{font-size:11px;color:var(--mute)}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.ev{display:grid;grid-template-columns:90px 1fr 1fr 1fr 24px;gap:5px;margin-bottom:5px}
+.ev input,.ev select{padding:4px 6px;font-size:12px}
+.sec{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px}
+.sec .ph{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.sec .ph img{width:44px;aspect-ratio:3/4;object-fit:cover;border-radius:4px;border:2px solid transparent;cursor:pointer}
+.sec .ph img.on{border-color:var(--accent)}
+/* lightbox */
+.lb-grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+.lb-grid img{width:100%;border-radius:10px;background:#eee}
+.tagrow{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 10px}
+.sw{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 8px 2px 3px;font-size:11px;background:#fff}
+.sw i{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.1)}
+/* cards list */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.card .imgs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:8px 0}
+.card .imgs img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;background:#eee}
+.card h4{margin:6px 0 2px;font-size:14px}
+.card .st{font-size:11px;color:var(--mute)}
+.toast{position:fixed;top:70px;right:20px;background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-size:12px;z-index:60;display:none;max-width:420px}
+.toast.on{display:block}
+.toast.err{background:var(--accent)}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:8px 12px;align-items:center;max-width:720px}
+.cascade{display:flex;gap:6px;flex-wrap:wrap}
+.cascade select{font-size:12px;padding:4px 6px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">TAXONOMY AGENT<small>admin</small></div>
+  <nav>
+    <button data-v="upload" class="on">업로드</button>
+    <button data-v="gallery">갤러리</button>
+    <button data-v="cards">카드</button>
+    <button data-v="settings">설정</button>
+  </nav>
+  <div class="sp"></div>
+  <span class="mute small" id="who"></span>
+  <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
+  <span class="ver" id="ver">v261022-02</span>
+</header>
+
+<main>
+<!-- ================= UPLOAD ================= -->
+<section class="view on" id="v-upload">
+  <div class="panel">
+    <div class="src-tabs" id="upSrc">
+      <button data-s="instagram" class="on">INSTAGRAM</button>
+      <button data-s="runway">RUNWAY</button>
+      <button data-s="market">MARKET</button>
+    </div>
+
+    <div class="row" id="upf-instagram">
+      <label>수집월 (파일명 날짜가 있으면 자동)<input type="month" id="ig-period"></label>
+      <label>계정 기본값 (파일명에서 못 읽을 때)<input type="text" id="ig-account" placeholder="@account"></label>
+      <label>시장<select id="ig-region"><option>GLOBAL</option><option>KR</option><option>CN</option><option>JP</option></select></label>
+      <span class="mute small">파일명 규칙 <code>계정_YYYYMMDD_번호.jpg</code> → 계정·날짜·번호 자동. 같은 계정+날짜 = 한 게시물</span>
+    </div>
+    <div class="row" id="upf-runway" style="display:none">
+      <label>시즌<select id="rw-season"></select></label>
+      <label>도시<select id="rw-city"><option>Paris</option><option>Milan</option><option>London</option><option>New York</option><option>Copenhagen</option><option>Seoul</option><option>Shanghai</option><option>Tokyo</option><option>Other</option></select></label>
+      <label>브랜드 기본값<input type="text" id="rw-brand" placeholder="파일명에서 자동 추출"></label>
+      <span class="mute small">파일명 <code>Brand_Name_27SS_12.jpg</code> 또는 <code>Brand_Name_12.jpg</code> → 브랜드·시즌·번호</span>
+    </div>
+    <div class="row" id="upf-market" style="display:none">
+      <label>수집월<input type="month" id="mk-period"></label>
+      <label>브랜드<input type="text" id="mk-brand" placeholder="MLB"></label>
+      <label>품명<input type="text" id="mk-name" placeholder="선택"></label>
+      <label>가격<input type="number" id="mk-price" placeholder="원"></label>
+      <label>상품 URL<input type="text" id="mk-url" placeholder="https://" style="width:260px"></label>
+      <span class="mute small">파일명 <code>MLB_품번_20261003.jpg</code> → 브랜드·품명·날짜</span>
+    </div>
+
+    <div class="drop" id="drop">사진을 여기에 끌어다 놓거나 클릭 · Ctrl+V 붙여넣기 가능<br><span class="small">브라우저에서 1600px 원본 + 400px 썸네일로 리사이즈 후 업로드 (10만 장 대비)</span>
+      <input type="file" id="file" multiple accept="image/*" style="display:none"></div>
+    <div class="row">
+      <button class="pri" id="btnUpload" disabled>업로드</button>
+      <button id="btnClear">목록 비우기</button>
+      <span id="upStat" class="mute small"></span>
+    </div>
+    <div class="prog"><i id="upProg"></i></div>
+    <div class="pv-grid" id="pv"></div>
+  </div>
+</section>
+
+<!-- ================= GALLERY ================= -->
+<section class="view" id="v-gallery">
+  <div class="src-tabs" id="galSrc">
+    <button data-s="instagram" class="on">INSTAGRAM</button>
+    <button data-s="runway">RUNWAY</button>
+    <button data-s="market">MARKET</button>
+  </div>
+  <div class="gal">
+    <aside class="filters panel" id="filters"></aside>
+    <div>
+      <div class="gbar">
+        <select id="gStatus"><option value="">전체</option><option value="new">미분석</option><option value="analyzed">분석됨</option></select>
+        <input type="text" id="gSearch" placeholder="계정 / 브랜드 / 품명 검색" style="width:220px">
+        <button class="sm" id="gSelAll">화면 전체 선택</button>
+        <button class="sm" id="gSelNone">선택 해제</button>
+        <span class="sp" style="flex:1"></span>
+        <span class="mute small" id="gCount"></span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div style="text-align:center;margin:16px"><button id="gMore">더 보기</button></div>
+    </div>
+  </div>
+  <div class="selbar" id="selbar">
+    <span id="selN">0장 선택</span>
+    <button class="acc" id="selCard">카드 만들기</button>
+    <button id="selAdd">기존 카드에 추가</button>
+    <button id="selAnalyze">분석 실행</button>
+    <button id="selDel">삭제</button>
+  </div>
+</section>
+
+<!-- ================= CARDS ================= -->
+<section class="view" id="v-cards">
+  <div class="gbar">
+    <select id="cSrc"><option value="">전체 소스</option><option value="instagram">INSTAGRAM</option><option value="runway">RUNWAY</option><option value="market">MARKET</option></select>
+    <input type="text" id="cSearch" placeholder="타이틀 검색" style="width:220px">
+    <span style="flex:1"></span>
+    <span class="mute small" id="cCount"></span>
+  </div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<!-- ================= SETTINGS ================= -->
+<section class="view" id="v-settings">
+  <div class="panel">
+    <h2>연결</h2>
+    <div class="kv">
+      <span class="mute">Supabase URL</span><code id="sUrl"></code>
+      <span class="mute">anon key</span><input type="password" id="sAnon" placeholder="파일에 박혀 있지 않으면 여기 입력 (이 브라우저에 저장)">
+      <span class="mute">작성자</span><select id="sAuthor"><option>jisoo</option><option>jin</option><option>sohee</option></select>
+      <span></span><button class="pri" id="sSaveConn">저장 후 다시 연결</button>
+    </div>
+    <h2 style="margin-top:22px">AI 분석 (팀 공용 · tx_config)</h2>
+    <div class="kv">
+      <span class="mute">OpenAI API key</span><input type="password" id="sOpenai" placeholder="sk-...">
+      <span class="mute">기본 모델</span><input type="text" id="sModel" placeholder="gpt-6-luna">
+      <span class="mute">승격 모델 (대표 사진 소재·디테일)</span><input type="text" id="sModelHi" placeholder="gpt-6.1-sol">
+      <span class="mute">프롬프트 버전</span><input type="text" id="sPromptV" placeholder="v1">
+      <span></span><button class="pri" id="sSaveAi">저장</button>
+    </div>
+    <h2 style="margin-top:22px">시즌 경계 (tx_seasons)</h2>
+    <div id="sSeasons" class="small mute"></div>
+    <h2 style="margin-top:22px">Storage 휴지통</h2>
+    <div class="row"><span id="trashN" class="mute small"></span><button id="btnTrash">휴지통 비우기</button></div>
+    <h2 style="margin-top:22px">상태</h2>
+    <div id="sStat" class="small mute"></div>
+  </div>
+</section>
+</main>
+
+<!-- ============ CARD BUILDER MODAL ============ -->
+<div class="modal" id="mCard">
+  <div class="box">
+    <button class="close sm" data-close="mCard">✕</button>
+    <h2 id="cbTitle">카드 만들기</h2>
+    <div class="cb-grid">
+      <div>
+        <div class="field"><span>타이틀 (예: Jersey Capri Pants · Neon Top) — 입력하면 분류체계 칩이 제안됩니다</span>
+          <input type="text" id="cbName" placeholder="타이틀" style="font-size:16px;font-weight:600"></div>
+        <div class="field"><span>Focus 카테고리 (분석·컬러칩 기준)</span>
+          <div class="cascade"><select id="cbGroup"></select><select id="cbCat"></select><span class="small mute" id="cbFocusHint"></span></div></div>
+        <div class="field"><span>분류체계 태그 — 점선 칩은 제안(클릭하면 확정), 진한 칩은 확정</span>
+          <div class="chips" id="cbTags"></div>
+          <div class="row" style="margin-top:6px"><input type="text" id="cbTagSearch" placeholder="태그 검색해서 추가 (영문)" style="width:260px"><div class="chips" id="cbTagHits"></div></div></div>
+        <div class="field"><span>설명 (2줄)</span><textarea id="cbDesc" rows="2"></textarea></div>
+        <div class="field"><span>특징 #해시태그 (팀 자유어, 쉼표·엔터로 추가)</span>
+          <div class="chips" id="cbHash"></div><input type="text" id="cbHashIn" placeholder="#홀터넥 #팝컬러"></div>
+        <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨 / 값 / URL·날짜</span>
+          <div id="cbEv"></div><button class="sm" id="cbEvAdd">+ 근거 추가</button></div>
+        <div class="field"><span>소제목 섹션 (없으면 추가 사진이 자동으로 4장 그리드)</span>
+          <div id="cbSecs"></div><button class="sm" id="cbSecAdd">+ 소제목 추가</button></div>
+        <div class="row">
+          <label>소스<select id="cbSource"><option value="instagram">INSTAGRAM</option><option value="runway">RUNWAY</option><option value="market">MARKET</option></select></label>
+          <label>기간<input type="text" id="cbPeriod" placeholder="2026-10 또는 27SS" style="width:110px"></label>
+          <label>First spotted<input type="text" id="cbFirst" placeholder="2026-09" style="width:90px"></label>
+          <label><span>Editor's Pick</span><input type="checkbox" id="cbPick"></label>
+        </div>
+      </div>
+      <div>
+        <div class="field"><span>사진 <b id="cbPhotoN"></b> · 클릭해서 대표 지정 (최대 3)</span>
+          <div class="cb-photos" id="cbPhotos"></div></div>
+        <div class="field"><span>컬러칩 (focus 아이템, 분석 후 자동)</span><div class="chips" id="cbColors"><span class="mute small">분석 대기</span></div></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end">
+      <span id="cbStat" class="mute small" style="flex:1"></span>
+      <button id="cbDelete" class="sm" style="display:none">카드 삭제</button>
+      <button id="cbSave" class="pri">저장</button>
+      <button id="cbSaveAn" class="acc">저장 + 분석 실행</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LIGHTBOX ============ -->
+<div class="modal" id="mLb">
+  <div class="box">
+    <button class="close sm" data-close="mLb">✕</button>
+    <div class="lb-grid">
+      <div><img id="lbImg" alt=""></div>
+      <div>
+        <h2 id="lbTitle"></h2>
+        <div class="small mute" id="lbMeta"></div>
+        <h3>분석 결과</h3>
+        <div id="lbTags"><span class="mute small">아직 분석 안 됨</span></div>
+        <div class="row" style="margin-top:12px">
+          <label>focus<select id="lbFocus"></select></label>
+          <button class="sm" id="lbAnalyze">분석</button>
+          <button class="sm" id="lbAnalyzeHi">승격 모델로 분석</button>
+          <button class="sm" id="lbDel">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADD TO EXISTING ============ -->
+<div class="modal" id="mPick">
+  <div class="box" style="width:min(640px,100%)">
+    <button class="close sm" data-close="mPick">✕</button>
+    <h2>기존 카드에 추가</h2>
+    <input type="text" id="pkSearch" placeholder="타이틀 검색" style="width:100%;margin-bottom:8px">
+    <div id="pkList" style="max-height:50vh;overflow:auto"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   TAXONOMY AGENT · admin.html  v261022-02
+   - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
+   - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
+   - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
+   ===================================================================== */
+const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
+const SUPA_ANON = '';           // 팀 배포 시 여기에 anon key 입력. 비어 있으면 설정 탭 입력값(localStorage) 사용
+const BUCKET = 'tx-images';
+const VER = 'v261022-02';
+const PAGE = 60;
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast = (m, err) => { const t = $('#toast'); t.textContent = m; t.className = 'toast on' + (err ? ' err' : ''); clearTimeout(t._t); t._t = setTimeout(() => t.className = 'toast', err ? 6000 : 2500); };
+const pubUrl = p => `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${p}`;
+const thisMonth = () => new Date().toISOString().slice(0, 7);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+let sb = null;
+let TAX = { nodes: [], byId: {}, children: {}, terms: [] };
+let SEASONS = [];
+let CFG = {};
+let LIB = null;           // Archroma rows (lab)
+let AUTHOR = localStorage.getItem('tx_author') || 'jisoo';
+
+/* ---------------- connect ---------------- */
+function connect() {
+  const key = SUPA_ANON || localStorage.getItem('tx_anon') || '';
+  $('#sUrl').textContent = SUPA_URL;
+  $('#sAuthor').value = AUTHOR; $('#who').textContent = AUTHOR;
+  if (!key) { toast('설정 탭에서 anon key를 입력하세요', true); showView('settings'); return false; }
+  sb = window.supabase.createClient(SUPA_URL, key);
+  return true;
+}
+async function boot() {
+  if (!connect()) return;
+  try {
+    await Promise.all([loadTaxonomy(), loadSeasons(), loadConfig()]);
+    fillSeasonSelects(); fillCascade();
+    $('#ig-period').value = thisMonth(); $('#mk-period').value = thisMonth();
+    renderFilters(); loadGallery(true);
+    $('#sStat').textContent = `분류체계 ${TAX.nodes.length}개 노드 · 시즌 ${SEASONS.map(s => s.code).join(' ')}`;
+  } catch (e) { console.error(e); toast('연결 실패: ' + e.message, true); }
+}
+async function loadTaxonomy() {
+  const { data, error } = await sb.from('tx_taxonomy_nodes').select('id,facet,kind,parent_id,name_en,name_ko,aliases,origin,canonical_id,hex,active,sort_order,meta').eq('active', true).order('sort_order').limit(5000);
+  if (error) throw error;
+  TAX.nodes = data; TAX.byId = {}; TAX.children = {}; TAX.terms = [];
+  for (const n of data) { TAX.byId[n.id] = n; (TAX.children[n.parent_id || ''] ||= []).push(n); }
+  for (const n of data) {
+    if (n.canonical_id) continue;
+    TAX.terms.push({ term: n.name_en.toLowerCase(), id: n.id });
+    for (const a of (n.aliases || [])) TAX.terms.push({ term: a.toLowerCase(), id: n.id });
+  }
+  TAX.terms.sort((a, b) => b.term.length - a.term.length);
+}
+async function loadSeasons() { const { data } = await sb.from('tx_seasons').select('*').order('sort_order'); SEASONS = data || []; $('#sSeasons').innerHTML = SEASONS.map(s => `${s.code} = ${s.month_from} ~ ${s.month_to}`).join(' · ') || '(없음 — 04_config.sql 확인)'; }
+async function loadConfig() {
+  const { data } = await sb.from('tx_config').select('*'); CFG = {}; (data || []).forEach(r => CFG[r.key] = r.value);
+  $('#sOpenai').value = CFG.openai_key || ''; $('#sModel').value = CFG.model_default || 'gpt-6-luna'; $('#sModelHi').value = CFG.model_hi || 'gpt-6.1-sol'; $('#sPromptV').value = CFG.prompt_version || 'v1';
+  const { count } = await sb.from('tx_storage_trash').select('*', { count: 'exact', head: true }); $('#trashN').textContent = `대기 ${count || 0}건`;
+}
+function fillSeasonSelects() {
+  const opts = SEASONS.map(s => `<option>${s.code}</option>`).join('');
+  $('#rw-season').innerHTML = opts; const cur = seasonOf(thisMonth()); if (cur) $('#rw-season').value = cur;
+}
+const seasonOf = m => (SEASONS.find(s => m >= s.month_from && m <= s.month_to) || {}).code || null;
+const catOf = id => { let n = TAX.byId[id]; while (n && n.kind !== 'category' && n.parent_id) n = TAX.byId[n.parent_id]; return n && n.kind === 'category' ? n : null; };
+const nodeName = id => (TAX.byId[id] || {}).name_en || id;
+
+/* ---------------- views ---------------- */
+function showView(v) { $$('header nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v)); if (v === 'cards') loadCards(); if (v === 'gallery') { renderFilters(); } }
+$$('header nav button').forEach(b => b.onclick = () => showView(b.dataset.v));
+$$('[data-close]').forEach(b => b.onclick = () => $('#' + b.dataset.close).classList.remove('on'));
+
+/* =====================================================================
+   UPLOAD
+   ===================================================================== */
+let UP_SRC = 'instagram';
+let QUEUE = [];   // {file, name, parsed:{account,date,no,brand,season,product}, url, status, hash}
+$('#upSrc').onclick = e => { const b = e.target.closest('button'); if (!b) return; UP_SRC = b.dataset.s; $$('#upSrc button').forEach(x => x.classList.toggle('on', x === b)); ['instagram', 'runway', 'market'].forEach(s => $('#upf-' + s).style.display = s === UP_SRC ? '' : 'none'); QUEUE.forEach(q => q.parsed = parseName(q.name, UP_SRC)); renderQueue(); };
+
+// ---- filename parsing
+const SEASON_RE = /^(\d{2})(SS|FW|AW|PF|RE)$/i;
+function stripName(n) { return n.replace(/\.[a-z0-9]+$/i, '').replace(/\s*\(\d+\)\s*$/, '').replace(/\s+-\s*\d+$/, '').trim(); }
+function parseName(name, src) {
+  const base = stripName(name); const tok = base.split('_').filter(Boolean); const p = {};
+  if (src === 'instagram') {
+    let t = [...tok];
+    if (t.length && /^\d{1,3}$/.test(t[t.length - 1])) p.no = +t.pop();
+    if (t.length && /^\d{8}$/.test(t[t.length - 1])) { const d = t.pop(); p.date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`; }
+    if (!p.no) p.no = 1;
+    p.account = p.date ? (t.join('_') || null) : null;   // 날짜가 없는 파일명(IMG_3321)은 규칙 밖 → 계정 기본값 사용
+  } else if (src === 'runway') {
+    let t = [...tok]; const si = t.findIndex(x => SEASON_RE.test(x));
+    if (si >= 0) { p.season = t[si].toUpperCase().replace('AW', 'FW'); const rest = t.slice(si + 1); t = t.slice(0, si); if (rest.length && /^\d{1,3}$/.test(rest[0])) p.no = +rest[0]; }
+    else if (t.length && /^\d{1,3}$/.test(t[t.length - 1])) p.no = +t.pop();
+    p.brand = brandFromTokens(t);
+  } else {
+    let t = [...tok]; const di = t.findIndex(x => /^\d{8}$/.test(x));
+    if (di >= 0) { const d = t[di]; p.date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`; t.splice(di, 1); }
+    if (t.length && /^\d{1,3}$/.test(t[t.length - 1])) p.no = +t.pop();
+    p.brand = t.shift() || null; p.product = t.join(' ') || null;
+  }
+  return p;
+}
+const CONNECT = new Set(['de', 'des', 'van', 'der', 'di', 'da', 'la', 'le', 'el', 'du', 'von', 'of', 'and', 'the', 'den', 'ten', 'op', '&']);
+function brandFromTokens(t) {
+  t = t.filter(x => !/^\d+$/.test(x)); const out = [];
+  for (const x of t) { if (/^[A-Z0-9]/.test(x) || CONNECT.has(x.toLowerCase()) || out.length === 0) out.push(x); else break; }
+  return (out.length ? out : t).join(' ').replace(/-/g, ' ').trim() || null;
+}
+
+// ---- drop / paste
+const drop = $('#drop');
+drop.onclick = () => $('#file').click();
+$('#file').onchange = e => addFiles([...e.target.files]);
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); };
+document.addEventListener('paste', e => { if (!$('#v-upload').classList.contains('on')) return; const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/')); if (fs.length) addFiles(fs.map((f, i) => new File([f], f.name && f.name !== 'image.png' ? f.name : `paste_${Date.now()}_${i + 1}.png`, { type: f.type }))); });
+function addFiles(files) {
+  files = files.filter(f => f.type.startsWith('image/'));
+  for (const f of files) QUEUE.push({ file: f, name: f.name, parsed: parseName(f.name, UP_SRC), url: URL.createObjectURL(f), status: '대기' });
+  renderQueue();
+}
+function renderQueue() {
+  $('#btnUpload').disabled = !QUEUE.some(q => q.status === '대기');
+  $('#upStat').textContent = QUEUE.length ? `${QUEUE.length}장 · 대기 ${QUEUE.filter(q => q.status === '대기').length}` : '';
+  $('#pv').innerHTML = QUEUE.map((q, i) => {
+    const p = q.parsed; let fields = '';
+    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD"><input data-k="no" value="${p.no || ''}" placeholder="#">`;
+    else if (UP_SRC === 'runway') fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="season" value="${esc(p.season || '')}" placeholder="시즌(비면 상단값)"><input data-k="no" value="${p.no || ''}" placeholder="#">`;
+    else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD">`;
+    const cls = q.status === '중복' ? 'dup' : q.status.startsWith('오류') ? 'err' : q.status === '완료' ? 'done' : '';
+    return `<div class="pv ${cls}" data-i="${i}"><img src="${q.url}" loading="lazy"><div class="f">${fields}<div class="st" title="${esc(q.name)}">${esc(q.status)} · ${esc(q.name)}</div></div></div>`;
+  }).join('');
+}
+$('#pv').oninput = e => { const inp = e.target.closest('input'); if (!inp) return; const i = +inp.closest('.pv').dataset.i; let v = inp.value.trim(); if (inp.dataset.k === 'no') v = +v || null; QUEUE[i].parsed[inp.dataset.k] = v || null; };
+$('#btnClear').onclick = () => { QUEUE.forEach(q => URL.revokeObjectURL(q.url)); QUEUE = []; renderQueue(); $('#upProg').style.width = '0'; };
+
+// ---- image processing
+async function loadBitmap(file) { try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { return await createImageBitmap(file); } }
+function resizeTo(bmp, max, q) {
+  const s = Math.min(1, max / Math.max(bmp.width, bmp.height)); const w = Math.round(bmp.width * s), h = Math.round(bmp.height * s);
+  const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  return new Promise(r => c.toBlob(b => r({ blob: b, w, h }), 'image/jpeg', q));
+}
+async function sha256(buf) { const h = await crypto.subtle.digest('SHA-256', buf); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); }
+const safeKey = s => String(s || '').normalize('NFKD').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'x';
+
+// ---- upload run
+$('#btnUpload').onclick = async () => {
+  if (!sb) return; const items = QUEUE.filter(q => q.status === '대기'); if (!items.length) return;
+  $('#btnUpload').disabled = true; let done = 0; const total = items.length; const t0 = Date.now();
+  const prog = () => { $('#upProg').style.width = (done / total * 100) + '%'; $('#upStat').textContent = `${done}/${total} · ${Math.round((Date.now() - t0) / 1000)}s`; };
+  // 1) hash all + dedupe against DB (batches of 200)
+  for (const q of items) { q.hash = await sha256(await q.file.arrayBuffer()); }
+  const seen = new Set();
+  for (let i = 0; i < items.length; i += 200) {
+    const hs = items.slice(i, i + 200).map(q => q.hash);
+    const { data } = await sb.from('tx_media').select('hash').in('hash', hs); (data || []).forEach(r => seen.add(r.hash));
+  }
+  for (const q of items) { if (seen.has(q.hash)) q.status = '중복'; else if (items.filter(x => x.hash === q.hash)[0] !== q) q.status = '중복'; }
+  renderQueue();
+  // 2) process + upload with concurrency 4, insert in batches
+  const todo = items.filter(q => q.status === '대기'); let rows = []; let idx = 0; const stamp = Date.now();
+  const flush = async () => { if (!rows.length) return; const { error } = await sb.from('tx_media').insert(rows); if (error) { rows.forEach(r => { const q = todo.find(x => x.hash === r.hash); if (q) q.status = '오류 DB ' + error.message; }); } rows = []; renderQueue(); };
+  const worker = async () => {
+    while (idx < todo.length) {
+      const q = todo[idx]; const n = idx++; try {
+        q.status = '처리중'; renderQueue();
+        const bmp = await loadBitmap(q.file); const big = await resizeTo(bmp, 1600, .86); const th = await resizeTo(bmp, 400, .8); bmp.close?.();
+        const meta = buildMeta(q, n);
+        const dir = meta.source === 'runway' ? `runway/${meta.period}/${safeKey(meta.brand)}` : meta.source === 'market' ? `market/${meta.period}/${safeKey(meta.brand)}` : `instagram/${meta.period}`;
+        const key = `${stamp}_${n}_${safeKey(stripName(q.name)).slice(0, 40)}.jpg`;
+        const path = `${dir}/${key}`, thumb = `thumbs/${dir}/${key}`;
+        let r = await sb.storage.from(BUCKET).upload(path, big.blob, { contentType: 'image/jpeg', upsert: false }); if (r.error) throw r.error;
+        r = await sb.storage.from(BUCKET).upload(thumb, th.blob, { contentType: 'image/jpeg', upsert: false }); if (r.error) throw r.error;
+        rows.push({ ...meta, filename: q.name, storage_path: path, thumb_path: thumb, hash: q.hash, width: big.w, height: big.h, bytes: big.blob.size, author: AUTHOR });
+        q.status = '완료';
+      } catch (e) { q.status = '오류 ' + (e.message || e); }
+      done++; prog(); if (rows.length >= 50) await flush();
+    }
+  };
+  await Promise.all([worker(), worker(), worker(), worker()]); await flush(); prog();
+  toast(`업로드 완료 ${todo.filter(q => q.status === '완료').length}장 · 중복 ${items.filter(q => q.status === '중복').length} · 오류 ${todo.filter(q => q.status.startsWith('오류')).length}`);
+  renderQueue(); renderFilters(); loadGallery(true);
+};
+function buildMeta(q, n) {
+  const p = q.parsed; const m = { source: UP_SRC, photo_no: p.no || null };
+  if (UP_SRC === 'instagram') { m.account = (p.account || $('#ig-account').value.trim().replace(/^@/, '')) || null; m.posted_at = p.date || null; m.period = p.date ? p.date.slice(0, 7) : $('#ig-period').value; m.city = $('#ig-region').value; }
+  else if (UP_SRC === 'runway') { m.period = p.season || $('#rw-season').value; m.brand = p.brand || $('#rw-brand').value.trim() || null; m.city = $('#rw-city').value; }
+  else { m.period = p.date ? p.date.slice(0, 7) : $('#mk-period').value; m.posted_at = p.date || null; m.brand = p.brand || $('#mk-brand').value.trim() || null; m.product_name = p.product || $('#mk-name').value.trim() || null; m.price = +$('#mk-price').value || null; m.product_url = $('#mk-url').value.trim() || null; }
+  return m;
+}
+
+/* =====================================================================
+   GALLERY
+   ===================================================================== */
+let G = { src: 'instagram', period: '', owner: '', status: '', q: '', page: 0, items: [], sel: new Set(), facets: [] };
+$('#galSrc').onclick = e => { const b = e.target.closest('button'); if (!b) return; G.src = b.dataset.s; G.period = ''; G.owner = ''; $$('#galSrc button').forEach(x => x.classList.toggle('on', x === b)); renderFilters(); loadGallery(true); };
+$('#gStatus').onchange = () => { G.status = $('#gStatus').value; loadGallery(true); };
+$('#gSearch').oninput = debounce(() => { G.q = $('#gSearch').value.trim(); loadGallery(true); }, 300);
+$('#gMore').onclick = () => loadGallery(false);
+$('#gSelAll').onclick = () => { G.items.forEach(m => G.sel.add(m.id)); paintSel(); };
+$('#gSelNone').onclick = () => { G.sel.clear(); paintSel(); };
+function debounce(f, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), ms); }; }
+
+async function renderFilters() {
+  if (!sb) return;
+  const { data } = await sb.from('tx_v_gallery_facets').select('*').eq('source', G.src).limit(5000); G.facets = data || [];
+  const per = {}, own = {}; let tot = 0, an = 0;
+  for (const f of G.facets) { per[f.period] = (per[f.period] || 0) + f.photos; if (f.owner) own[f.owner] = (own[f.owner] || 0) + f.photos; tot += f.photos; an += f.analyzed; }
+  const perList = Object.keys(per).sort().reverse(); const ownList = Object.entries(own).sort((a, b) => b[1] - a[1]).slice(0, 80);
+  const lab = G.src === 'runway' ? '시즌' : '수집월'; const olab = G.src === 'instagram' ? '계정' : '브랜드';
+  $('#filters').innerHTML = `
+    <div class="grp"><div class="t">전체</div><div class="it ${!G.period && !G.owner ? 'on' : ''}" data-f="all">${G.src.toUpperCase()}<b>${tot} · 분석 ${an}</b></div></div>
+    <div class="grp"><div class="t">${lab}</div>${perList.map(p => `<div class="it ${G.period === p ? 'on' : ''}" data-f="period" data-v="${esc(p)}">${esc(p)}<b>${per[p]}</b></div>`).join('')}</div>
+    <div class="grp"><div class="t">${olab}</div>${ownList.map(([o, c]) => `<div class="it ${G.owner === o ? 'on' : ''}" data-f="owner" data-v="${esc(o)}">${esc(o)}<b>${c}</b></div>`).join('')}</div>`;
+}
+$('#filters').onclick = e => { const it = e.target.closest('.it'); if (!it) return; if (it.dataset.f === 'all') { G.period = ''; G.owner = ''; } else if (it.dataset.f === 'period') G.period = G.period === it.dataset.v ? '' : it.dataset.v; else G.owner = G.owner === it.dataset.v ? '' : it.dataset.v; renderFilters(); loadGallery(true); };
+
+async function loadGallery(reset) {
+  if (!sb) return;
+  if (reset) { G.page = 0; G.items = []; $('#grid').innerHTML = ''; }
+  let q = sb.from('tx_media').select('id,source,period,season,posted_at,account,brand,city,product_name,price,photo_no,thumb_path,storage_path,status,filename').eq('source', G.src);
+  if (G.period) q = q.eq('period', G.period);
+  if (G.owner) q = G.src === 'instagram' ? q.eq('account', G.owner) : q.eq('brand', G.owner);
+  if (G.status) q = q.eq('status', G.status);
+  if (G.q) q = q.or(`account.ilike.%${G.q}%,brand.ilike.%${G.q}%,product_name.ilike.%${G.q}%,filename.ilike.%${G.q}%`);
+  if (G.src === 'instagram') q = q.order('posted_at', { ascending: false, nullsFirst: false }).order('account').order('photo_no'); else q = q.order('period', { ascending: false }).order('brand').order('photo_no');
+  q = q.order('id', { ascending: false }).range(G.page * PAGE, G.page * PAGE + PAGE - 1);
+  const { data, error } = await q; if (error) { toast(error.message, true); return; }
+  // which are in cards
+  const ids = (data || []).map(m => m.id); let inCard = new Set();
+  if (ids.length) { const { data: em } = await sb.from('tx_entry_media').select('media_id').in('media_id', ids); (em || []).forEach(r => inCard.add(r.media_id)); }
+  G.items.push(...(data || [])); G.page++;
+  $('#grid').insertAdjacentHTML('beforeend', (data || []).map(m => cellHTML(m, inCard.has(m.id))).join(''));
+  $('#gMore').style.display = (data || []).length < PAGE ? 'none' : '';
+  $('#gCount').textContent = `${G.items.length}장 표시`; paintSel();
+}
+function cellHTML(m, inCard) {
+  const cap = m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b> · ${esc(m.posted_at || m.period)} #${m.photo_no || ''}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b> · ${esc(m.city || '')} · ${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b> · ${esc(m.product_name || '')} · ${esc(m.period)}`;
+  const bd = m.status === 'analyzed' ? `<span class="bd an">분석됨</span>` : m.status === 'error' ? `<span class="bd" style="color:var(--accent)">오류</span>` : '';
+  const cd = inCard ? `<span class="bd cd" style="top:28px">카드</span>` : '';
+  return `<div class="cell ${G.sel.has(m.id) ? 'sel' : ''}" data-id="${m.id}"><span class="chk">${G.sel.has(m.id) ? '✓' : ''}</span>${bd}${cd}<img src="${pubUrl(m.thumb_path)}" loading="lazy" alt=""><div class="cap">${cap}</div></div>`;
+}
+$('#grid').onclick = e => {
+  const cell = e.target.closest('.cell'); if (!cell) return; const id = +cell.dataset.id;
+  if (e.target.closest('.chk') || e.shiftKey || e.ctrlKey || e.metaKey) { G.sel.has(id) ? G.sel.delete(id) : G.sel.add(id); paintSel(); return; }
+  openLightbox(G.items.find(m => m.id === id));
+};
+function paintSel() {
+  $$('#grid .cell').forEach(c => { const on = G.sel.has(+c.dataset.id); c.classList.toggle('sel', on); c.querySelector('.chk').textContent = on ? '✓' : ''; });
+  $('#selbar').classList.toggle('on', G.sel.size > 0); $('#selN').textContent = `${G.sel.size}장 선택`;
+}
+$('#selCard').onclick = () => openCardBuilder(null, [...G.sel]);
+$('#selAdd').onclick = () => openPick([...G.sel]);
+$('#selAnalyze').onclick = async () => { const ids = [...G.sel]; const focus = prompt('focus 카테고리 id (예: product.apparel.tops). 비우면 AI가 카테고리를 판정합니다', ''); await analyzeMany(ids, focus || null, false); loadGallery(true); };
+$('#selDel').onclick = async () => { if (!confirm(`${G.sel.size}장 삭제? (카드에서도 빠지고 Storage는 휴지통으로)`)) return; const { error } = await sb.from('tx_media').delete().in('id', [...G.sel]); if (error) return toast(error.message, true); G.sel.clear(); toast('삭제됨 — 설정 탭에서 휴지통 비우기'); renderFilters(); loadGallery(true); loadConfig(); };
+
+/* ---------------- lightbox ---------------- */
+let LB = null;
+async function openLightbox(m) {
+  LB = m; $('#lbImg').src = pubUrl(m.storage_path);
+  $('#lbTitle').textContent = m.source === 'instagram' ? `@${m.account || '?'}` : `${m.brand || '?'}${m.product_name ? ' · ' + m.product_name : ''}`;
+  $('#lbMeta').textContent = `${m.source} · ${m.period}${m.season && m.season !== m.period ? ' (' + m.season + ')' : ''} · ${m.posted_at || ''} · #${m.photo_no || ''} · ${m.filename || ''}`;
+  fillFocusSelect($('#lbFocus'), null); $('#mLb').classList.add('on'); renderLbTags();
+}
+async function renderLbTags() {
+  const { data } = await sb.from('tx_media_tags').select('node_id,origin,confidence,dominance,focus_node_id').eq('media_id', LB.id);
+  const { data: an } = await sb.from('tx_analyses').select('model,prompt_version,focus_node_id,created_at,result').eq('media_id', LB.id).order('created_at', { ascending: false }).limit(1);
+  if (!data || !data.length) { $('#lbTags').innerHTML = '<span class="mute small">아직 분석 안 됨</span>'; return; }
+  const a = an && an[0]; const groups = {};
+  for (const t of data) { const n = TAX.byId[t.node_id]; if (!n) continue; (groups[n.facet] ||= []).push({ ...t, n }); }
+  let h = a ? `<div class="small mute">${esc(a.model)} · ${esc(a.prompt_version)} · focus ${esc(nodeName(a.focus_node_id))} · ${a.created_at.slice(0, 16).replace('T', ' ')}</div>` : '';
+  for (const f of ['product', 'fnf', 'detail', 'material', 'pattern', 'color']) {
+    if (!groups[f]) continue;
+    h += `<h3>${f}</h3><div class="tagrow">` + groups[f].sort((x, y) => (y.dominance || 0) - (x.dominance || 0)).map(t => f === 'color' ? `<span class="sw"><i style="background:${t.n.hex || '#ccc'}"></i>${esc(t.n.name_en)} ${t.dominance ? Math.round(t.dominance * 100) + '%' : ''}</span>` : `<span class="chip ${t.origin === 'ai' ? 'ai' : ''}" title="conf ${t.confidence ?? ''}">${esc(t.n.name_en)}</span>`).join('') + '</div>';
+  }
+  if (a?.result?.notes) h += `<div class="small mute">${esc(a.result.notes)}</div>`;
+  $('#lbTags').innerHTML = h;
+}
+$('#lbAnalyze').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, false); renderLbTags(); };
+$('#lbAnalyzeHi').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, true); renderLbTags(); };
+$('#lbDel').onclick = async () => { if (!confirm('이 사진 삭제?')) return; await sb.from('tx_media').delete().eq('id', LB.id); $('#mLb').classList.remove('on'); renderFilters(); loadGallery(true); };
+
+function fillFocusSelect(sel, cur) {
+  const cats = TAX.nodes.filter(n => n.kind === 'category' && n.facet === 'product');
+  sel.innerHTML = '<option value="">(AI 판정)</option>' + cats.map(c => `<option value="${c.id}" ${c.id === cur ? 'selected' : ''}>${esc(nodeName(c.parent_id))} › ${esc(c.name_en)}</option>`).join('');
+}
+
+/* =====================================================================
+   CARD BUILDER
+   ===================================================================== */
+let CB = null; // {id, media:[], covers:Set, tags:Map(id->{origin,confirmed}), hashtags:[], evidence:[], sections:[]}
+function fillCascade() {
+  const groups = TAX.nodes.filter(n => n.kind === 'group' && n.facet === 'product');
+  $('#cbGroup').innerHTML = '<option value="">대분류</option>' + groups.map(g => `<option value="${g.id}">${esc(g.name_en)}</option>`).join('');
+  $('#cbGroup').onchange = () => { const cats = TAX.children[$('#cbGroup').value] || []; $('#cbCat').innerHTML = '<option value="">카테고리</option>' + cats.filter(c => c.kind === 'category').map(c => `<option value="${c.id}">${esc(c.name_en)}</option>`).join(''); };
+  $('#cbCat').onchange = () => { if (CB) CB.focus = $('#cbCat').value || null; $('#cbFocusHint').textContent = CB?.focus ? '' : 'focus 미지정 → AI가 판정'; };
+}
+function setFocus(id) { const c = catOf(id); if (!c) { $('#cbGroup').value = ''; $('#cbCat').innerHTML = '<option value="">카테고리</option>'; CB.focus = null; return; } $('#cbGroup').value = c.parent_id; $('#cbGroup').onchange(); $('#cbCat').value = c.id; CB.focus = c.id; $('#cbFocusHint').textContent = ''; }
+
+async function openCardBuilder(entryId, mediaIds) {
+  CB = { id: entryId, media: [], covers: new Set(), tags: new Map(), hashtags: [], evidence: [], sections: [], focus: null };
+  $('#cbTitle').textContent = entryId ? '카드 수정' : '카드 만들기'; $('#cbDelete').style.display = entryId ? '' : 'none';
+  $('#cbName').value = ''; $('#cbDesc').value = ''; $('#cbFirst').value = ''; $('#cbPick').checked = false; $('#cbHashIn').value = ''; $('#cbTagSearch').value = ''; $('#cbTagHits').innerHTML = '';
+  if (entryId) {
+    const { data: e } = await sb.from('tx_entries').select('*').eq('id', entryId).single();
+    const { data: em } = await sb.from('tx_entry_media').select('media_id,role,sort_order').eq('entry_id', entryId).order('sort_order');
+    const { data: et } = await sb.from('tx_entry_tags').select('*').eq('entry_id', entryId);
+    mediaIds = (em || []).map(r => r.media_id); (em || []).filter(r => r.role === 'cover').forEach(r => CB.covers.add(r.media_id));
+    $('#cbName').value = e.title; $('#cbDesc').value = e.description || ''; $('#cbSource').value = e.source; $('#cbPeriod').value = e.period; $('#cbFirst').value = e.first_spotted || ''; $('#cbPick').checked = e.is_pick;
+    CB.hashtags = e.hashtags || []; CB.evidence = e.evidence || []; CB.sections = e.sections || []; (et || []).forEach(t => CB.tags.set(t.node_id, { origin: t.origin, confirmed: t.confirmed }));
+    setFocus(e.focus_node_id);
+  }
+  if (mediaIds.length) { const { data } = await sb.from('tx_media').select('id,source,period,posted_at,account,brand,product_name,thumb_path,storage_path,photo_no').in('id', mediaIds); CB.media = mediaIds.map(id => (data || []).find(m => m.id === id)).filter(Boolean); }
+  if (!entryId && CB.media.length) {
+    const m0 = CB.media[0]; $('#cbSource').value = m0.source; $('#cbPeriod').value = m0.period;
+    const sorted = [...CB.media].sort((a, b) => (a.photo_no || 99) - (b.photo_no || 99)); sorted.slice(0, 3).forEach(m => CB.covers.add(m.id));
+    const months = CB.media.map(m => m.period).filter(p => /^\d{4}-\d{2}$/.test(p)).sort(); if (months[0]) $('#cbFirst').value = months[0];
+    setFocus(null);
+  }
+  renderCB(); $('#mCard').classList.add('on'); $('#cbName').focus();
+}
+function renderCB() {
+  $('#cbPhotoN').textContent = `${CB.media.length}장`;
+  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.posted_at || '')}</span></div>`).join('');
+  $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
+  $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
+  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="celeb" ${e.type === 'celeb' ? 'selected' : ''}>셀럽 착용</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select><input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명"><input data-k="value" value="${esc(e.value || '')}" placeholder="값 (예: 좋아요 12.4K, 27SS)"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
+  $('#cbSecs').innerHTML = CB.sections.map((s, i) => `<div class="sec" data-i="${i}"><div class="row"><input type="text" data-sub value="${esc(s.subtitle || '')}" placeholder="소제목" style="flex:1"><button class="sm" data-secx="${i}">✕</button></div><div class="ph">${CB.media.map(m => `<img src="${pubUrl(m.thumb_path)}" data-mid="${m.id}" class="${(s.media_ids || []).includes(m.id) ? 'on' : ''}">`).join('')}</div></div>`).join('');
+  renderCBColors();
+}
+$('#cbPhotos').onclick = e => { const p = e.target.closest('.p'); if (!p) return; const id = +p.dataset.id; if (CB.covers.has(id)) CB.covers.delete(id); else { if (CB.covers.size >= 3) { toast('대표는 3장까지'); return; } CB.covers.add(id); } renderCB(); };
+$('#cbTags').onclick = e => { const x = e.target.closest('[data-x]'); if (x) { CB.tags.delete(x.dataset.x); renderCB(); return; } const c = e.target.closest('.chip'); if (!c) return; const t = CB.tags.get(c.dataset.id); if (t) { t.confirmed = !t.confirmed; if (t.confirmed) t.origin = 'human'; renderCB(); } };
+$('#cbHash').onclick = e => { const x = e.target.closest('[data-h]'); if (!x) return; CB.hashtags = CB.hashtags.filter(h => h !== x.dataset.h); renderCB(); };
+$('#cbHashIn').onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); const v = $('#cbHashIn').value.split(/[,\s]+/).map(s => s.replace(/^#/, '').trim()).filter(Boolean); v.forEach(h => { if (!CB.hashtags.includes(h)) CB.hashtags.push(h); }); $('#cbHashIn').value = ''; renderCB(); } };
+$('#cbHashIn').onblur = () => { if ($('#cbHashIn').value.trim()) $('#cbHashIn').onkeydown({ key: 'Enter', preventDefault() {} }); };
+$('#cbEvAdd').onclick = () => { CB.evidence.push({ type: 'celeb', label: '', value: '', url: '' }); renderCB(); };
+$('#cbEv').oninput = e => { const row = e.target.closest('.ev'); if (!row) return; CB.evidence[+row.dataset.i][e.target.dataset.k] = e.target.value; };
+$('#cbEv').onclick = e => { const b = e.target.closest('[data-evx]'); if (!b) return; CB.evidence.splice(+b.dataset.evx, 1); renderCB(); };
+$('#cbSecAdd').onclick = () => { CB.sections.push({ subtitle: '', media_ids: [] }); renderCB(); };
+$('#cbSecs').oninput = e => { const s = e.target.closest('.sec'); if (!s || !e.target.hasAttribute('data-sub')) return; CB.sections[+s.dataset.i].subtitle = e.target.value; };
+$('#cbSecs').onclick = e => { const b = e.target.closest('[data-secx]'); if (b) { CB.sections.splice(+b.dataset.secx, 1); renderCB(); return; } const img = e.target.closest('img[data-mid]'); if (!img) return; const s = CB.sections[+img.closest('.sec').dataset.i]; const id = +img.dataset.mid; s.media_ids = s.media_ids || []; s.media_ids.includes(id) ? s.media_ids = s.media_ids.filter(x => x !== id) : s.media_ids.push(id); renderCB(); };
+
+// ---- title → taxonomy suggestions
+$('#cbName').oninput = debounce(() => suggestFromTitle($('#cbName').value), 250);
+function matchTerms(text) {
+  let s = ' ' + text.toLowerCase().replace(/[^a-z0-9가-힣+&' -]/g, ' ').replace(/\s+/g, ' ') + ' '; const hits = [];
+  const rx = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  for (const t of TAX.terms) {
+    if (t.term.length < 3) continue;
+    const forms = [t.term]; if (!t.term.endsWith('s')) forms.push(t.term + 's'); else forms.push(t.term.slice(0, -1));   // top↔tops, pant↔pants
+    const hit = forms.find(f => s.includes(' ' + f + ' '));
+    if (hit) { hits.push(t.id); s = s.replace(new RegExp(' ' + rx(hit) + ' ', 'g'), ' '); }
+  }
+  return [...new Set(hits)];
+}
+function suggestFromTitle(title) {
+  if (!CB) return; const ids = matchTerms(title); if (!ids.length) return;
+  // focus: explicit category, else category owning a matched style value
+  let focus = ids.map(id => TAX.byId[id]).find(n => n.kind === 'category'); if (!focus) { for (const id of ids) { const c = catOf(id); if (c) { focus = c; break; } } }
+  if (focus && !CB.focus) setFocus(focus.id);
+  for (const id of ids) { const n = TAX.byId[id]; if (n.kind === 'category' || n.kind === 'group' || n.kind === 'axis') continue; if (!CB.tags.has(id)) CB.tags.set(id, { origin: 'title', confirmed: false }); }
+  // product values from other categories than focus → drop (e.g. 'Cropped' exists in many); keep facet tags
+  if (CB.focus) for (const [id] of CB.tags) { const n = TAX.byId[id]; if (n.facet === 'product' && catOf(id)?.id !== CB.focus) CB.tags.delete(id); }
+  renderCB();
+}
+$('#cbTagSearch').oninput = debounce(() => { const q = $('#cbTagSearch').value.trim().toLowerCase(); if (q.length < 2) { $('#cbTagHits').innerHTML = ''; return; } const hits = TAX.nodes.filter(n => !n.canonical_id && n.kind !== 'group' && n.kind !== 'axis' && (n.name_en.toLowerCase().includes(q) || (n.aliases || []).some(a => a.toLowerCase().includes(q)))).slice(0, 12); $('#cbTagHits').innerHTML = hits.map(n => `<span class="chip" data-add="${n.id}" title="${esc(n.id)}">${esc(n.name_en)}<small class="mute"> ${esc(n.facet)}</small></span>`).join(''); }, 200);
+$('#cbTagHits').onclick = e => { const c = e.target.closest('[data-add]'); if (!c) return; CB.tags.set(c.dataset.add, { origin: 'human', confirmed: true }); $('#cbTagSearch').value = ''; $('#cbTagHits').innerHTML = ''; renderCB(); };
+
+async function renderCBColors() {
+  if (!CB || !CB.id) { $('#cbColors').innerHTML = '<span class="mute small">저장 + 분석 후 자동</span>'; return; }
+  const { data } = await sb.from('tx_v_entry_colors').select('*').eq('entry_id', CB.id).order('weight', { ascending: false }).limit(5);
+  if (!data || !data.length) { $('#cbColors').innerHTML = '<span class="mute small">분석 대기</span>'; return; }
+  const tot = data.reduce((s, c) => s + +c.weight, 0);
+  $('#cbColors').innerHTML = data.map(c => `<span class="sw"><i style="background:${c.hex}"></i>${esc(c.name_en)} ${Math.round(c.weight / tot * 100)}%</span>`).join('');
+}
+async function saveCard() {
+  const title = $('#cbName').value.trim(); if (!title) { toast('타이틀을 입력하세요', true); return null; }
+  if (!CB.media.length) { toast('사진이 없습니다', true); return null; }
+  if (!CB.covers.size) CB.covers.add(CB.media[0].id);
+  const row = { source: $('#cbSource').value, period: $('#cbPeriod').value.trim() || CB.media[0].period, title, focus_node_id: CB.focus || null, description: $('#cbDesc').value.trim() || null, hashtags: CB.hashtags, evidence: CB.evidence.filter(e => e.label || e.value), sections: CB.sections.filter(s => s.subtitle || (s.media_ids || []).length), first_spotted: $('#cbFirst').value.trim() || null, is_pick: $('#cbPick').checked, author: AUTHOR };
+  let id = CB.id;
+  if (id) { const { error } = await sb.from('tx_entries').update(row).eq('id', id); if (error) { toast(error.message, true); return null; } }
+  else { const { data, error } = await sb.from('tx_entries').insert(row).select('id').single(); if (error) { toast(error.message, true); return null; } id = data.id; CB.id = id; }
+  await sb.from('tx_entry_media').delete().eq('entry_id', id);
+  const covers = [...CB.covers]; const em = CB.media.map((m, i) => ({ entry_id: id, media_id: m.id, role: CB.covers.has(m.id) ? 'cover' : 'extra', sort_order: CB.covers.has(m.id) ? covers.indexOf(m.id) : 10 + i }));
+  let r = await sb.from('tx_entry_media').insert(em); if (r.error) toast(r.error.message, true);
+  await sb.from('tx_entry_tags').delete().eq('entry_id', id);
+  const et = [...CB.tags.entries()].map(([node_id, t]) => ({ entry_id: id, node_id, origin: t.origin, confirmed: t.confirmed }));
+  if (et.length) { r = await sb.from('tx_entry_tags').insert(et); if (r.error) toast(r.error.message, true); }
+  $('#cbStat').textContent = `저장됨 #${id}`; $('#cbDelete').style.display = ''; $('#cbTitle').textContent = '카드 수정';
+  return id;
+}
+$('#cbSave').onclick = async () => { const id = await saveCard(); if (id) { toast('카드 저장'); G.sel.clear(); paintSel(); renderCBColors(); loadGallery(true); } };
+$('#cbSaveAn').onclick = async () => { const id = await saveCard(); if (!id) return; G.sel.clear(); paintSel(); await analyzeMany(CB.media.map(m => m.id), CB.focus, false, [...CB.covers]); renderCBColors(); loadGallery(true); };
+$('#cbDelete').onclick = async () => { if (!CB.id || !confirm('카드 삭제? (사진은 갤러리에 남습니다)')) return; await sb.from('tx_entries').delete().eq('id', CB.id); $('#mCard').classList.remove('on'); toast('카드 삭제'); loadCards(); loadGallery(true); };
+
+/* ---------------- add to existing ---------------- */
+let PICK_IDS = [];
+async function openPick(ids) { PICK_IDS = ids; $('#pkSearch').value = ''; $('#mPick').classList.add('on'); renderPick(); }
+$('#pkSearch').oninput = debounce(renderPick, 200);
+async function renderPick() { let q = sb.from('tx_entries').select('id,title,source,period').order('updated_at', { ascending: false }).limit(50); const s = $('#pkSearch').value.trim(); if (s) q = q.ilike('title', `%${s}%`); const { data } = await q; $('#pkList').innerHTML = (data || []).map(e => `<div class="it" data-id="${e.id}" style="padding:8px;border-bottom:1px solid var(--line);cursor:pointer"><b>${esc(e.title)}</b> <span class="mute small">${e.source} · ${e.period} · #${e.id}</span></div>`).join('') || '<span class="mute">카드 없음</span>'; }
+$('#pkList').onclick = async e => { const it = e.target.closest('[data-id]'); if (!it) return; const id = +it.dataset.id; const { data: ex } = await sb.from('tx_entry_media').select('media_id').eq('entry_id', id); const have = new Set((ex || []).map(r => r.media_id)); const rows = PICK_IDS.filter(m => !have.has(m)).map((m, i) => ({ entry_id: id, media_id: m, role: 'extra', sort_order: 100 + i })); if (rows.length) { const { error } = await sb.from('tx_entry_media').insert(rows); if (error) return toast(error.message, true); } $('#mPick').classList.remove('on'); toast(`${rows.length}장 추가`); G.sel.clear(); paintSel(); loadGallery(true); };
+
+/* =====================================================================
+   CARDS LIST
+   ===================================================================== */
+$('#cSrc').onchange = loadCards; $('#cSearch').oninput = debounce(loadCards, 250);
+async function loadCards() {
+  if (!sb) return; let q = sb.from('tx_v_entries_list').select('*').order('updated_at', { ascending: false }).limit(200);
+  if ($('#cSrc').value) q = q.eq('source', $('#cSrc').value); const s = $('#cSearch').value.trim(); if (s) q = q.ilike('title', `%${s}%`);
+  const { data, error } = await q; if (error) return toast(error.message, true);
+  const ids = (data || []).map(e => e.id); let tags = {};
+  if (ids.length) { const { data: et } = await sb.from('tx_entry_tags').select('entry_id,node_id,confirmed').in('entry_id', ids); (et || []).forEach(t => { (tags[t.entry_id] ||= []).push(t); }); }
+  $('#cCount').textContent = `${(data || []).length}개`;
+  $('#cards').innerHTML = (data || []).map(e => {
+    const chips = (tags[e.id] || []).filter(t => t.confirmed).slice(0, 4).map(t => `<span class="chip">${esc(nodeName(t.node_id))}</span>`).join('');
+    const imgs = (e.cover_thumbs || []).slice(0, 3).map(p => `<img src="${pubUrl(p)}">`).join('') || '<div class="mute small">대표 없음</div>';
+    const stat = e.source === 'instagram' ? `${e.posts || 0} posts · ${e.accounts || 0} accounts · ${e.photos || 0} photos` : e.source === 'runway' ? `${e.runway_brands || 0} brands · ${e.photos || 0} looks` : `${e.market_brands || 0} brands · ${e.photos || 0} items`;
+    return `<div class="card" data-id="${e.id}"><div class="chips">${chips}<span class="chip" style="margin-left:auto">${e.source} · ${esc(e.period)}</span></div><h4>${esc(e.title)}${e.is_pick ? ' <span class="chip acc">Editor\'s Pick</span>' : ''}</h4><div class="small mute">${esc(nodeName(e.focus_node_id) || 'focus 미지정')}${e.hashtags?.length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div><div class="imgs">${imgs}</div><div class="st">${stat}</div><div class="row" style="margin-top:8px"><button class="sm" data-edit="${e.id}">수정</button><button class="sm" data-an="${e.id}">분석 실행</button></div></div>`;
+  }).join('') || '<span class="mute">카드가 없습니다 — 갤러리에서 사진을 선택해 만드세요</span>';
+}
+$('#cards').onclick = async e => { const ed = e.target.closest('[data-edit]'); if (ed) return openCardBuilder(+ed.dataset.edit, []); const an = e.target.closest('[data-an]'); if (an) { const id = +an.dataset.an; const { data: e2 } = await sb.from('tx_entries').select('focus_node_id').eq('id', id).single(); const { data: em } = await sb.from('tx_entry_media').select('media_id,role').eq('entry_id', id); await analyzeMany((em || []).map(r => r.media_id), e2?.focus_node_id || null, false, (em || []).filter(r => r.role === 'cover').map(r => r.media_id)); loadCards(); } };
+
+/* =====================================================================
+   AI ANALYSIS — OpenAI Responses API, Structured Output (enum = taxonomy)
+   ===================================================================== */
+function enumsFor(focusId) {
+  const vals = (pid) => (TAX.children[pid] || []).filter(n => !n.canonical_id && n.active);
+  const axes = {}; let cat = focusId ? TAX.byId[focusId] : null;
+  if (cat) for (const ax of vals(cat.id).filter(n => n.kind === 'axis')) axes[ax.name_en] = vals(ax.id).map(v => v.name_en);
+  const flat = (facet, kinds) => TAX.nodes.filter(n => n.facet === facet && kinds.includes(n.kind) && !n.canonical_id && n.active).map(n => n.name_en);
+  const out = { axes, details: [...new Set(flat('detail', ['value']))], materials: [...new Set(flat('material', ['value']))], patterns: [...new Set(flat('pattern', ['value', 'sub']))], categories: TAX.nodes.filter(n => n.kind === 'category' && n.facet === 'product').map(n => `${nodeName(n.parent_id)} > ${n.name_en}`) };
+  // F&F extension axes by group
+  const g = cat ? nodeName(cat.parent_id) : ''; const fnfGroup = g === 'Footwear' ? 'fnf.footwear' : g === 'Bags' ? 'fnf.bags' : g === 'General Access.' ? 'fnf.headwear' : null;
+  if (fnfGroup) for (const ax of vals(fnfGroup).filter(n => n.kind === 'axis')) axes['F&F ' + ax.name_en] = vals(ax.id).map(v => v.name_en);
+  return out;
+}
+function schemaFor(E, focusKnown) {
+  const arr = (list, max) => ({ type: 'array', items: { type: 'string', enum: list } });
+  const props = { focus_present: { type: 'boolean' }, category: focusKnown ? { type: 'string' } : { type: 'string', enum: E.categories }, axes: { type: 'object', properties: {}, required: Object.keys(E.axes), additionalProperties: false }, details: arr(E.details, 6), materials: arr(E.materials, 3), patterns: arr(E.patterns, 3), colors: { type: 'array', items: { type: 'object', properties: { hex: { type: 'string' }, dominance: { type: 'number' }, where: { type: 'string' } }, required: ['hex', 'dominance', 'where'], additionalProperties: false } }, confidence: { type: 'object', properties: { category: { type: 'number' }, axes: { type: 'number' }, details: { type: 'number' }, materials: { type: 'number' }, patterns: { type: 'number' }, colors: { type: 'number' } }, required: ['category', 'axes', 'details', 'materials', 'patterns', 'colors'], additionalProperties: false }, notes: { type: 'string' } };
+  for (const [ax, list] of Object.entries(E.axes)) props.axes.properties[ax] = arr(list, 2);
+  return { type: 'object', properties: props, required: Object.keys(props), additionalProperties: false };
+}
+function promptFor(focusId, E) {
+  const f = focusId ? `${nodeName(TAX.byId[focusId].parent_id)} > ${nodeName(focusId)}` : null;
+  return [
+    'You are a fashion runway/street-style tagger. Tag ONE garment/item in the photo using ONLY the provided vocabulary (FS Runway taxonomy).',
+    f ? `FOCUS ITEM: the ${f} worn in the photo. If no such item is visible, set focus_present=false and leave arrays empty. Describe only that item (ignore other garments).` : 'FOCUS ITEM: the single most prominent garment/item. Return its category from the enum.',
+    'Rules: pick tags only when clearly visible; materials are an estimate from appearance (lower confidence). Axis values: choose at most 2 per axis, empty if unsure.',
+    'colors: up to 3 colors of the FOCUS ITEM only, as sRGB hex (#RRGGBB) with dominance (fraction of the item area, sum ≤ 1) and where (e.g. "body", "trim"). Judge the real fabric color, compensating for lighting/filters.',
+    'confidence: 0-1 per facet. notes: ≤ 20 words.'
+  ].join('\n');
+}
+async function callOpenAI(model, prompt, schema, imageUrl, key) {
+  const body = { model, input: [{ role: 'user', content: [{ type: 'input_text', text: prompt }, { type: 'input_image', image_url: imageUrl, detail: 'auto' }] }], text: { format: { type: 'json_schema', name: 'fashion_tags', schema, strict: true } } };
+  const r = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key }, body: JSON.stringify(body) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error?.message || r.statusText);
+  let txt = j.output_text; if (!txt) { for (const o of (j.output || [])) for (const c of (o.content || [])) if (c.type === 'output_text') txt = c.text; }
+  return { result: JSON.parse(txt), usage: j.usage || {} };
+}
+// ---- color library (Archroma) nearest match
+function hex2lab(hex) { let [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c > .04045 ? ((c + .055) / 1.055) ** 2.4 : c / 12.92); let x = (r * .4124 + g * .3576 + b * .1805) / .95047, y = (r * .2126 + g * .7152 + b * .0722), z = (r * .0193 + g * .1192 + b * .9505) / 1.08883; const f = t => t > .008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; [x, y, z] = [x, y, z].map(f); return [116 * y - 16, 500 * (x - y), 200 * (y - z)]; }
+async function loadLib() {
+  if (LIB) return LIB; const out = []; let from = 0;
+  while (true) { const { data, error } = await sb.from('tx_color_library').select('hex,sub_group,tones,code,name,color_system').in('color_system', ['Archroma Color Atlas', 'PANTONE FHI: TCX, TSX, TPM, TN']).range(from, from + 999); if (error) throw error; out.push(...data); if (data.length < 1000) break; from += 1000; }
+  LIB = { arch: out.filter(r => r.sub_group).map(r => ({ ...r, lab: hex2lab(r.hex) })), tcx: out.filter(r => r.color_system.startsWith('PANTONE') && /TCX$/.test(r.code)).map(r => ({ ...r, lab: hex2lab(r.hex) })) };
+  return LIB;
+}
+function nearest(list, lab) { let best = null, bd = 1e9; for (const r of list) { const d = (r.lab[0] - lab[0]) ** 2 + (r.lab[1] - lab[1]) ** 2 + (r.lab[2] - lab[2]) ** 2; if (d < bd) { bd = d; best = r; } } return { row: best, dE: Math.sqrt(bd) }; }
+function shadeNode(subGroup) { const name = (subGroup || '').split('|')[0].trim().toLowerCase(); return TAX.nodes.find(n => n.facet === 'color' && n.kind === 'value' && (n.name_en.toLowerCase() === name || (n.aliases || []).some(a => a.toLowerCase() === name))); }
+const findByName = (facet, kinds, name) => TAX.nodes.find(n => n.facet === facet && kinds.includes(n.kind) && !n.canonical_id && n.name_en === name);
+
+async function analyzeOne(m, focusId, hi, key) {
+  const model = hi ? (CFG.model_hi || 'gpt-6.1-sol') : (CFG.model_default || 'gpt-6-luna'); const pv = CFG.prompt_version || 'v1';
+  let exists = false; { let q = sb.from('tx_analyses').select('id').eq('media_id', m.id).eq('model', model).eq('prompt_version', pv); q = focusId ? q.eq('focus_node_id', focusId) : q.is('focus_node_id', null); const { data } = await q.limit(1); exists = !!(data && data.length); }
+  if (exists && !hi) return 'skip';
+  const E = enumsFor(focusId); const schema = schemaFor(E, !!focusId); const prompt = promptFor(focusId, E);
+  const { result, usage } = await callOpenAI(model, prompt, schema, pubUrl(m.storage_path), key);
+  // resolve focus category when AI decided
+  let focus = focusId; if (!focus && result.category) { const nm = result.category.split('>').pop().trim(); const c = TAX.nodes.find(n => n.kind === 'category' && n.facet === 'product' && n.name_en === nm); if (c) focus = c.id; }
+  const cost = ((usage.input_tokens || 0) * (hi ? 2 : .1) + (usage.output_tokens || 0) * (hi ? 10 : .5)) / 1e6;
+  const { data: an, error } = await sb.from('tx_analyses').upsert({ media_id: m.id, focus_node_id: focus || null, model, prompt_version: pv, result, confidence: avg(Object.values(result.confidence || {})), in_tokens: usage.input_tokens || null, out_tokens: usage.output_tokens || null, cost_usd: cost }, { onConflict: 'media_id,focus_node_id,model,prompt_version' }).select('id').single();
+  if (error) throw error;
+  // flatten → tx_media_tags (ai rows for this media/focus replaced)
+  const tags = []; const add = (node, extra) => { if (node && !tags.some(t => t.node_id === node.id)) tags.push({ media_id: m.id, node_id: node.id, focus_node_id: focus || null, origin: 'ai', analysis_id: an.id, ...extra }); };
+  if (result.focus_present !== false) {
+    if (focus) add(TAX.byId[focus], { confidence: result.confidence?.category });
+    const cat = focus ? TAX.byId[focus] : null;
+    for (const [ax, vals] of Object.entries(result.axes || {})) for (const v of vals) {
+      let node = null; const axName = ax.replace(/^F&F /, '');
+      if (cat) { const axNode = (TAX.children[cat.id] || []).find(n => n.kind === 'axis' && n.name_en === axName); if (axNode) node = (TAX.children[axNode.id] || []).find(n => n.name_en === v); }
+      if (!node) { const fnfAx = TAX.nodes.find(n => n.facet === 'fnf' && n.kind === 'axis' && n.name_en === axName); if (fnfAx) node = (TAX.children[fnfAx.id] || []).find(n => n.name_en === v); }
+      add(node, { confidence: result.confidence?.axes });
+    }
+    (result.details || []).forEach(v => add(findByName('detail', ['value'], v), { confidence: result.confidence?.details }));
+    (result.materials || []).forEach(v => add(findByName('material', ['value'], v), { confidence: result.confidence?.materials }));
+    (result.patterns || []).forEach(v => add(findByName('pattern', ['value', 'sub'], v), { confidence: result.confidence?.patterns }));
+    const lib = await loadLib(); result._colors = [];
+    for (const c of (result.colors || [])) {
+      if (!/^#[0-9a-f]{6}$/i.test(c.hex || '')) continue; const lab = hex2lab(c.hex); const a = nearest(lib.arch, lab); const t = nearest(lib.tcx, lab); const node = shadeNode(a.row?.sub_group);
+      result._colors.push({ hex: c.hex, dominance: c.dominance, shade: node?.name_en || null, sub_group: a.row?.sub_group, tones: a.row?.tones, archroma: a.row?.code, dE: +a.dE.toFixed(1), tcx: t.row ? `${t.row.code} ${t.row.name}` : null });
+      if (node) { const prev = tags.find(x => x.node_id === node.id); if (prev) prev.dominance = (prev.dominance || 0) + (c.dominance || 0); else add(node, { confidence: result.confidence?.colors, dominance: c.dominance || null }); }
+    }
+    await sb.from('tx_analyses').update({ result }).eq('id', an.id);
+  }
+  { let q = sb.from('tx_media_tags').delete().eq('media_id', m.id).eq('origin', 'ai'); q = focus ? q.eq('focus_node_id', focus) : q.is('focus_node_id', null); await q; }
+  if (tags.length) { const { error: e2 } = await sb.from('tx_media_tags').insert(tags); if (e2) throw e2; }
+  await sb.from('tx_media').update({ status: 'analyzed' }).eq('id', m.id);
+  return 'ok';
+}
+const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+async function analyzeMany(ids, focusId, hi, hiIds) {
+  const key = CFG.openai_key || ''; if (!key) { toast('설정 탭에 OpenAI 키를 저장하세요', true); return; }
+  const { data: media } = await sb.from('tx_media').select('id,storage_path').in('id', ids); if (!media?.length) return;
+  let done = 0, ok = 0, skip = 0, err = 0; const t0 = Date.now(); toast(`분석 시작 ${media.length}장`);
+  let i = 0; const worker = async () => { while (i < media.length) { const m = media[i++]; try { const r = await analyzeOne(m, focusId, hi || (hiIds || []).includes(m.id), key); r === 'skip' ? skip++ : ok++; } catch (e) { err++; console.error(m.id, e); await sb.from('tx_media').update({ status: 'error' }).eq('id', m.id); if (err === 1) toast('분석 오류: ' + e.message, true); } done++; if (done % 5 === 0) toast(`분석 ${done}/${media.length}`); } };
+  await Promise.all([worker(), worker(), worker()]);
+  toast(`분석 완료 ${ok} · 건너뜀 ${skip} · 오류 ${err} · ${Math.round((Date.now() - t0) / 1000)}s`, err > 0);
+}
+
+/* =====================================================================
+   SETTINGS
+   ===================================================================== */
+$('#sSaveConn').onclick = () => { const k = $('#sAnon').value.trim(); if (k) localStorage.setItem('tx_anon', k); AUTHOR = $('#sAuthor').value; localStorage.setItem('tx_author', AUTHOR); boot(); showView('upload'); toast('연결 재시도'); };
+$('#sSaveAi').onclick = async () => { const rows = [['openai_key', $('#sOpenai').value.trim()], ['model_default', $('#sModel').value.trim() || 'gpt-6-luna'], ['model_hi', $('#sModelHi').value.trim() || 'gpt-6.1-sol'], ['prompt_version', $('#sPromptV').value.trim() || 'v1']].map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() })); const { error } = await sb.from('tx_config').upsert(rows); if (error) return toast(error.message, true); await loadConfig(); toast('저장됨 (팀 공용)'); };
+$('#btnTrash').onclick = async () => { const { data } = await sb.from('tx_storage_trash').select('path').limit(1000); if (!data?.length) return toast('비어 있음'); let n = 0; for (let i = 0; i < data.length; i += 100) { const paths = data.slice(i, i + 100).map(r => r.path); const { error } = await sb.storage.from(BUCKET).remove(paths); if (!error) { await sb.from('tx_storage_trash').delete().in('path', paths); n += paths.length; } else toast(error.message, true); } toast(`${n}개 파일 삭제`); loadConfig(); };
+
+$('#sAnon').value = localStorage.getItem('tx_anon') || '';
+boot();
+</script>
+</body>
+</html>
