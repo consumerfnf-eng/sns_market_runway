@@ -161,7 +161,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-16</span>
+  <span class="ver" id="ver">v261022-17</span>
 </header>
 
 <main>
@@ -290,7 +290,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <div>
         <div class="field"><span>타이틀 (예: Jersey Capri Pants · Neon Top) — 입력하면 분류체계 칩이 제안됩니다</span>
           <input type="text" id="cbName" placeholder="타이틀" style="font-size:16px;font-weight:600"></div>
-        <div class="field"><span>Focus 카테고리 (분석·컬러칩 기준)</span>
+        <div class="field"><span>Focus — 아이템 카테고리(분석·컬러칩 기준) 또는 테마(패턴·그래픽·컬러·소재·디테일)</span>
           <div class="cascade"><select id="cbGroup"></select><select id="cbCat"></select><span class="small mute" id="cbFocusHint"></span></div></div>
         <div class="field"><span>분류체계 태그 (FS Taxonomy 코드 — Analytics 집계·FS 벤치마크 비교에 쓰임. 점선=제안, 클릭=확정)</span>
           <div class="chips" id="cbTags"></div>
@@ -298,7 +298,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
         <div class="field"><span>설명 (2줄)</span><textarea id="cbDesc" rows="2"></textarea></div>
         <div class="field"><span>특징 #해시태그 (영문 소문자 고정 · 쉼표/엔터로 추가 · #halter-neck #halterneck #halter_neck 모두 분류체계 Halterneck으로 인식돼 위 칩에 제안됨)</span>
           <div class="chips" id="cbHash"></div><input type="text" id="cbHashIn" placeholder="#홀터넥 #팝컬러"></div>
-        <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨(랭킹이면 사이트) / 값 / URL·날짜</span>
+        <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨(랭킹이면 사이트) / 값 / URL·날짜 · 셀럽 착용은 사진에 지정(여기 아님)</span>
           <div id="cbEv"></div><button class="sm" id="cbEvAdd">+ 근거 추가</button></div>
         <div class="field"><span>소제목 섹션 (없으면 추가 사진이 자동으로 4장 그리드)</span>
           <div id="cbSecs"></div><button class="sm" id="cbSecAdd">+ 소제목 추가</button></div>
@@ -390,7 +390,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-16
+   TAXONOMY AGENT · admin.html  v261022-17
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -398,7 +398,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-16';
+const VER = 'v261022-17';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -749,13 +749,26 @@ function fillFocusSelect(sel, cur) {
    CARD BUILDER
    ===================================================================== */
 let CB = null; // {id, media:[], covers:Set, tags:Map(id->{origin,confirmed}), hashtags:[], evidence:[], sections:[]}
+const THEME_FACETS = [['pattern', 'Pattern & Graphics'], ['color', 'Color'], ['material', 'Materials'], ['detail', 'Details']];
 function fillCascade() {
   const groups = TAX.nodes.filter(n => n.kind === 'group' && n.facet === 'product');
-  $('#cbGroup').innerHTML = '<option value="">대분류</option>' + groups.map(g => `<option value="${g.id}">${esc(g.name_en)}</option>`).join('');
-  $('#cbGroup').onchange = () => { const cats = TAX.children[$('#cbGroup').value] || []; $('#cbCat').innerHTML = '<option value="">카테고리</option>' + cats.filter(c => c.kind === 'category').map(c => `<option value="${c.id}">${esc(c.name_en)}</option>`).join(''); };
-  $('#cbCat').onchange = () => { if (CB) CB.focus = $('#cbCat').value || null; $('#cbFocusHint').textContent = CB?.focus ? '' : 'focus 미지정 → AI가 판정'; };
+  $('#cbGroup').innerHTML = '<option value="">대분류 / 테마</option>' + groups.map(g => `<option value="${g.id}">${esc(g.name_en)}</option>`).join('') + THEME_FACETS.map(([f, l]) => `<option value="facet:${f}">— ${l} (테마)</option>`).join('');
+  $('#cbGroup').onchange = () => {
+    const v = $('#cbGroup').value;
+    if (v.startsWith('facet:')) { const f = v.slice(6); const vals = TAX.nodes.filter(n => n.facet === f && (n.kind === 'value' || n.kind === 'sub') && !n.canonical_id); $('#cbCat').innerHTML = '<option value="">값 선택</option>' + vals.map(n => `<option value="${n.id}">${esc(nodeName(n.parent_id))} › ${esc(n.name_en)}</option>`).join(''); }
+    else { const cats = TAX.children[v] || []; $('#cbCat').innerHTML = '<option value="">카테고리</option>' + cats.filter(c => c.kind === 'category').map(c => `<option value="${c.id}">${esc(c.name_en)}</option>`).join(''); }
+  };
+  $('#cbCat').onchange = () => { if (CB) CB.focus = $('#cbCat').value || null; $('#cbFocusHint').textContent = focusHint(CB?.focus); };
 }
-function setFocus(id) { const c = catOf(id); if (!c) { $('#cbGroup').value = ''; $('#cbCat').innerHTML = '<option value="">카테고리</option>'; CB.focus = null; return; } $('#cbGroup').value = c.parent_id; $('#cbGroup').onchange(); $('#cbCat').value = c.id; CB.focus = c.id; $('#cbFocusHint').textContent = ''; }
+const isCategory = id => { const n = TAX.byId[id]; return !!n && n.kind === 'category' && n.facet === 'product'; };
+const analysisFocus = id => isCategory(id) ? id : null;   // 테마 focus(패턴·컬러…)는 분석 focus가 아님 → 사진별 focus 또는 AI 판정
+const focusHint = id => !id ? 'focus 미지정 → AI가 판정' : isCategory(id) ? '' : '테마 카드 — 사진마다 아이템 focus를 지정하면 그 아이템 기준으로 분석됩니다';
+function setFocus(id) {
+  const n = TAX.byId[id];
+  if (n && !isCategory(id) && n.facet !== 'product') { $('#cbGroup').value = 'facet:' + n.facet; $('#cbGroup').onchange(); $('#cbCat').value = id; CB.focus = id; $('#cbFocusHint').textContent = focusHint(id); return; }
+  const c = catOf(id); if (!c) { $('#cbGroup').value = ''; $('#cbCat').innerHTML = '<option value="">카테고리</option>'; CB.focus = null; $('#cbFocusHint').textContent = focusHint(null); return; }
+  $('#cbGroup').value = c.parent_id; $('#cbGroup').onchange(); $('#cbCat').value = c.id; CB.focus = c.id; $('#cbFocusHint').textContent = '';
+}
 
 async function openCardBuilder(entryId, mediaIds) {
   CB = { id: entryId, media: [], covers: new Set(), tags: new Map(), hashtags: [], evidence: [], sections: [], focus: null };
@@ -767,7 +780,7 @@ async function openCardBuilder(entryId, mediaIds) {
     const { data: et } = await sb.from('tx_entry_tags').select('*').eq('entry_id', entryId);
     mediaIds = (em || []).map(r => r.media_id); (em || []).filter(r => r.role === 'cover').forEach(r => CB.covers.add(r.media_id));
     $('#cbName').value = e.title; $('#cbDesc').value = e.description || ''; $('#cbSource').value = e.source; $('#cbPeriod').value = e.period; $('#cbFirst').value = e.first_spotted || ''; $('#cbPick').checked = e.is_pick;
-    CB.hashtags = e.hashtags || []; CB.evidence = e.evidence || []; CB.sections = e.sections || []; (et || []).forEach(t => CB.tags.set(t.node_id, { origin: t.origin, confirmed: t.confirmed }));
+    CB.hashtags = e.hashtags || []; CB.evidence = (e.evidence || []).map(x => x.type === 'celeb' ? { ...x, type: 'note' } : x); CB.sections = e.sections || []; (et || []).forEach(t => CB.tags.set(t.node_id, { origin: t.origin, confirmed: t.confirmed }));
     setFocus(e.focus_node_id);
   }
   if (mediaIds.length) { const { data } = await sb.from('tx_media').select('id,source,period,posted_at,account,brand,product_name,thumb_path,storage_path,photo_no,is_celeb,celeb_name,focus_node_ids').in('id', mediaIds); CB.media = mediaIds.map(id => (data || []).find(m => m.id === id)).filter(Boolean); }
@@ -792,7 +805,7 @@ function renderCB() {
   $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}">${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div>`).join('');
   $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
   $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
-  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="celeb" ${e.type === 'celeb' ? 'selected' : ''}>셀럽 착용</option><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
+  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
   $('#cbSecs').innerHTML = CB.sections.map((s, i) => `<div class="sec" data-i="${i}"><div class="row"><input type="text" data-sub value="${esc(s.subtitle || '')}" placeholder="소제목" style="flex:1"><button class="sm" data-secx="${i}">✕</button></div><div class="ph">${CB.media.map(m => `<img src="${pubUrl(m.thumb_path)}" data-mid="${m.id}" class="${(s.media_ids || []).includes(m.id) ? 'on' : ''}">`).join('')}</div></div>`).join('');
   renderCBColors();
 }
@@ -806,7 +819,7 @@ $('#cbHash').onclick = e => { const x = e.target.closest('[data-h]'); if (!x) re
 $('#cbHashIn').onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); const v = $('#cbHashIn').value.split(/[,\s]+/).map(s => s.replace(/^#+/, '').trim().toLowerCase()).filter(Boolean); v.forEach(h => { if (!CB.hashtags.includes(h)) CB.hashtags.push(h); }); $('#cbHashIn').value = ''; suggestFromTitle(v.join(' ')); renderCB(); } };
 $('#cbHashIn').oninput = () => { const el = $('#cbHashIn'); const lo = el.value.toLowerCase(); if (lo !== el.value) { const p = el.selectionStart; el.value = lo; el.setSelectionRange(p, p); } };
 $('#cbHashIn').onblur = () => { if ($('#cbHashIn').value.trim()) $('#cbHashIn').onkeydown({ key: 'Enter', preventDefault() {} }); };
-$('#cbEvAdd').onclick = () => { CB.evidence.push({ type: 'celeb', label: '', value: '', url: '' }); renderCB(); };
+$('#cbEvAdd').onclick = () => { CB.evidence.push({ type: 'ranking', label: '무신사', value: '', url: '' }); renderCB(); };
 $('#cbEv').oninput = e => { const row = e.target.closest('.ev'); if (!row) return; const ev = CB.evidence[+row.dataset.i]; ev[e.target.dataset.k] = e.target.value; if (e.target.dataset.k === 'type') { if (e.target.value === 'ranking' && !['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].includes(ev.label)) ev.label = '무신사'; renderCB(); } };
 $('#cbEv').onclick = e => { const b = e.target.closest('[data-evx]'); if (!b) return; CB.evidence.splice(+b.dataset.evx, 1); renderCB(); };
 $('#cbSecAdd').onclick = () => { CB.sections.push({ subtitle: '', media_ids: [] }); renderCB(); };
@@ -837,10 +850,11 @@ function suggestFromTitle(title) {
   if (!CB) return; const ids = matchTerms(title); if (!ids.length) return;
   // focus: explicit category, else category owning a matched style value
   let focus = ids.map(id => TAX.byId[id]).find(n => n.kind === 'category'); if (!focus) { for (const id of ids) { const c = catOf(id); if (c) { focus = c; break; } } }
+  if (!focus) focus = ids.map(id => TAX.byId[id]).find(n => ['pattern', 'color', 'material', 'detail'].includes(n.facet) && n.kind !== 'group');   // 테마 카드 (Stripes, Lime…)
   if (focus && !CB.focus) setFocus(focus.id);
   for (const id of ids) { const n = TAX.byId[id]; if (n.kind === 'category' || n.kind === 'group' || n.kind === 'axis') continue; if (!CB.tags.has(id)) CB.tags.set(id, { origin: 'title', confirmed: false }); }
   // product values from other categories than focus → drop (e.g. 'Cropped' exists in many); keep facet tags
-  if (CB.focus) for (const [id] of CB.tags) { const n = TAX.byId[id]; if (n.facet === 'product' && catOf(id)?.id !== CB.focus) CB.tags.delete(id); }
+  if (isCategory(CB.focus)) for (const [id] of CB.tags) { const n = TAX.byId[id]; if (n.facet === 'product' && catOf(id)?.id !== CB.focus) CB.tags.delete(id); }
   renderCB();
 }
 $('#cbTagSearch').oninput = debounce(() => { const q = $('#cbTagSearch').value.trim().toLowerCase(); if (q.length < 2) { $('#cbTagHits').innerHTML = ''; return; } const hits = TAX.nodes.filter(n => !n.canonical_id && n.kind !== 'group' && n.kind !== 'axis' && (n.name_en.toLowerCase().includes(q) || (n.aliases || []).some(a => a.toLowerCase().includes(q)))).slice(0, 12); $('#cbTagHits').innerHTML = hits.map(n => `<span class="chip" data-add="${n.id}" title="${esc(n.id)}">${esc(n.name_en)}<small class="mute"> ${esc(n.facet)}</small></span>`).join(''); }, 200);
@@ -920,7 +934,7 @@ async function openCardView(id) {
   $('#cvGrid').innerHTML = media.map(m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`).join('') || '<div class="mute">사진 없음</div>';
   $('#cvGrid').onclick = ev => { const ph = ev.target.closest('.ph'); if (!ph) return; const m = media.find(x => x.id === +ph.dataset.id); if (m) openLightbox(m); };
   $('#cvEdit').onclick = () => { $('#mView').classList.remove('on'); openCardBuilder(id, []); };
-  $('#cvAn').onclick = async () => { await analyzeMany(ids, e.focus_node_id || null, false, [...covers]); openCardView(id); };
+  $('#cvAn').onclick = async () => { await analyzeMany(ids, analysisFocus(e.focus_node_id), false, [...covers]); openCardView(id); };
   $('#mView').classList.add('on');
 }
 
@@ -963,7 +977,7 @@ async function loadCards() {
   $('#cards').innerHTML = gkeys.map(k => `<div class="cgroup"><h3 style="margin:6px 0 2px;font-size:13px;letter-spacing:.04em">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : 'FOCUS 미지정'} <span class="mute" style="font-weight:400">${groupsC[k].length}</span></h3><div class="cards">${groupsC[k].map(cardHTML).join('')}</div></div>`).join('') || '<span class="mute">카드가 없습니다 — 갤러리에서 사진을 선택해 만드세요</span>';
 }
 $('#cards').onclick = async e => { const ed = e.target.closest('[data-edit]'); if (ed) return openCardBuilder(+ed.dataset.edit, []);
-  if (!e.target.closest('button')) { const c = e.target.closest('.card'); if (c) return openCardView(+c.dataset.id); } const an = e.target.closest('[data-an]'); if (an) { const id = +an.dataset.an; const { data: e2 } = await sb.from('tx_entries').select('focus_node_id').eq('id', id).single(); const { data: em } = await sb.from('tx_entry_media').select('media_id,role').eq('entry_id', id); await analyzeMany((em || []).map(r => r.media_id), e2?.focus_node_id || null, false, (em || []).filter(r => r.role === 'cover').map(r => r.media_id)); loadCards(); } };
+  if (!e.target.closest('button')) { const c = e.target.closest('.card'); if (c) return openCardView(+c.dataset.id); } const an = e.target.closest('[data-an]'); if (an) { const id = +an.dataset.an; const { data: e2 } = await sb.from('tx_entries').select('focus_node_id').eq('id', id).single(); const { data: em } = await sb.from('tx_entry_media').select('media_id,role').eq('entry_id', id); await analyzeMany((em || []).map(r => r.media_id), analysisFocus(e2?.focus_node_id), false, (em || []).filter(r => r.role === 'cover').map(r => r.media_id)); loadCards(); } };
 
 /* =====================================================================
    AI ANALYSIS — OpenAI Responses API, Structured Output (enum = taxonomy)

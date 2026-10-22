@@ -75,13 +75,20 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 /* ---- cards ---- */
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:1100px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.card{background:var(--card);border-radius:18px;padding:18px 18px 16px;display:flex;flex-direction:column;cursor:pointer;position:relative}
+.card{background:var(--card);border-radius:18px;padding:14px 14px 12px;display:flex;flex-direction:column;cursor:pointer;position:relative}
+.card .foot{display:flex;align-items:center;gap:5px;margin-top:10px;min-height:26px;overflow:hidden}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;line-height:1.2}
+.pill.cel{background:linear-gradient(90deg,#d9d9d9,#f5f5f5,#cfcfcf);color:#222;border:1px solid #c4c4c4}
+.pill.rank{background:#1f5fd1;color:#fff}
+.pill.dat{background:#fff;color:#1f5fd1;border:1px solid #1f5fd1}
+.pill.mut{color:var(--mute);font-weight:500;background:none;padding-left:0}
+.card .foot .pl{display:flex;gap:5px;flex:1;min-width:0;overflow:hidden}.card .foot .pick{margin-left:auto;flex-shrink:0;white-space:nowrap}
 .card .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .chip{display:inline-flex;align-items:center;background:var(--chip);border-radius:999px;padding:3px 9px;font-size:11px;font-weight:600;white-space:nowrap}
 .chip.key{background:#eaf2e6}.chip.key2{background:#e2ecef}
-.card h3{margin:0 0 6px;font-size:15px}
-.card .desc{font-size:12px;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
-.card .imgs{display:flex;gap:5px;margin:12px 0 10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;padding-bottom:4px}
+.card h3{margin:0 0 3px;font-size:15px;display:flex;align-items:baseline;gap:8px}.card h3 small{font-size:11px;color:var(--mute);font-weight:500;margin-left:auto}
+.card .desc{font-size:12px;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:8px}
+.card .imgs{display:flex;gap:5px;margin:8px 0 0;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;padding-bottom:4px}
 .card .imgs .ph{flex:0 0 calc((100% - 10px)/3);scroll-snap-align:start}
 .card .imgs img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;background:#e6e6e3;display:block}
 .card .more{background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:1px 6px;border-radius:999px}
@@ -93,7 +100,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .bx.data-bx{border-color:#1f5fd1;color:#1f5fd1}
 .bx.rank-bx{background:#1f5fd1;color:#fff;border-color:#1f5fd1}.bx.rank-bx small{color:rgba(255,255,255,.8)}.bx.rank-bx b{font-size:16px}
 .bx.empty-bx{color:var(--mute);border-style:dashed}
-.card .hashes{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px;font-size:12px}
+.card .hashes{display:flex;gap:6px;flex-wrap:wrap;margin:0;font-size:12px}
 .card .hashes span{color:var(--orange);font-weight:600}
 .dt-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
 .dt-strip .ph{flex:0 0 220px;position:relative;border-radius:8px}
@@ -176,7 +183,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-11</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261022-12</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -217,7 +224,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-11
+   TAXONOMY AGENT · index.html (리포트)  v261022-12
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -349,17 +356,25 @@ function paintCards() {
     const thumbs = c.all_thumbs || c.cover_thumbs || []; const ids = c.all_ids || c.cover_ids || [];
     const imgHTML = thumbs.map((p, i) => { const cn = CELEB[ids[i]]; return `<div class="ph ${cn ? 'celeb' : ''}"><img src="${pubUrl(p)}" loading="lazy" alt="">${cn ? `<span class="star">⭐</span><span class="celeb-tag">${esc(cn)}</span>` : ''}</div>`; }).join('') || '<div class="ph"><img alt=""></div>';
     const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
-    const pr = c.period_min && c.period_max && c.period_min !== c.period_max ? `${c.period_min} ~ ${c.period_max} · 주로 ${c.period_top || c.period}` : (c.period_top || c.period);
-    return `<div class="card" data-id="${c.id}"><div class="pr" style="font-size:11px;color:var(--mute);margin-bottom:4px">${esc(pr)}</div><h3>${esc(c.title)}</h3>${hashes}<div class="desc">${esc(c.description || '')}</div><div class="imgs">${imgHTML}</div>${thumbs.length > 3 ? `<div style="margin:-4px 0 8px"><span class="more">${thumbs.length}장 · 옆으로 스크롤</span></div>` : ''}<div class="boxes">${boxesHTML(c)}</div><div class="pickrow">${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
+    const pr = c.period_min && c.period_max && c.period_min !== c.period_max ? `${c.period_min}~${c.period_max}` : (c.period_top || c.period);
+    return `<div class="card" data-id="${c.id}"><h3>${esc(c.title)}<small>${esc(pr)}${thumbs.length > 3 ? ' · ' + thumbs.length + '장 ›' : ''}</small></h3>${hashes}<div class="imgs">${imgHTML}</div>${c.description ? `<div class="desc">${esc(c.description)}</div>` : ''}<div class="foot"><div class="pl">${pillsHTML(c)}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
   };
   $('#cards').innerHTML = gk.map(k => `<div style="grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:6px">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : '미지정'} <span style="color:var(--mute);font-weight:400">${groups[k].length}</span></div>${groups[k].map(cardHTML).join('')}`).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
 }
 const EV_LABEL = { celeb: '셀럽 착용', ranking: '랭킹', runway: 'Runway', metric: '수치', market: 'Market', note: '메모' };
+function pillsHTML(c) {
+  const p = []; const names = (c.celeb_names || []).filter(Boolean);
+  if (names.length) p.push(`<span class="pill cel">⭐ ${esc(names.slice(0, 2).join(', '))}${names.length > 2 ? ' +' + (names.length - 2) : ''}</span>`); else if (c.celebs) p.push(`<span class="pill cel">⭐ 셀럽 ${c.celebs}</span>`);
+  const ev = (c.evidence || []).filter(e => e.type !== 'celeb' && e.type !== 'note' && (e.label || e.value));
+  for (const e of ev.slice(0, 2)) { const rank = e.type === 'ranking' || /\d+\s*위/.test(e.value || ''); const txt = e.type === 'ranking' ? `${e.label || ''} ${e.value || ''}` : e.type === 'metric' ? `${e.label || ''} ${e.value || ''}` : `${EV_LABEL[e.type] || ''} ${e.label || ''} ${e.value || ''}`; p.push(`<span class="pill ${rank ? 'rank' : 'dat'}">${esc(txt.replace(/\s+/g, ' ').trim())}</span>`); }
+  if (ev.length > 2) p.push(`<span class="pill mut">+${ev.length - 2}</span>`);
+  return p.join('');
+}
 function boxesHTML(c) {
   // 1행: 셀럽 착용 (사진 셀럽 표시 + 근거의 '셀럽 착용' 항목)
   const names = (c.celeb_names || []).filter(Boolean);
   const evAll = (c.evidence || []).filter(e => e.label || e.value);
-  const evCeleb = evAll.filter(e => e.type === 'celeb').map(e => [e.label, e.value].filter(Boolean).join(' '));
+  const evCeleb = [];
   const celebTxt = [...names, ...evCeleb.filter(x => !names.includes(x))].join(', ');
   let h = celebTxt || c.celebs ? `<div class="bx celeb-bx"><small>⭐ 셀럽 착용</small><b>${esc(celebTxt || c.celebs + '명')}</b></div>` : `<div class="bx empty-bx"><small>셀럽 착용</small><b>—</b></div>`;
   // 2행: 근거 데이터 전부 (랭킹은 크게 강조)
@@ -419,7 +434,7 @@ async function openDetail(id) {
 async function renderAnalytics() {
   const an = $('#an'); an.innerHTML = '<div class="empty">계산 중…</div>';
   const src = S.src === 'ai' ? S.anSrc : S.src;
-  let rows = [], totals = {}, denom = 0, label = '';
+  let rows = [], totals = {}, denom = 0, label = ''; let byFocus = null;
   if (src === 'fs') {
     const { data } = await sb.from('tx_season_counts').select('node_id,item_count,scope').eq('src', 'fs').eq('season', '27SS').is('scope', null).limit(5000);
     rows = (data || []).map(r => ({ node_id: r.node_id, photos: r.item_count })); label = 'FS Runway · SS27 (Future Snoops 집계, 아이템 수)';
@@ -427,6 +442,7 @@ async function renderAnalytics() {
   } else {
     let q = sb.from('tx_v_tag_counts').select('node_id,photos,focus_node_id').eq('source', src); if (S.period) q = q.eq('period', S.period);
     const { data } = await q.limit(20000); const agg = {}; for (const r of (data || [])) agg[r.node_id] = (agg[r.node_id] || 0) + r.photos; rows = Object.entries(agg).map(([node_id, photos]) => ({ node_id, photos }));
+    byFocus = {}; for (const r of (data || [])) { const k = r.node_id + '|' + (r.focus_node_id || ''); byFocus[k] = (byFocus[k] || 0) + r.photos; }
     let tq = sb.from('tx_v_focus_totals').select('focus_node_id,photos').eq('source', src); if (S.period) tq = tq.eq('period', S.period); const { data: t } = await tq; for (const r of (t || [])) { totals[r.focus_node_id] = (totals[r.focus_node_id] || 0) + r.photos; denom += r.photos; }
     label = `${src.toUpperCase()} · ${S.period || '전체 기간'} · AI 분석 사진 ${denom.toLocaleString()}장 (focus 아이템 기준)`;
   }
@@ -447,7 +463,14 @@ async function renderAnalytics() {
     const F = TAX.byId[S.fam]; const list = (shades[S.fam] || []).sort((a, b) => b.v - a.v); const mx = list[0]?.v || 1;
     h += `<div class="an-grid"><div class="panel"><h3>${esc(F.name_en)} <span style="font-weight:400;color:var(--mute);font-size:12px">${pct(famCnt[S.fam], famTot)}% of all colors · ${famCnt[S.fam]} · ${list.length} subgroups</span></h3>`;
     h += list.map((x, i) => `<div class="shade"><div class="nm"><i style="background:${x.n.hex}"></i>${i + 1}. ${esc(x.n.name_en)}</div><div class="bar"><i style="width:${x.v / mx * 100}%;background:${x.n.hex}"></i></div><div class="n">${x.v}</div><div class="n">${pct(x.v, famCnt[S.fam])}%</div></div>`).join('');
-    h += `<div class="note">Subgroup percentages represent each shade's share of all ${esc(F.name_en)} items.</div></div>`;
+    h += `<div class="note">Subgroup percentages represent each shade's share of all ${esc(F.name_en)} items.</div>`;
+    // 카테고리별 분포 (이 계열이 어떤 아이템에서 나왔나) — AI 분석 소스만
+    if (byFocus) {
+      const catCnt = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (!n || n.facet !== 'color' || n.kind !== 'value' || n.parent_id !== S.fam || !f) continue; catCnt[f] = (catCnt[f] || 0) + v; }
+      const cl = Object.entries(catCnt).sort((a, b) => b[1] - a[1]); const cmx = cl[0]?.[1] || 1; const ctot = cl.reduce((a, b) => a + b[1], 0);
+      if (cl.length) h += `<h3 style="margin-top:16px">${esc(F.name_en)} · 카테고리별</h3>` + cl.map(([f, v]) => `<div class="shade"><div class="nm">${esc(nodeName(f))}</div><div class="bar"><i style="width:${v / cmx * 100}%"></i></div><div class="n">${v}</div><div class="n">${pct(v, ctot)}%</div></div>`).join('') + `<div class="note">각 카테고리(focus 아이템)에서 ${esc(F.name_en)} 계열 색이 잡힌 사진 수.</div>`;
+    }
+    h += `</div>`;
     // top shades overall excluding neutrals
     const top = []; for (const f of fams) { if (f.name_en === 'Neutrals') continue; for (const x of shades[f.id]) top.push({ ...x, f }); } top.sort((a, b) => b.v - a.v);
     h += `<div class="panel"><h3>Top shades</h3><div class="note" style="margin:0 0 6px">Across all families except Neutrals</div>${top.slice(0, 6).map(x => `<div class="trend"><div class="nm"><i style="background:${x.n.hex}"></i><div>${esc(x.n.name_en)}<div style="font-size:11px;color:var(--mute)">${esc(x.f.name_en)} · ${x.v} items</div></div></div><b>${pct(x.v, famTot)}%</b></div>`).join('') || '<div class="empty">데이터 없음</div>'}</div></div>`;
