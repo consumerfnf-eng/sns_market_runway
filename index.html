@@ -61,6 +61,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 @keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 .celeb{position:relative;box-shadow:0 0 0 3px #d9d9d9,0 0 10px 2px rgba(255,255,255,.9),0 0 0 4px #a8a8a8}
 .celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(120deg,#9a9a9a,#f4f4f4 30%,#b8b8b8 50%,#ffffff 70%,#9a9a9a);background-size:200% 100%;animation:shine 2.4s linear infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
+.star{position:absolute;top:6px;right:6px;font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));z-index:4;pointer-events:none}
 .celeb-tag{position:absolute;left:8px;bottom:8px;background:linear-gradient(90deg,#8e8e8e,#e8e8e8,#8e8e8e);color:#111;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
 .card .imgs .ph{position:relative;border-radius:6px}
 .card .tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:11px}
@@ -159,7 +160,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-06</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261022-07</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -200,7 +201,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-06
+   TAXONOMY AGENT · index.html (리포트)  v261022-07
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -329,7 +330,7 @@ function paintCards() {
   $('#cards').innerHTML = list.map(c => {
     const chips = facetsOf(c).slice(0, 3).map((f, i) => `<span class="chip ${i === 0 ? 'key' : 'key2'}">${esc(f)}</span>`).join('');
     const imgs = (c.cover_thumbs || []).slice(0, 3); const ids = (c.cover_ids || []).slice(0, 3); while (imgs.length < 3) imgs.push(null);
-    const imgHTML = imgs.map((p, i) => { const cn = ids[i] && CELEB[ids[i]]; return `<div class="ph ${cn ? 'celeb' : ''}">${p ? `<img src="${pubUrl(p)}" loading="lazy" alt="">` : '<img alt="">'}${cn ? `<span class="celeb-tag">★ ${esc(cn)}</span>` : ''}</div>`; }).join('');
+    const imgHTML = imgs.map((p, i) => { const cn = ids[i] && CELEB[ids[i]]; return `<div class="ph ${cn ? 'celeb' : ''}">${p ? `<img src="${pubUrl(p)}" loading="lazy" alt="">` : '<img alt="">'}${cn ? `<span class="star">⭐</span><span class="celeb-tag">${esc(cn)}</span>` : ''}</div>`; }).join('');
     const red = dataLine(c);
     const tags = ((c.hashtags || []).length || red) ? `<div class="tags">${(c.hashtags || []).slice(0, 4).map(h => `<span class="hash">#${esc(h)}</span>`).join('')}${red ? `<span class="red">${esc(red)}</span>` : ''}</div>` : '';
     return `<div class="card" data-id="${c.id}"><div class="chips">${chips}</div><h3>${esc(c.title)}</h3><div class="desc">${esc(c.description || '')}</div><div class="imgs">${imgHTML}</div><div class="stats">${statsHTML(c)}</div>${tags}<div class="pickrow">${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
@@ -360,7 +361,7 @@ async function openDetail(id) {
   if (mids.length) { const { data } = await sb.from('tx_media').select('id,thumb_path,storage_path,account,brand,posted_at,period,city,product_name,price,source,is_celeb,celeb_name').in('id', mids); media = mids.map(i => (data || []).find(m => m.id === i)).filter(Boolean); }
   const covers = (em || []).filter(r => r.role === 'cover').map(r => media.find(m => m.id === r.media_id)).filter(Boolean);
   const extras = media.filter(m => !covers.includes(m));
-  const img = m => `<div class="ph ${m.is_celeb ? 'celeb' : ''}"><img src="${pubUrl(m.thumb_path)}" data-full="${pubUrl(m.storage_path)}" data-id="${m.id}" title="${esc(m.account ? '@' + m.account : m.brand || '')}">${m.is_celeb ? `<span class="celeb-tag">★ ${esc(m.celeb_name || 'CELEB')}</span>` : ''}</div>`;
+  const img = m => `<div class="ph ${m.is_celeb ? 'celeb' : ''}"><img src="${pubUrl(m.thumb_path)}" data-full="${pubUrl(m.storage_path)}" data-id="${m.id}" title="${esc(m.account ? '@' + m.account : m.brand || '')}">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}</div>`;
   const tags = (CARD_TAGS[id] || []).map(i => TAX.byId[i]).filter(Boolean);
   const tot = (cols || []).reduce((s, x) => s + +x.weight, 0);
   let h = `<div class="dt-head"><div class="chips">${facetsOf(c).map((f, i) => `<span class="chip ${i === 0 ? 'key' : 'key2'}">${esc(f)}</span>`).join('')}</div><h2>${esc(c.title)}</h2><div class="meta">First spotted · ${esc(c.first_spotted || c.period)} · ${esc(c.source)} · ${esc(c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
