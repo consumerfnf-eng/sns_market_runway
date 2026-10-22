@@ -186,7 +186,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261023-03</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-04</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -236,7 +236,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261023-03
+   TAXONOMY AGENT · index.html (리포트)  v261023-04
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -486,9 +486,16 @@ function renderReport() {
   $('#rpSeasons').innerHTML = RUNWAY_REPORTS.map(r => `<button data-rps="${esc(r.season)}" class="${r.season === S.rpSeason ? 'on' : ''}" title="${esc(r.title)}">${esc(r.season)}</button>`).join('');
   $('#rpSeasons').onclick = e => { const b = e.target.closest('[data-rps]'); if (!b) return; S.rpSeason = b.dataset.rps; renderReport(); };
   $('#rpFrame').style.display = ''; $('#rpEmpty').style.display = 'none';
-  if ($('#rpFrame').getAttribute('src') !== cur.url) $('#rpFrame').src = cur.url;
+  // Storage는 HTML을 text/plain으로 내려주므로, 파일 내용을 그대로 받아 iframe에 HTML로 그림 (내용 수정 없음)
+  if ($('#rpFrame').dataset.url !== cur.url) {
+    $('#rpFrame').dataset.url = cur.url; $('#rpFrame').removeAttribute('src'); $('#rpFrame').srcdoc = '<p style="font:13px sans-serif;color:#888;padding:20px">불러오는 중…</p>';
+    fetch(cur.url, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(buf => { const html = new TextDecoder('utf-8').decode(buf); RP_HTML[cur.url] = html; $('#rpFrame').srcdoc = html; })
+      .catch(e => { $('#rpFrame').srcdoc = `<p style="font:13px sans-serif;color:#c00;padding:20px">리포트를 불러오지 못했습니다 (${esc(String(e.message || e))}) — ${esc(cur.url)}</p>`; });
+  }
   $('#rpOpen').href = cur.url;
+  $('#rpOpen').onclick = e => { const html = RP_HTML[cur.url]; if (!html) return; e.preventDefault(); const b = new Blob([html], { type: 'text/html;charset=utf-8' }); window.open(URL.createObjectURL(b), '_blank'); };
 }
+const RP_HTML = {};
 
 /* =====================================================================
    EXPORT — 현재 필터(소스·기간·카테고리) 기준 단일 HTML 리포트
