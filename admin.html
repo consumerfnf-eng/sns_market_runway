@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TAXONOMY AGENT · admin</title>
+<title>Fashion Analysis · admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
 :root{
@@ -26,7 +26,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #ddd6c5;outline-offset
 textarea{resize:vertical}
 header{display:flex;align-items:center;gap:18px;padding:12px 22px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20}
 header .logo{font-weight:800;letter-spacing:.04em}
-header .logo small{font-weight:500;color:var(--mute);margin-left:6px}
+header .logo{display:flex;flex-direction:column;line-height:1.15}header .logo small{font-weight:500;color:var(--mute);font-size:10px}
 header nav{display:flex;gap:4px}
 header nav button{border:none;background:none;padding:6px 10px;border-radius:8px;color:var(--mute);font-weight:600}
 header nav button.on{background:var(--soft);color:var(--ink)}
@@ -50,6 +50,11 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .src-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:12px}
 .src-tabs button{border:none;background:none;border-radius:0;padding:8px 12px;border-bottom:2px solid transparent;color:var(--mute);font-weight:600}
 .src-tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+/* 셀럽 착장: 실버 반짝이 테두리 */
+@keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.celeb{position:relative;box-shadow:0 0 0 3px #d9d9d9,0 0 10px 2px rgba(255,255,255,.9),0 0 0 4px #a8a8a8}
+.celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(120deg,#9a9a9a,#f4f4f4 30%,#b8b8b8 50%,#ffffff 70%,#9a9a9a);background-size:200% 100%;animation:shine 2.4s linear infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
+.celeb-tag{position:absolute;left:8px;bottom:8px;background:linear-gradient(90deg,#8e8e8e,#e8e8e8,#8e8e8e);color:#111;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
 /* upload */
 .drop{border:2px dashed #cfc9bb;border-radius:var(--r);padding:28px;text-align:center;color:var(--mute);background:#fbfaf7;margin:12px 0}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
@@ -58,6 +63,9 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .pv img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
 .pv .f{padding:6px 7px;display:grid;gap:3px}
 .pv input{padding:2px 5px;font-size:11px;border-radius:5px;width:100%}
+.pv{position:relative}.pv .rm,.cell .rm{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;z-index:2}
+.pv .rm:hover,.cell .rm:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cell .rm{display:none}.cell:hover .rm{display:flex}
 .pv .st{color:var(--mute)}.pv.dup{opacity:.5}.pv.err .st{color:var(--accent)}.pv.done .st{color:var(--ok)}
 .prog{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin:10px 0}
 .prog i{display:block;height:100%;background:var(--ink);width:0;transition:width .2s}
@@ -79,6 +87,13 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .cell .bd{position:absolute;top:8px;right:8px;font-size:10px;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.92)}
 .cell .bd.an{color:var(--ok)}.cell .bd.cd{color:var(--accent)}
 .cell .grp-head{position:absolute;left:0;right:0;bottom:30px;background:rgba(0,0,0,.4);color:#fff;font-size:10px;padding:2px 8px}
+#v-gallery:not(.on) ~ * .tray, .tray.hide{display:none}
+.tray{position:fixed;right:18px;bottom:70px;width:260px;background:#fff;border:2px dashed #cfcfcf;border-radius:14px;padding:10px;z-index:29;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.tray.over{border-color:var(--accent);background:var(--accent-soft)}
+.tray .t{font-size:11px;color:var(--mute);margin-bottom:6px}
+.tray .ph{display:flex;gap:4px;flex-wrap:wrap;min-height:40px;max-height:160px;overflow:auto}
+.tray .ph img{width:36px;aspect-ratio:3/4;object-fit:cover;border-radius:4px;cursor:pointer}
+.cell[draggable=true]{-webkit-user-drag:element}
 .selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:var(--ink);color:#fff;border-radius:999px;padding:8px 10px 8px 18px;display:none;gap:8px;align-items:center;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .selbar.on{display:flex}
 .selbar button{background:#fff;color:var(--ink);border:none}
@@ -128,7 +143,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 </head>
 <body>
 <header>
-  <div class="logo">TAXONOMY AGENT<small>admin</small></div>
+  <div class="logo">Fashion Analysis<small>소비자분석팀 · admin</small></div>
   <nav>
     <button data-v="upload" class="on">업로드</button>
     <button data-v="gallery">갤러리</button>
@@ -138,7 +153,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-02</span>
+  <span class="ver" id="ver">v261022-10</span>
 </header>
 
 <main>
@@ -155,6 +170,8 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <label>수집월 (파일명 날짜가 있으면 자동)<input type="month" id="ig-period"></label>
       <label>계정 기본값 (파일명에서 못 읽을 때)<input type="text" id="ig-account" placeholder="@account"></label>
       <label>시장<select id="ig-region"><option>GLOBAL</option><option>KR</option><option>CN</option><option>JP</option></select></label>
+      <label>셀럽 착장<span><input type="checkbox" id="ig-celeb"> 이 묶음 전체</span></label>
+      <label>셀럽 이름<input type="text" id="ig-celebName" placeholder="예: 제니" style="width:110px"></label>
       <span class="mute small">파일명 규칙 <code>계정_YYYYMMDD_번호.jpg</code> → 계정·날짜·번호 자동. 같은 계정+날짜 = 한 게시물</span>
     </div>
     <div class="row" id="upf-runway" style="display:none">
@@ -206,6 +223,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <div style="text-align:center;margin:16px"><button id="gMore">더 보기</button></div>
     </div>
   </div>
+  <div class="tray hide" id="tray"><div class="t">카드 바구니 — 사진을 여기로 드래그하거나 체크하세요</div><div class="ph" id="trayPh"></div></div>
   <div class="selbar" id="selbar">
     <span id="selN">0장 선택</span>
     <button class="acc" id="selCard">카드 만들기</button>
@@ -265,11 +283,11 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
           <input type="text" id="cbName" placeholder="타이틀" style="font-size:16px;font-weight:600"></div>
         <div class="field"><span>Focus 카테고리 (분석·컬러칩 기준)</span>
           <div class="cascade"><select id="cbGroup"></select><select id="cbCat"></select><span class="small mute" id="cbFocusHint"></span></div></div>
-        <div class="field"><span>분류체계 태그 — 점선 칩은 제안(클릭하면 확정), 진한 칩은 확정</span>
+        <div class="field"><span>분류체계 태그 (FS Taxonomy 코드 — Analytics 집계·FS 벤치마크 비교에 쓰임. 점선=제안, 클릭=확정)</span>
           <div class="chips" id="cbTags"></div>
           <div class="row" style="margin-top:6px"><input type="text" id="cbTagSearch" placeholder="태그 검색해서 추가 (영문)" style="width:260px"><div class="chips" id="cbTagHits"></div></div></div>
         <div class="field"><span>설명 (2줄)</span><textarea id="cbDesc" rows="2"></textarea></div>
-        <div class="field"><span>특징 #해시태그 (팀 자유어, 쉼표·엔터로 추가)</span>
+        <div class="field"><span>특징 #해시태그 (영문 소문자 고정 · 쉼표/엔터로 추가 · #halter-neck #halterneck #halter_neck 모두 분류체계 Halterneck으로 인식돼 위 칩에 제안됨)</span>
           <div class="chips" id="cbHash"></div><input type="text" id="cbHashIn" placeholder="#홀터넥 #팝컬러"></div>
         <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨 / 값 / URL·날짜</span>
           <div id="cbEv"></div><button class="sm" id="cbEvAdd">+ 근거 추가</button></div>
@@ -279,7 +297,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
           <label>소스<select id="cbSource"><option value="instagram">INSTAGRAM</option><option value="runway">RUNWAY</option><option value="market">MARKET</option></select></label>
           <label>기간<input type="text" id="cbPeriod" placeholder="2026-10 또는 27SS" style="width:110px"></label>
           <label>First spotted<input type="text" id="cbFirst" placeholder="2026-09" style="width:90px"></label>
-          <label><span>Editor's Pick</span><input type="checkbox" id="cbPick"></label>
+          <label><span>🔥 HOT 표시</span><input type="checkbox" id="cbPick"></label>
         </div>
       </div>
       <div>
@@ -313,6 +331,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
           <button class="sm" id="lbAnalyze">분석</button>
           <button class="sm" id="lbAnalyzeHi">승격 모델로 분석</button>
           <button class="sm" id="lbDel">삭제</button>
+          <button class="sm" id="lbCeleb">★ 셀럽 지정/해제</button>
         </div>
       </div>
     </div>
@@ -333,15 +352,15 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-02
+   TAXONOMY AGENT · admin.html  v261022-10
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
    ===================================================================== */
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
-const SUPA_ANON = '';           // 팀 배포 시 여기에 anon key 입력. 비어 있으면 설정 탭 입력값(localStorage) 사용
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-02';
+const VER = 'v261022-10';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -389,6 +408,7 @@ async function loadTaxonomy() {
     for (const a of (n.aliases || [])) TAX.terms.push({ term: a.toLowerCase(), id: n.id });
   }
   TAX.terms.sort((a, b) => b.term.length - a.term.length);
+  TAX.termKeys = {}; for (const t of TAX.terms) { const k = t.term.toLowerCase().replace(/[^a-z0-9]/g, ''); if (k.length >= 3) (TAX.termKeys[k] ||= []).push(t.id); }
 }
 async function loadSeasons() { const { data } = await sb.from('tx_seasons').select('*').order('sort_order'); SEASONS = data || []; $('#sSeasons').innerHTML = SEASONS.map(s => `${s.code} = ${s.month_from} ~ ${s.month_to}`).join(' · ') || '(없음 — 04_config.sql 확인)'; }
 async function loadConfig() {
@@ -405,7 +425,7 @@ const catOf = id => { let n = TAX.byId[id]; while (n && n.kind !== 'category' &&
 const nodeName = id => (TAX.byId[id] || {}).name_en || id;
 
 /* ---------------- views ---------------- */
-function showView(v) { $$('header nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v)); if (v === 'cards') loadCards(); if (v === 'gallery') { renderFilters(); } }
+function showView(v) { $('#tray').classList.toggle('hide', v !== 'gallery'); $$('header nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v)); if (v === 'cards') loadCards(); if (v === 'gallery') { renderFilters(); } }
 $$('header nav button').forEach(b => b.onclick = () => showView(b.dataset.v));
 $$('[data-close]').forEach(b => b.onclick = () => $('#' + b.dataset.close).classList.remove('on'));
 
@@ -454,10 +474,19 @@ $('#file').onchange = e => addFiles([...e.target.files]);
 drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
 drop.ondragleave = () => drop.classList.remove('over');
 drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); };
-document.addEventListener('paste', e => { if (!$('#v-upload').classList.contains('on')) return; const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/')); if (fs.length) addFiles(fs.map((f, i) => new File([f], f.name && f.name !== 'image.png' ? f.name : `paste_${Date.now()}_${i + 1}.png`, { type: f.type }))); });
+let PASTE_N = 0;
+document.addEventListener('paste', e => {
+  if (!$('#v-upload').classList.contains('on')) return;
+  const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/')); if (!fs.length) return;
+  // 붙여넣기: 파일명이 없으므로 오늘(수집일) 기준 '계정_YYYYMMDD_번호' 로 생성 → 계정은 상단 기본값(없으면 비움)
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const acc = UP_SRC === 'instagram' ? $('#ig-account').value.trim().replace(/^@/, '') : UP_SRC === 'runway' ? $('#rw-brand').value.trim() : $('#mk-brand').value.trim();
+  addFiles(fs.map(f => { PASTE_N++; const ext = (f.type.split('/')[1] || 'png').replace('jpeg', 'jpg'); const name = `${acc ? acc + '_' : ''}${today}_${PASTE_N}.${ext}`; return new File([f], name, { type: f.type }); }));
+});
 function addFiles(files) {
   files = files.filter(f => f.type.startsWith('image/'));
-  for (const f of files) QUEUE.push({ file: f, name: f.name, parsed: parseName(f.name, UP_SRC), url: URL.createObjectURL(f), status: '대기' });
+  const celeb = UP_SRC === 'instagram' && $('#ig-celeb').checked, celebName = $('#ig-celebName').value.trim();
+  for (const f of files) QUEUE.push({ file: f, name: f.name, parsed: parseName(f.name, UP_SRC), url: URL.createObjectURL(f), status: '대기', celeb, celebName });
   renderQueue();
 }
 function renderQueue() {
@@ -465,14 +494,20 @@ function renderQueue() {
   $('#upStat').textContent = QUEUE.length ? `${QUEUE.length}장 · 대기 ${QUEUE.filter(q => q.status === '대기').length}` : '';
   $('#pv').innerHTML = QUEUE.map((q, i) => {
     const p = q.parsed; let fields = '';
-    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD"><input data-k="no" value="${p.no || ''}" placeholder="#">`;
+    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD"><input data-k="no" value="${p.no || ''}" placeholder="#"><label style="display:flex;gap:4px;align-items:center;font-size:11px"><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> 셀럽 <input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="이름" style="flex:1"></label>`;
     else if (UP_SRC === 'runway') fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="season" value="${esc(p.season || '')}" placeholder="시즌(비면 상단값)"><input data-k="no" value="${p.no || ''}" placeholder="#">`;
     else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD">`;
     const cls = q.status === '중복' ? 'dup' : q.status.startsWith('오류') ? 'err' : q.status === '완료' ? 'done' : '';
-    return `<div class="pv ${cls}" data-i="${i}"><img src="${q.url}" loading="lazy"><div class="f">${fields}<div class="st" title="${esc(q.name)}">${esc(q.status)} · ${esc(q.name)}</div></div></div>`;
+    return `<div class="pv ${cls} ${q.celeb ? 'celeb' : ''}" data-i="${i}"><span class="rm" data-rm="${i}" title="목록에서 제거${q.status === '완료' ? ' (업로드된 사진도 삭제)' : ''}">✕</span><img src="${q.url}" loading="lazy"><div class="f">${fields}<div class="st" title="${esc(q.name)}">${esc(q.status)} · ${esc(q.name)}</div></div></div>`;
   }).join('');
 }
-$('#pv').oninput = e => { const inp = e.target.closest('input'); if (!inp) return; const i = +inp.closest('.pv').dataset.i; let v = inp.value.trim(); if (inp.dataset.k === 'no') v = +v || null; QUEUE[i].parsed[inp.dataset.k] = v || null; };
+$('#pv').onclick = async e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return; const i = +b.dataset.rm; const q = QUEUE[i]; if (!q) return;
+  if (q.status === '완료' && q.hash) { if (!confirm(`업로드된 사진을 삭제할까요?\n${q.name}`)) return; const { error } = await sb.from('tx_media').delete().eq('hash', q.hash); if (error) return toast(error.message, true); toast('삭제됨 (Storage는 휴지통)'); renderFilters(); }
+  URL.revokeObjectURL(q.url); QUEUE.splice(i, 1); renderQueue();
+};
+$('#pv').oninput = e => { const inp = e.target.closest('input'); if (!inp) return; const i = +inp.closest('.pv').dataset.i; if (inp.dataset.k === 'celeb') { QUEUE[i].celeb = inp.checked; inp.closest('.pv').classList.toggle('celeb', inp.checked); return; } if (inp.dataset.k === 'celebName') { QUEUE[i].celebName = inp.value.trim(); return; } let v = inp.value.trim(); if (inp.dataset.k === 'no') v = +v || null; QUEUE[i].parsed[inp.dataset.k] = v || null; };
+$('#ig-celeb').onchange = () => { QUEUE.forEach(q => { if (q.status === '대기') q.celeb = $('#ig-celeb').checked; }); renderQueue(); };
 $('#btnClear').onclick = () => { QUEUE.forEach(q => URL.revokeObjectURL(q.url)); QUEUE = []; renderQueue(); $('#upProg').style.width = '0'; };
 
 // ---- image processing
@@ -521,10 +556,13 @@ $('#btnUpload').onclick = async () => {
   };
   await Promise.all([worker(), worker(), worker(), worker()]); await flush(); prog();
   toast(`업로드 완료 ${todo.filter(q => q.status === '완료').length}장 · 중복 ${items.filter(q => q.status === '중복').length} · 오류 ${todo.filter(q => q.status.startsWith('오류')).length}`);
-  renderQueue(); renderFilters(); loadGallery(true);
+  renderQueue();
+  const okItems = todo.filter(q => q.status === '완료');
+  if (okItems.length) { const per = {}; okItems.forEach(q => { const m = buildMeta(q, 0); per[m.period] = (per[m.period] || 0) + 1; }); G.src = UP_SRC; G.period = Object.entries(per).sort((a, b) => b[1] - a[1])[0][0]; G.owner = ''; G.date = ''; $$('#galSrc button').forEach(x => x.classList.toggle('on', x.dataset.s === G.src)); showView('gallery'); }
+  renderFilters(); loadGallery(true);
 };
 function buildMeta(q, n) {
-  const p = q.parsed; const m = { source: UP_SRC, photo_no: p.no || null };
+  const p = q.parsed; const m = { source: UP_SRC, photo_no: p.no || null, is_celeb: !!q.celeb, celeb_name: q.celeb ? (q.celebName || $('#ig-celebName').value.trim() || null) : null };
   if (UP_SRC === 'instagram') { m.account = (p.account || $('#ig-account').value.trim().replace(/^@/, '')) || null; m.posted_at = p.date || null; m.period = p.date ? p.date.slice(0, 7) : $('#ig-period').value; m.city = $('#ig-region').value; }
   else if (UP_SRC === 'runway') { m.period = p.season || $('#rw-season').value; m.brand = p.brand || $('#rw-brand').value.trim() || null; m.city = $('#rw-city').value; }
   else { m.period = p.date ? p.date.slice(0, 7) : $('#mk-period').value; m.posted_at = p.date || null; m.brand = p.brand || $('#mk-brand').value.trim() || null; m.product_name = p.product || $('#mk-name').value.trim() || null; m.price = +$('#mk-price').value || null; m.product_url = $('#mk-url').value.trim() || null; }
@@ -534,8 +572,8 @@ function buildMeta(q, n) {
 /* =====================================================================
    GALLERY
    ===================================================================== */
-let G = { src: 'instagram', period: '', owner: '', status: '', q: '', page: 0, items: [], sel: new Set(), facets: [] };
-$('#galSrc').onclick = e => { const b = e.target.closest('button'); if (!b) return; G.src = b.dataset.s; G.period = ''; G.owner = ''; $$('#galSrc button').forEach(x => x.classList.toggle('on', x === b)); renderFilters(); loadGallery(true); };
+let G = { src: 'instagram', period: '', owner: '', date: '', status: '', q: '', page: 0, items: [], sel: new Set(), facets: [] };
+$('#galSrc').onclick = e => { const b = e.target.closest('button'); if (!b) return; G.src = b.dataset.s; G.period = ''; G.owner = ''; G.date = ''; $$('#galSrc button').forEach(x => x.classList.toggle('on', x === b)); renderFilters(); loadGallery(true); };
 $('#gStatus').onchange = () => { G.status = $('#gStatus').value; loadGallery(true); };
 $('#gSearch').oninput = debounce(() => { G.q = $('#gSearch').value.trim(); loadGallery(true); }, 300);
 $('#gMore').onclick = () => loadGallery(false);
@@ -550,18 +588,28 @@ async function renderFilters() {
   for (const f of G.facets) { per[f.period] = (per[f.period] || 0) + f.photos; if (f.owner) own[f.owner] = (own[f.owner] || 0) + f.photos; tot += f.photos; an += f.analyzed; }
   const perList = Object.keys(per).sort().reverse(); const ownList = Object.entries(own).sort((a, b) => b[1] - a[1]).slice(0, 80);
   const lab = G.src === 'runway' ? '시즌' : '수집월'; const olab = G.src === 'instagram' ? '계정' : '브랜드';
+  // 날짜(일) 목록 — 런웨이 제외. 선택된 수집월 안에서만 집계 (10만 장 대비)
+  let dateHTML = '';
+  if (G.src !== 'runway') {
+    let dq = sb.from('tx_media').select('posted_at').eq('source', G.src).not('posted_at', 'is', null); if (G.period) dq = dq.eq('period', G.period); if (G.owner) dq = dq.eq(G.src === 'instagram' ? 'account' : 'brand', G.owner);
+    const { data: dd } = await dq.limit(5000); const dc = {}; (dd || []).forEach(r => dc[r.posted_at] = (dc[r.posted_at] || 0) + 1);
+    const dl = Object.keys(dc).sort().reverse().slice(0, 120);
+    dateHTML = `<div class="grp"><div class="t">날짜</div>${dl.map(d => `<div class="it ${G.date === d ? 'on' : ''}" data-f="date" data-v="${d}">${d.slice(5)}<b>${dc[d]}</b></div>`).join('') || '<div class="small mute" style="padding:0 6px">날짜 정보 없음</div>'}</div>`;
+  }
   $('#filters').innerHTML = `
-    <div class="grp"><div class="t">전체</div><div class="it ${!G.period && !G.owner ? 'on' : ''}" data-f="all">${G.src.toUpperCase()}<b>${tot} · 분석 ${an}</b></div></div>
+    <div class="grp"><div class="t">전체</div><div class="it ${!G.period && !G.owner && !G.date ? 'on' : ''}" data-f="all">${G.src.toUpperCase()}<b>${tot} · 분석 ${an}</b></div></div>
     <div class="grp"><div class="t">${lab}</div>${perList.map(p => `<div class="it ${G.period === p ? 'on' : ''}" data-f="period" data-v="${esc(p)}">${esc(p)}<b>${per[p]}</b></div>`).join('')}</div>
+    ${dateHTML}
     <div class="grp"><div class="t">${olab}</div>${ownList.map(([o, c]) => `<div class="it ${G.owner === o ? 'on' : ''}" data-f="owner" data-v="${esc(o)}">${esc(o)}<b>${c}</b></div>`).join('')}</div>`;
 }
-$('#filters').onclick = e => { const it = e.target.closest('.it'); if (!it) return; if (it.dataset.f === 'all') { G.period = ''; G.owner = ''; } else if (it.dataset.f === 'period') G.period = G.period === it.dataset.v ? '' : it.dataset.v; else G.owner = G.owner === it.dataset.v ? '' : it.dataset.v; renderFilters(); loadGallery(true); };
+$('#filters').onclick = e => { const it = e.target.closest('.it'); if (!it) return; if (it.dataset.f === 'all') { G.period = ''; G.owner = ''; G.date = ''; } else if (it.dataset.f === 'period') { G.period = G.period === it.dataset.v ? '' : it.dataset.v; G.date = ''; } else if (it.dataset.f === 'date') G.date = G.date === it.dataset.v ? '' : it.dataset.v; else G.owner = G.owner === it.dataset.v ? '' : it.dataset.v; renderFilters(); loadGallery(true); };
 
 async function loadGallery(reset) {
   if (!sb) return;
   if (reset) { G.page = 0; G.items = []; $('#grid').innerHTML = ''; }
-  let q = sb.from('tx_media').select('id,source,period,season,posted_at,account,brand,city,product_name,price,photo_no,thumb_path,storage_path,status,filename').eq('source', G.src);
+  let q = sb.from('tx_media').select('id,source,period,season,posted_at,account,brand,city,product_name,price,photo_no,thumb_path,storage_path,status,filename,is_celeb,celeb_name').eq('source', G.src);
   if (G.period) q = q.eq('period', G.period);
+  if (G.date) q = q.eq('posted_at', G.date);
   if (G.owner) q = G.src === 'instagram' ? q.eq('account', G.owner) : q.eq('brand', G.owner);
   if (G.status) q = q.eq('status', G.status);
   if (G.q) q = q.or(`account.ilike.%${G.q}%,brand.ilike.%${G.q}%,product_name.ilike.%${G.q}%,filename.ilike.%${G.q}%`);
@@ -580,17 +628,34 @@ function cellHTML(m, inCard) {
   const cap = m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b> · ${esc(m.posted_at || m.period)} #${m.photo_no || ''}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b> · ${esc(m.city || '')} · ${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b> · ${esc(m.product_name || '')} · ${esc(m.period)}`;
   const bd = m.status === 'analyzed' ? `<span class="bd an">분석됨</span>` : m.status === 'error' ? `<span class="bd" style="color:var(--accent)">오류</span>` : '';
   const cd = inCard ? `<span class="bd cd" style="top:28px">카드</span>` : '';
-  return `<div class="cell ${G.sel.has(m.id) ? 'sel' : ''}" data-id="${m.id}"><span class="chk">${G.sel.has(m.id) ? '✓' : ''}</span>${bd}${cd}<img src="${pubUrl(m.thumb_path)}" loading="lazy" alt=""><div class="cap">${cap}</div></div>`;
+  return `<div class="cell ${G.sel.has(m.id) ? 'sel' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}" draggable="true">${m.is_celeb ? `<span class="celeb-tag">★ ${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="rm" data-del="${m.id}" title="이 사진 삭제">✕</span><span class="chk">${G.sel.has(m.id) ? '✓' : ''}</span>${bd}${cd}<img src="${pubUrl(m.thumb_path)}" loading="lazy" alt=""><div class="cap">${cap}</div></div>`;
 }
 $('#grid').onclick = e => {
   const cell = e.target.closest('.cell'); if (!cell) return; const id = +cell.dataset.id;
+  if (e.target.closest('[data-del]')) { e.stopPropagation(); deleteOne(id); return; }
   if (e.target.closest('.chk') || e.shiftKey || e.ctrlKey || e.metaKey) { G.sel.has(id) ? G.sel.delete(id) : G.sel.add(id); paintSel(); return; }
   openLightbox(G.items.find(m => m.id === id));
 };
+async function deleteOne(id) {
+  const m = G.items.find(x => x.id === id); if (!confirm(`이 사진 삭제?\n${m?.filename || id}`)) return;
+  const { error } = await sb.from('tx_media').delete().eq('id', id); if (error) return toast(error.message, true);
+  G.sel.delete(id); G.items = G.items.filter(x => x.id !== id); const el = $(`#grid .cell[data-id="${id}"]`); if (el) el.remove();
+  $('#gCount').textContent = `${G.items.length}장 표시`; paintSel(); toast('삭제됨 (Storage는 휴지통)'); renderFilters(); loadConfig();
+}
 function paintSel() {
   $$('#grid .cell').forEach(c => { const on = G.sel.has(+c.dataset.id); c.classList.toggle('sel', on); c.querySelector('.chk').textContent = on ? '✓' : ''; });
   $('#selbar').classList.toggle('on', G.sel.size > 0); $('#selN').textContent = `${G.sel.size}장 선택`;
+  const seen = new Map(); G.items.forEach(m => { if (G.sel.has(m.id)) seen.set(m.id, m); }); for (const id of G.sel) if (!seen.has(id) && TRAY_CACHE[id]) seen.set(id, TRAY_CACHE[id]);
+  $('#trayPh').innerHTML = [...seen.values()].map(m => `<img src="${pubUrl(m.thumb_path)}" data-id="${m.id}" title="클릭하면 뺌">`).join('') || '<span class="small mute">비어 있음</span>';
 }
+const TRAY_CACHE = {};   // 페이지 바뀌어도 바구니 썸네일 유지
+$('#grid').addEventListener('dragstart', e => { const c = e.target.closest('.cell'); if (!c) return; const id = +c.dataset.id; const ids = G.sel.has(id) ? [...G.sel] : [id]; e.dataTransfer.setData('text/plain', ids.join(',')); e.dataTransfer.effectAllowed = 'copy'; });
+const tray = $('#tray');
+tray.ondragover = e => { e.preventDefault(); tray.classList.add('over'); };
+tray.ondragleave = () => tray.classList.remove('over');
+tray.ondrop = e => { e.preventDefault(); tray.classList.remove('over'); (e.dataTransfer.getData('text/plain') || '').split(',').map(Number).filter(Boolean).forEach(id => { G.sel.add(id); const m = G.items.find(x => x.id === id); if (m) TRAY_CACHE[id] = m; }); paintSel(); };
+$('#trayPh').onclick = e => { const im = e.target.closest('img'); if (!im) return; G.sel.delete(+im.dataset.id); paintSel(); };
+$('#grid').addEventListener('click', e => { const c = e.target.closest('.cell'); if (c && G.sel.has(+c.dataset.id)) { const m = G.items.find(x => x.id === +c.dataset.id); if (m) TRAY_CACHE[m.id] = m; } }, true);
 $('#selCard').onclick = () => openCardBuilder(null, [...G.sel]);
 $('#selAdd').onclick = () => openPick([...G.sel]);
 $('#selAnalyze').onclick = async () => { const ids = [...G.sel]; const focus = prompt('focus 카테고리 id (예: product.apparel.tops). 비우면 AI가 카테고리를 판정합니다', ''); await analyzeMany(ids, focus || null, false); loadGallery(true); };
@@ -620,6 +685,7 @@ async function renderLbTags() {
 }
 $('#lbAnalyze').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, false); renderLbTags(); };
 $('#lbAnalyzeHi').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, true); renderLbTags(); };
+$('#lbCeleb').onclick = async () => { const on = !LB.is_celeb; let name = LB.celeb_name || ''; if (on) { name = prompt('셀럽 이름', name) ?? name; } const { error } = await sb.from('tx_media').update({ is_celeb: on, celeb_name: on ? (name || null) : null }).eq('id', LB.id); if (error) return toast(error.message, true); LB.is_celeb = on; LB.celeb_name = on ? name : null; toast(on ? '셀럽 착장 지정' : '해제'); loadGallery(true); };
 $('#lbDel').onclick = async () => { if (!confirm('이 사진 삭제?')) return; await sb.from('tx_media').delete().eq('id', LB.id); $('#mLb').classList.remove('on'); renderFilters(); loadGallery(true); };
 
 function fillFocusSelect(sel, cur) {
@@ -652,7 +718,7 @@ async function openCardBuilder(entryId, mediaIds) {
     CB.hashtags = e.hashtags || []; CB.evidence = e.evidence || []; CB.sections = e.sections || []; (et || []).forEach(t => CB.tags.set(t.node_id, { origin: t.origin, confirmed: t.confirmed }));
     setFocus(e.focus_node_id);
   }
-  if (mediaIds.length) { const { data } = await sb.from('tx_media').select('id,source,period,posted_at,account,brand,product_name,thumb_path,storage_path,photo_no').in('id', mediaIds); CB.media = mediaIds.map(id => (data || []).find(m => m.id === id)).filter(Boolean); }
+  if (mediaIds.length) { const { data } = await sb.from('tx_media').select('id,source,period,posted_at,account,brand,product_name,thumb_path,storage_path,photo_no,is_celeb,celeb_name').in('id', mediaIds); CB.media = mediaIds.map(id => (data || []).find(m => m.id === id)).filter(Boolean); }
   if (!entryId && CB.media.length) {
     const m0 = CB.media[0]; $('#cbSource').value = m0.source; $('#cbPeriod').value = m0.period;
     const sorted = [...CB.media].sort((a, b) => (a.photo_no || 99) - (b.photo_no || 99)); sorted.slice(0, 3).forEach(m => CB.covers.add(m.id));
@@ -663,7 +729,7 @@ async function openCardBuilder(entryId, mediaIds) {
 }
 function renderCB() {
   $('#cbPhotoN').textContent = `${CB.media.length}장`;
-  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.posted_at || '')}</span></div>`).join('');
+  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.posted_at || '')}</span></div>`).join('');
   $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
   $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
   $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="celeb" ${e.type === 'celeb' ? 'selected' : ''}>셀럽 착용</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select><input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명"><input data-k="value" value="${esc(e.value || '')}" placeholder="값 (예: 좋아요 12.4K, 27SS)"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
@@ -673,7 +739,8 @@ function renderCB() {
 $('#cbPhotos').onclick = e => { const p = e.target.closest('.p'); if (!p) return; const id = +p.dataset.id; if (CB.covers.has(id)) CB.covers.delete(id); else { if (CB.covers.size >= 3) { toast('대표는 3장까지'); return; } CB.covers.add(id); } renderCB(); };
 $('#cbTags').onclick = e => { const x = e.target.closest('[data-x]'); if (x) { CB.tags.delete(x.dataset.x); renderCB(); return; } const c = e.target.closest('.chip'); if (!c) return; const t = CB.tags.get(c.dataset.id); if (t) { t.confirmed = !t.confirmed; if (t.confirmed) t.origin = 'human'; renderCB(); } };
 $('#cbHash').onclick = e => { const x = e.target.closest('[data-h]'); if (!x) return; CB.hashtags = CB.hashtags.filter(h => h !== x.dataset.h); renderCB(); };
-$('#cbHashIn').onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); const v = $('#cbHashIn').value.split(/[,\s]+/).map(s => s.replace(/^#/, '').trim()).filter(Boolean); v.forEach(h => { if (!CB.hashtags.includes(h)) CB.hashtags.push(h); }); $('#cbHashIn').value = ''; renderCB(); } };
+$('#cbHashIn').onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); const v = $('#cbHashIn').value.split(/[,\s]+/).map(s => s.replace(/^#+/, '').trim().toLowerCase()).filter(Boolean); v.forEach(h => { if (!CB.hashtags.includes(h)) CB.hashtags.push(h); }); $('#cbHashIn').value = ''; suggestFromTitle(v.join(' ')); renderCB(); } };
+$('#cbHashIn').oninput = () => { const el = $('#cbHashIn'); const lo = el.value.toLowerCase(); if (lo !== el.value) { const p = el.selectionStart; el.value = lo; el.setSelectionRange(p, p); } };
 $('#cbHashIn').onblur = () => { if ($('#cbHashIn').value.trim()) $('#cbHashIn').onkeydown({ key: 'Enter', preventDefault() {} }); };
 $('#cbEvAdd').onclick = () => { CB.evidence.push({ type: 'celeb', label: '', value: '', url: '' }); renderCB(); };
 $('#cbEv').oninput = e => { const row = e.target.closest('.ev'); if (!row) return; CB.evidence[+row.dataset.i][e.target.dataset.k] = e.target.value; };
@@ -683,15 +750,22 @@ $('#cbSecs').oninput = e => { const s = e.target.closest('.sec'); if (!s || !e.t
 $('#cbSecs').onclick = e => { const b = e.target.closest('[data-secx]'); if (b) { CB.sections.splice(+b.dataset.secx, 1); renderCB(); return; } const img = e.target.closest('img[data-mid]'); if (!img) return; const s = CB.sections[+img.closest('.sec').dataset.i]; const id = +img.dataset.mid; s.media_ids = s.media_ids || []; s.media_ids.includes(id) ? s.media_ids = s.media_ids.filter(x => x !== id) : s.media_ids.push(id); renderCB(); };
 
 // ---- title → taxonomy suggestions
+const titleCase = t => t.replace(/\S+/g, w => /^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w);
 $('#cbName').oninput = debounce(() => suggestFromTitle($('#cbName').value), 250);
+$('#cbName').onblur = () => { const v = titleCase($('#cbName').value.trim()); if (v !== $('#cbName').value) $('#cbName').value = v; };
+// 타이틀·해시태그 → taxonomy. 하이픈/언더스코어/공백 무시: halter-neck = halter_neck = halterneck = Halter Neck
+const normKey = x => String(x).toLowerCase().replace(/[^a-z0-9]/g, '');
 function matchTerms(text) {
-  let s = ' ' + text.toLowerCase().replace(/[^a-z0-9가-힣+&' -]/g, ' ').replace(/\s+/g, ' ') + ' '; const hits = [];
-  const rx = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  for (const t of TAX.terms) {
-    if (t.term.length < 3) continue;
-    const forms = [t.term]; if (!t.term.endsWith('s')) forms.push(t.term + 's'); else forms.push(t.term.slice(0, -1));   // top↔tops, pant↔pants
-    const hit = forms.find(f => s.includes(' ' + f + ' '));
-    if (hit) { hits.push(t.id); s = s.replace(new RegExp(' ' + rx(hit) + ' ', 'g'), ' '); }
+  const words = String(text).toLowerCase().replace(/[#,.()/_\-]/g, ' ').split(/\s+/).filter(Boolean);
+  const hits = []; const used = new Array(words.length).fill(false);
+  // n-gram(최대 4단어)을 키로 합쳐 비교 → 'halter neck', 'halter-neck', 'halterneck' 모두 같은 키
+  const byKey = TAX.termKeys;
+  for (let n = 4; n >= 1; n--) for (let i = 0; i + n <= words.length; i++) {
+    if (used.slice(i, i + n).some(Boolean)) continue;
+    const key = normKey(words.slice(i, i + n).join('')); if (key.length < 3) continue;
+    const forms = [key, key.endsWith('s') ? key.slice(0, -1) : key + 's'];
+    const ids = forms.map(k => byKey[k]).find(Boolean);
+    if (ids) { hits.push(...ids); for (let k = i; k < i + n; k++) used[k] = true; }
   }
   return [...new Set(hits)];
 }
@@ -716,7 +790,8 @@ async function renderCBColors() {
   $('#cbColors').innerHTML = data.map(c => `<span class="sw"><i style="background:${c.hex}"></i>${esc(c.name_en)} ${Math.round(c.weight / tot * 100)}%</span>`).join('');
 }
 async function saveCard() {
-  const title = $('#cbName').value.trim(); if (!title) { toast('타이틀을 입력하세요', true); return null; }
+  const title = titleCase($('#cbName').value.trim()); $('#cbName').value = title; if (!title) { toast('타이틀을 입력하세요', true); return null; }
+  CB.hashtags = [...new Set(CB.hashtags.map(h => h.toLowerCase()))];
   if (!CB.media.length) { toast('사진이 없습니다', true); return null; }
   if (!CB.covers.size) CB.covers.add(CB.media[0].id);
   const row = { source: $('#cbSource').value, period: $('#cbPeriod').value.trim() || CB.media[0].period, title, focus_node_id: CB.focus || null, description: $('#cbDesc').value.trim() || null, hashtags: CB.hashtags, evidence: CB.evidence.filter(e => e.label || e.value), sections: CB.sections.filter(s => s.subtitle || (s.media_ids || []).length), first_spotted: $('#cbFirst').value.trim() || null, is_pick: $('#cbPick').checked, author: AUTHOR };
@@ -732,8 +807,8 @@ async function saveCard() {
   $('#cbStat').textContent = `저장됨 #${id}`; $('#cbDelete').style.display = ''; $('#cbTitle').textContent = '카드 수정';
   return id;
 }
-$('#cbSave').onclick = async () => { const id = await saveCard(); if (id) { toast('카드 저장'); G.sel.clear(); paintSel(); renderCBColors(); loadGallery(true); } };
-$('#cbSaveAn').onclick = async () => { const id = await saveCard(); if (!id) return; G.sel.clear(); paintSel(); await analyzeMany(CB.media.map(m => m.id), CB.focus, false, [...CB.covers]); renderCBColors(); loadGallery(true); };
+$('#cbSave').onclick = async () => { const id = await saveCard(); if (id) { toast(`카드 #${id} 저장됨`); G.sel.clear(); paintSel(); $('#mCard').classList.remove('on'); showView('cards'); loadGallery(true); } };
+$('#cbSaveAn').onclick = async () => { const id = await saveCard(); if (!id) return; G.sel.clear(); paintSel(); await analyzeMany(CB.media.map(m => m.id), CB.focus, false, [...CB.covers]); renderCBColors(); loadGallery(true); $('#mCard').classList.remove('on'); showView('cards'); };
 $('#cbDelete').onclick = async () => { if (!CB.id || !confirm('카드 삭제? (사진은 갤러리에 남습니다)')) return; await sb.from('tx_entries').delete().eq('id', CB.id); $('#mCard').classList.remove('on'); toast('카드 삭제'); loadCards(); loadGallery(true); };
 
 /* ---------------- add to existing ---------------- */
@@ -750,7 +825,12 @@ $('#cSrc').onchange = loadCards; $('#cSearch').oninput = debounce(loadCards, 250
 async function loadCards() {
   if (!sb) return; let q = sb.from('tx_v_entries_list').select('*').order('updated_at', { ascending: false }).limit(200);
   if ($('#cSrc').value) q = q.eq('source', $('#cSrc').value); const s = $('#cSearch').value.trim(); if (s) q = q.ilike('title', `%${s}%`);
-  const { data, error } = await q; if (error) return toast(error.message, true);
+  let { data, error } = await q;
+  if (error) { // 뷰(tx_v_entries_list)가 없거나 스키마 캐시 전이면 기본 테이블로 대체
+    toast('카드 목록 뷰 오류: ' + error.message + ' — 04_config.sql 실행 여부 확인', true);
+    let q2 = sb.from('tx_entries').select('*').order('updated_at', { ascending: false }).limit(200); if ($('#cSrc').value) q2 = q2.eq('source', $('#cSrc').value); if (s) q2 = q2.ilike('title', `%${s}%`);
+    const r2 = await q2; data = r2.data || [];
+  }
   const ids = (data || []).map(e => e.id); let tags = {};
   if (ids.length) { const { data: et } = await sb.from('tx_entry_tags').select('entry_id,node_id,confirmed').in('entry_id', ids); (et || []).forEach(t => { (tags[t.entry_id] ||= []).push(t); }); }
   $('#cCount').textContent = `${(data || []).length}개`;
@@ -758,7 +838,7 @@ async function loadCards() {
     const chips = (tags[e.id] || []).filter(t => t.confirmed).slice(0, 4).map(t => `<span class="chip">${esc(nodeName(t.node_id))}</span>`).join('');
     const imgs = (e.cover_thumbs || []).slice(0, 3).map(p => `<img src="${pubUrl(p)}">`).join('') || '<div class="mute small">대표 없음</div>';
     const stat = e.source === 'instagram' ? `${e.posts || 0} posts · ${e.accounts || 0} accounts · ${e.photos || 0} photos` : e.source === 'runway' ? `${e.runway_brands || 0} brands · ${e.photos || 0} looks` : `${e.market_brands || 0} brands · ${e.photos || 0} items`;
-    return `<div class="card" data-id="${e.id}"><div class="chips">${chips}<span class="chip" style="margin-left:auto">${e.source} · ${esc(e.period)}</span></div><h4>${esc(e.title)}${e.is_pick ? ' <span class="chip acc">Editor\'s Pick</span>' : ''}</h4><div class="small mute">${esc(nodeName(e.focus_node_id) || 'focus 미지정')}${e.hashtags?.length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div><div class="imgs">${imgs}</div><div class="st">${stat}</div><div class="row" style="margin-top:8px"><button class="sm" data-edit="${e.id}">수정</button><button class="sm" data-an="${e.id}">분석 실행</button></div></div>`;
+    return `<div class="card" data-id="${e.id}"><div class="chips">${chips}<span class="chip" style="margin-left:auto">${e.source} · ${esc(e.period)}</span></div><h4>${esc(e.title)}${e.is_pick ? ' <span class="chip acc">🔥 HOT</span>' : ''}</h4><div class="small mute">${esc(nodeName(e.focus_node_id) || 'focus 미지정')}${e.hashtags?.length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div><div class="imgs">${imgs}</div><div class="st">${stat}</div><div class="row" style="margin-top:8px"><button class="sm" data-edit="${e.id}">수정</button><button class="sm" data-an="${e.id}">분석 실행</button></div></div>`;
   }).join('') || '<span class="mute">카드가 없습니다 — 갤러리에서 사진을 선택해 만드세요</span>';
 }
 $('#cards').onclick = async e => { const ed = e.target.closest('[data-edit]'); if (ed) return openCardBuilder(+ed.dataset.edit, []); const an = e.target.closest('[data-an]'); if (an) { const id = +an.dataset.an; const { data: e2 } = await sb.from('tx_entries').select('focus_node_id').eq('id', id).single(); const { data: em } = await sb.from('tx_entry_media').select('media_id,role').eq('entry_id', id); await analyzeMany((em || []).map(r => r.media_id), e2?.focus_node_id || null, false, (em || []).filter(r => r.role === 'cover').map(r => r.media_id)); loadCards(); } };

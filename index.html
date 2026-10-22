@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TAXONOMY AGENT</title>
+<title>Fashion Analysis</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
 :root{
@@ -20,7 +20,7 @@ button:disabled{opacity:.4;cursor:default}
 input[type=text],select{border:1px solid var(--line);border-radius:999px;padding:6px 12px;background:#fff}
 input:focus,select:focus{outline:2px solid #ddd;outline-offset:0}
 header{display:flex;align-items:center;gap:22px;padding:14px 26px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20}
-header .logo{font-weight:800;font-size:15px;letter-spacing:.02em}
+header .logo{font-weight:800;font-size:15px;letter-spacing:.02em;display:flex;flex-direction:column;line-height:1.15}header .logo small{font-weight:500;color:var(--mute);font-size:10px;letter-spacing:0}
 header .srcnav{display:flex;gap:18px;margin:0 auto}
 header .srcnav button{border:none;background:none;border-radius:0;padding:4px 0;color:var(--mute);font-weight:600;border-bottom:2px solid transparent}
 header .srcnav button.on{color:var(--ink);border-bottom-color:var(--ink)}
@@ -57,6 +57,19 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .cov .cap b{color:var(--ink);font-weight:600}
 .cov .cap i{font-style:normal;margin:0 4px;opacity:.5}
 .more{text-align:center;margin:20px}
+/* 셀럽 착장: 실버 반짝이 테두리 */
+@keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.celeb{position:relative;box-shadow:0 0 0 3px #d9d9d9,0 0 10px 2px rgba(255,255,255,.9),0 0 0 4px #a8a8a8}
+.celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(120deg,#9a9a9a,#f4f4f4 30%,#b8b8b8 50%,#ffffff 70%,#9a9a9a);background-size:200% 100%;animation:shine 2.4s linear infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
+.celeb-tag{position:absolute;left:8px;bottom:8px;background:linear-gradient(90deg,#8e8e8e,#e8e8e8,#8e8e8e);color:#111;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
+.card .imgs .ph{position:relative;border-radius:6px}
+.card .tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:11px}
+.card .tags .hash{color:var(--orange);font-weight:600}
+.card .tags .red{color:#1f5fd1;font-weight:700}
+.dt-imgs .ph{position:relative;border-radius:8px}
+.kpi.big div{padding:10px 16px;background:#fff;border:1px solid var(--line)}
+.kpi.big div b{font-size:22px}
+.kpi.big div.red{border-color:#1f5fd1;color:#1f5fd1}
 /* ---- cards ---- */
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:1100px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -139,14 +152,14 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 </head>
 <body>
 <header>
-  <div class="logo">TAXONOMY AGENT</div>
+  <div class="logo">Fashion Analysis<small>소비자분석팀</small></div>
   <nav class="srcnav" id="srcnav">
     <button data-s="runway">Runway</button>
     <button data-s="instagram" class="on">Instagram</button>
     <button data-s="market">Market</button>
-    <button data-s="fs">FS Benchmark</button>
+    <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-01</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261022-06</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -187,12 +200,12 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-01
+   TAXONOMY AGENT · index.html (리포트)  v261022-06
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
-const SUPA_ANON = '';   // 팀 배포 시 입력. 비어 있으면 admin.html 설정에서 저장한 localStorage 값 사용
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
 const PAGE = 60;
 const FAM_HEX = { Neutrals: '#1b1b1b', Blue: '#2f7fc1', Pink: '#f08fb4', Green: '#4fa05a', Red: '#d8322b', Yellow: '#f2d23a', Orange: '#f08a2c', Purple: '#8c56b8' };
@@ -208,7 +221,7 @@ const fmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : S
 const ICON = { eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>', pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>', tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>', flag: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 2h2v20H4zM7 3h12l-3 5 3 5H7z"/></svg>' };
 
 let sb; let TAX = { nodes: [], byId: {}, children: {} }; let SEASONS = [];
-let S = { src: 'instagram', tab: 'trends', period: '', facet: '', picks: false, periods: [], cov: { page: 0, items: [], q: '' } };
+let S = { src: 'instagram', anSrc: 'instagram', tab: 'trends', period: '', facet: '', picks: false, periods: [], cov: { page: 0, items: [], q: '' } };
 
 /* ---------------- boot ---------------- */
 async function boot() {
@@ -225,19 +238,20 @@ const canon = id => (TAX.byId[id] && TAX.byId[id].canonical_id) || id;
 const catOf = id => { let n = TAX.byId[id]; while (n && n.kind !== 'category' && n.parent_id) n = TAX.byId[n.parent_id]; return n && n.kind === 'category' ? n : null; };
 
 async function loadPeriods() {
-  if (S.src === 'fs') { S.periods = ['27SS']; }
-  else { const { data } = await sb.from('tx_v_gallery_facets').select('period').eq('source', S.src).limit(5000); S.periods = [...new Set((data || []).map(r => r.period))].sort().reverse(); }
-  if (!S.periods.includes(S.period)) S.period = S.periods[0] || '';
+  const ps = S.src === 'ai' ? S.anSrc : S.src;
+  if (ps === 'fs') { S.periods = ['27SS']; }
+  else { const { data } = await sb.from('tx_v_gallery_facets').select('period').eq('source', ps).limit(5000); S.periods = [...new Set((data || []).map(r => r.period))].sort().reverse(); }
+  if (S.period && !S.periods.includes(S.period)) S.period = '';
   $('#period').innerHTML = `<option value="">전체 기간</option>` + S.periods.map(p => `<option value="${p}" ${p === S.period ? 'selected' : ''}>${p}</option>`).join('');
 }
 $('#period').onchange = () => { S.period = $('#period').value; render(); };
 $('#clear').onclick = () => { S.period = ''; S.facet = ''; S.picks = false; S.cov.q = ''; $('#covSearch').value = ''; $('#period').value = ''; render(); };
-$('#srcnav').onclick = async e => { const b = e.target.closest('button'); if (!b) return; S.src = b.dataset.s; S.facet = ''; $$('#srcnav button').forEach(x => x.classList.toggle('on', x === b)); if (S.src === 'fs' && S.tab !== 'analytics') S.tab = 'analytics'; await loadPeriods(); render(); };
+$('#srcnav').onclick = async e => { const b = e.target.closest('button'); if (!b) return; S.src = b.dataset.s; S.facet = ''; $$('#srcnav button').forEach(x => x.classList.toggle('on', x === b)); if (S.src === 'ai') S.tab = 'analytics'; await loadPeriods(); render(); };
 $('#tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; render(); };
 $$('[data-close]').forEach(b => b.onclick = () => $('#' + b.dataset.close).classList.remove('on'));
 
 function render() {
-  $$('#tabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === S.tab); b.disabled = S.src === 'fs' && b.dataset.t !== 'analytics'; });
+  $$('#tabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === S.tab); b.disabled = S.src === 'ai' && b.dataset.t !== 'analytics'; });
   $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + S.tab));
   if (S.tab === 'coverage') { renderCovAside(); loadCoverage(true); }
   else if (S.tab === 'trends') { renderTrendAside(); loadCards(); }
@@ -289,18 +303,20 @@ async function openLightbox(m) {
 /* =====================================================================
    EMERGING TRENDS (3열 카드)
    ===================================================================== */
-let CARDS = []; let CARD_TAGS = {};
+let CARDS = []; let CARD_TAGS = {}; let CELEB = {};
 async function renderTrendAside() {
-  $('#aside').innerHTML = `<div class="tog">Editor's Picks<span class="switch ${S.picks ? 'on' : ''}" id="pickTog"><i></i></span></div><div id="facetList"></div>`;
+  $('#aside').innerHTML = `<div class="tog">HOT만 보기<span class="switch ${S.picks ? 'on' : ''}" id="pickTog"><i></i></span></div><div id="facetList"></div>`;
   $('#pickTog').onclick = () => { S.picks = !S.picks; $('#pickTog').classList.toggle('on', S.picks); paintCards(); };
 }
 async function loadCards() {
   let q = sb.from('tx_v_entries_list').select('*').eq('source', S.src).eq('status', 'active').order('is_pick', { ascending: false }).order('updated_at', { ascending: false }).limit(300);
   if (S.period) q = q.eq('period', S.period);
-  const { data, error } = await q; if (error) return toast(error.message, true); CARDS = data || []; CARD_TAGS = {};
+  const { data, error } = await q; if (error) { toast('카드 목록 오류: ' + error.message, true); $('#cards').innerHTML = `<div class="empty">${esc(error.message)} — 04_config.sql(tx_v_entries_list) 실행 확인</div>`; return; } CARDS = data || []; CARD_TAGS = {};
   const ids = CARDS.map(c => c.id);
   if (ids.length) { const { data: et } = await sb.from('tx_entry_tags').select('entry_id,node_id,confirmed').in('entry_id', ids); for (const t of (et || [])) if (t.confirmed) (CARD_TAGS[t.entry_id] ||= []).push(t.node_id); }
   // facet counts for aside
+  const cids = [...new Set(CARDS.flatMap(c => c.cover_ids || []))]; CELEB = {};
+  if (cids.length) { const { data: cm } = await sb.from('tx_media').select('id,is_celeb,celeb_name').in('id', cids); for (const m of (cm || [])) if (m.is_celeb) CELEB[m.id] = m.celeb_name || 'CELEB'; }
   const fc = {}; for (const c of CARDS) { const fs = new Set(facetsOf(c)); for (const f of fs) fc[f] = (fc[f] || 0) + 1; }
   const order = ['Key Items', 'Pattern & Graphics', 'Color', 'Materials', 'Details', 'Themes'];
   $('#facetList').innerHTML = order.map(f => `<div class="it ${S.facet === f ? 'on' : ''}" data-f="${f}">${f}<b>${fc[f] || 0}</b></div>`).join('');
@@ -312,9 +328,18 @@ function paintCards() {
   let list = CARDS.filter(c => (!S.picks || c.is_pick) && (!S.facet || facetsOf(c).includes(S.facet)));
   $('#cards').innerHTML = list.map(c => {
     const chips = facetsOf(c).slice(0, 3).map((f, i) => `<span class="chip ${i === 0 ? 'key' : 'key2'}">${esc(f)}</span>`).join('');
-    const imgs = (c.cover_thumbs || []).slice(0, 3); while (imgs.length < 3) imgs.push(null);
-    return `<div class="card" data-id="${c.id}"><div class="chips">${chips}</div><h3>${esc(c.title)}</h3><div class="desc">${esc(c.description || '')}</div><div class="imgs">${imgs.map(p => p ? `<img src="${pubUrl(p)}" loading="lazy" alt="">` : '<img alt="">').join('')}</div><div class="stats">${statsHTML(c)}</div><div class="pickrow">${c.is_pick ? `<span class="pick">Editor's Pick ${ICON.flag}</span>` : ''}</div></div>`;
+    const imgs = (c.cover_thumbs || []).slice(0, 3); const ids = (c.cover_ids || []).slice(0, 3); while (imgs.length < 3) imgs.push(null);
+    const imgHTML = imgs.map((p, i) => { const cn = ids[i] && CELEB[ids[i]]; return `<div class="ph ${cn ? 'celeb' : ''}">${p ? `<img src="${pubUrl(p)}" loading="lazy" alt="">` : '<img alt="">'}${cn ? `<span class="celeb-tag">★ ${esc(cn)}</span>` : ''}</div>`; }).join('');
+    const red = dataLine(c);
+    const tags = ((c.hashtags || []).length || red) ? `<div class="tags">${(c.hashtags || []).slice(0, 4).map(h => `<span class="hash">#${esc(h)}</span>`).join('')}${red ? `<span class="red">${esc(red)}</span>` : ''}</div>` : '';
+    return `<div class="card" data-id="${c.id}"><div class="chips">${chips}</div><h3>${esc(c.title)}</h3><div class="desc">${esc(c.description || '')}</div><div class="imgs">${imgHTML}</div><div class="stats">${statsHTML(c)}</div>${tags}<div class="pickrow">${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
   }).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
+}
+function dataLine(c) {
+  const parts = [];
+  const names = (c.celeb_names || []).filter(Boolean); if (names.length) parts.push('★ ' + names.slice(0, 3).join(', ') + ' 착용'); else if (c.celebs) parts.push(`★ 셀럽 ${c.celebs}`);
+  for (const e of (c.evidence || [])) { if (e.type === 'metric' && (e.label || e.value)) parts.push(`${e.label || ''} ${e.value || ''}`.trim()); else if (e.type === 'celeb' && e.label && !names.includes(e.label)) parts.push(`★ ${e.label}${e.value ? ' ' + e.value : ''}`); else if (e.type === 'runway' && e.label) parts.push(`Runway ${e.label}${e.value ? ' ' + e.value : ''}`); }
+  return parts.slice(0, 3).join(' · ');
 }
 function statsHTML(c) {
   if (c.source === 'instagram') return `<span>${ICON.eye}${c.posts || 0} Posts</span><span>${ICON.pin}${c.accounts || 0} Accounts</span><span>${ICON.tag}${c.photos || 0} Items</span>`;
@@ -332,25 +357,27 @@ async function openDetail(id) {
     sb.from('tx_season_counts').select('node_id,item_count,season').in('node_id', (CARD_TAGS[id] || []).concat(c.focus_node_id ? [c.focus_node_id] : [])).eq('src', 'fs').is('scope', null)
   ]);
   const mids = (em || []).map(r => r.media_id); let media = [];
-  if (mids.length) { const { data } = await sb.from('tx_media').select('id,thumb_path,storage_path,account,brand,posted_at,period,city,product_name,price,source').in('id', mids); media = mids.map(i => (data || []).find(m => m.id === i)).filter(Boolean); }
+  if (mids.length) { const { data } = await sb.from('tx_media').select('id,thumb_path,storage_path,account,brand,posted_at,period,city,product_name,price,source,is_celeb,celeb_name').in('id', mids); media = mids.map(i => (data || []).find(m => m.id === i)).filter(Boolean); }
   const covers = (em || []).filter(r => r.role === 'cover').map(r => media.find(m => m.id === r.media_id)).filter(Boolean);
   const extras = media.filter(m => !covers.includes(m));
-  const img = m => `<img src="${pubUrl(m.thumb_path)}" data-full="${pubUrl(m.storage_path)}" data-id="${m.id}" title="${esc(m.account ? '@' + m.account : m.brand || '')}">`;
+  const img = m => `<div class="ph ${m.is_celeb ? 'celeb' : ''}"><img src="${pubUrl(m.thumb_path)}" data-full="${pubUrl(m.storage_path)}" data-id="${m.id}" title="${esc(m.account ? '@' + m.account : m.brand || '')}">${m.is_celeb ? `<span class="celeb-tag">★ ${esc(m.celeb_name || 'CELEB')}</span>` : ''}</div>`;
   const tags = (CARD_TAGS[id] || []).map(i => TAX.byId[i]).filter(Boolean);
   const tot = (cols || []).reduce((s, x) => s + +x.weight, 0);
   let h = `<div class="dt-head"><div class="chips">${facetsOf(c).map((f, i) => `<span class="chip ${i === 0 ? 'key' : 'key2'}">${esc(f)}</span>`).join('')}</div><h2>${esc(c.title)}</h2><div class="meta">First spotted · ${esc(c.first_spotted || c.period)} · ${esc(c.source)} · ${esc(c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
-  h += `<div class="dt-stats">${statsHTML(c)}</div>`;
+  h += `<div class="dt-stats">${statsHTML(c)}${dataLine(c) ? `<span style="color:#1f5fd1;font-weight:700">${esc(dataLine(c))}</span>` : ''}</div>`;
   if (c.description) h += `<div class="dt-sec"><h4>What it is</h4><div>${esc(c.description)}</div></div>`;
   h += `<div class="dt-imgs three">${covers.map(img).join('')}</div>`;
   if (tags.length) h += `<div class="dt-sec"><h4>Taxonomy</h4><div class="tagrow">${tags.map(n => `<span class="chip">${esc(n.name_en)}</span>`).join('')}</div></div>`;
   if ((c.evidence || []).length) h += `<div class="dt-sec"><h4>근거 데이터</h4>${c.evidence.map(e => `<div class="ev"><span class="tp">${({ celeb: '셀럽 착용', runway: '런웨이', metric: '수치', market: '마켓', note: '메모' })[e.type] || e.type}</span><span>${esc(e.label)}</span><span>${esc(e.value)}</span><span>${e.url && /^https?:/.test(e.url) ? `<a href="${esc(e.url)}" target="_blank" style="text-decoration:underline">링크</a>` : esc(e.url || '')}</span></div>`).join('')}</div>`;
   if ((c.hashtags || []).length) h += `<div class="dt-sec"><h4>특징</h4><div class="tagrow">${c.hashtags.map(t => `<span class="chip" style="background:var(--orange-soft);color:var(--orange)">#${esc(t)}</span>`).join('')}</div></div>`;
-  const kp = []; if (c.source === 'instagram') { kp.push(`<div>Posts<b>${c.posts || 0}</b></div><div>Accounts<b>${c.accounts || 0}</b></div>`); } kp.push(`<div>Photos analyzed<b>${c.photos || 0}</b></div>`);
+  const kp = []; if (c.source === 'instagram') { kp.push(`<div>Posts<b>${c.posts || 0}</b></div><div>Accounts<b>${c.accounts || 0}</b></div>`); } kp.push(`<div>Photos<b>${c.photos || 0}</b></div>`);
+  if (c.celebs) kp.push(`<div class="red">★ 셀럽 착용<b>${(c.celeb_names || []).filter(Boolean).join(', ') || c.celebs}</b></div>`);
+  for (const e of (c.evidence || [])) if (e.type === 'metric' && (e.label || e.value)) kp.push(`<div class="red">${esc(e.label || '수치')}<b>${esc(e.value || '')}</b></div>`);
   if (fsb && fsb.length) kp.push(...fsb.slice(0, 4).map(r => `<div>FS ${r.season} · ${esc(nodeName(r.node_id))}<b>${fmt(r.item_count)} items</b></div>`));
-  h += `<div class="dt-sec"><h4>데이터</h4><div class="kpi">${kp.join('')}</div></div>`;
+  h += `<div class="dt-sec"><h4>데이터</h4><div class="kpi big">${kp.join('')}</div></div>`;
   const secs = (c.sections || []).filter(s => (s.media_ids || []).length);
   if (secs.length) for (const s of secs) h += `<div class="dt-sec"><h4>${esc(s.subtitle || '')}</h4><div class="dt-imgs">${s.media_ids.map(i => media.find(m => m.id === i)).filter(Boolean).map(img).join('')}</div></div>`;
-  else if (extras.length) h += `<div class="dt-sec"><h4>More</h4><div class="dt-imgs">${extras.slice(0, 4).map(img).join('')}</div></div>`;
+  else if (extras.length) h += `<div class="dt-sec"><h4>More · ${extras.length}</h4><div class="dt-imgs">${extras.map(img).join('')}</div></div>`;
   h += `<div class="dt-sec"><h4>Color · ${esc(nodeName(c.focus_node_id) || 'focus')}</h4>${(cols || []).length ? cols.map(x => `<span class="sw"><i style="background:${x.hex}"></i>${esc(x.name_en)}<small>${Math.round(x.weight / tot * 100)}%</small></span>`).join('') : '<span style="color:var(--mute);font-size:12px">분석 전</span>'}</div>`;
   $('#detail').innerHTML = h;
   $('#detail').onclick = e => { const im = e.target.closest('img[data-full]'); if (im) openLightbox(media.find(m => m.id === +im.dataset.id)); };
@@ -361,16 +388,17 @@ async function openDetail(id) {
    ===================================================================== */
 async function renderAnalytics() {
   const an = $('#an'); an.innerHTML = '<div class="empty">계산 중…</div>';
+  const src = S.src === 'ai' ? S.anSrc : S.src;
   let rows = [], totals = {}, denom = 0, label = '';
-  if (S.src === 'fs') {
+  if (src === 'fs') {
     const { data } = await sb.from('tx_season_counts').select('node_id,item_count,scope').eq('src', 'fs').eq('season', '27SS').is('scope', null).limit(5000);
     rows = (data || []).map(r => ({ node_id: r.node_id, photos: r.item_count })); label = 'FS Runway · SS27 (Future Snoops 집계, 아이템 수)';
     denom = (rows.find(r => r.node_id === 'product.apparel') || {}).photos || 0;
   } else {
-    let q = sb.from('tx_v_tag_counts').select('node_id,photos,focus_node_id').eq('source', S.src); if (S.period) q = q.eq('period', S.period);
+    let q = sb.from('tx_v_tag_counts').select('node_id,photos,focus_node_id').eq('source', src); if (S.period) q = q.eq('period', S.period);
     const { data } = await q.limit(20000); const agg = {}; for (const r of (data || [])) agg[r.node_id] = (agg[r.node_id] || 0) + r.photos; rows = Object.entries(agg).map(([node_id, photos]) => ({ node_id, photos }));
-    let tq = sb.from('tx_v_focus_totals').select('focus_node_id,photos').eq('source', S.src); if (S.period) tq = tq.eq('period', S.period); const { data: t } = await tq; for (const r of (t || [])) { totals[r.focus_node_id] = (totals[r.focus_node_id] || 0) + r.photos; denom += r.photos; }
-    label = `${S.src.toUpperCase()} · ${S.period || '전체 기간'} · 분석된 사진 ${denom.toLocaleString()}장 (focus 아이템 기준)`;
+    let tq = sb.from('tx_v_focus_totals').select('focus_node_id,photos').eq('source', src); if (S.period) tq = tq.eq('period', S.period); const { data: t } = await tq; for (const r of (t || [])) { totals[r.focus_node_id] = (totals[r.focus_node_id] || 0) + r.photos; denom += r.photos; }
+    label = `${src.toUpperCase()} · ${S.period || '전체 기간'} · AI 분석 사진 ${denom.toLocaleString()}장 (focus 아이템 기준)`;
   }
   const cnt = {}; for (const r of rows) cnt[r.node_id] = r.photos;
   // ---- Color families
@@ -380,7 +408,9 @@ async function renderAnalytics() {
   const famTot = Object.values(famCnt).reduce((a, b) => a + b, 0);
   const famOrder = fams.slice().sort((a, b) => famCnt[b.id] - famCnt[a.id]);
   S.fam = S.fam && famCnt[S.fam] ? S.fam : (famOrder.find(f => f.name_en !== 'Neutrals' && famCnt[f.id]) || famOrder[0] || {}).id;
-  let h = `<div class="an-head"><h2>Analytics</h2><span class="mute" style="color:var(--mute)">${esc(label)}</span></div>`;
+  const SRC_OPTS = [['instagram', 'Instagram'], ['runway', 'Runway'], ['market', 'Market'], ['fs', 'FS 27SS 벤치마크']];
+  const picker = S.src === 'ai' ? `<div class="cat-tabs" style="margin:0 0 14px">${SRC_OPTS.map(([k, l]) => `<button data-ansrc="${k}" class="${S.anSrc === k ? 'on' : ''}">${l}</button>`).join('')}</div>` : '';
+  let h = `<div class="an-head"><h2>AI Analytics</h2><span class="mute" style="color:var(--mute)">${esc(label)}</span></div>${picker}`;
   h += `<div class="an-sec"><h2>Color</h2><div class="sub">See what's trending across color families and their subgroups</div>`;
   if (famTot) {
     h += `<div class="fambar">${famOrder.filter(f => famCnt[f.id]).map(f => `<div data-fam="${f.id}" class="${S.fam === f.id ? '' : ''}" style="flex:${famCnt[f.id]};background:${FAM_HEX[f.name_en] || '#999'}">${esc(f.name_en)}<span>${pct(famCnt[f.id], famTot)}%</span></div>`).join('')}</div>`;
@@ -396,7 +426,7 @@ async function renderAnalytics() {
   // ---- Category statistics
   const tabs = [{ id: 'pattern', label: 'Pattern & Graphics' }, { id: 'material', label: 'Materials' }, { id: 'detail', label: 'Details' }];
   const cats = TAX.nodes.filter(n => n.kind === 'category' && n.facet === 'product' && n.parent_id === 'product.apparel');
-  for (const c of cats) { const has = S.src === 'fs' ? (cnt[c.id] || 0) > 0 : (totals[c.id] || 0) > 0; if (has) tabs.push({ id: c.id, label: c.name_en }); }
+  for (const c of cats) { const has = src === 'fs' ? (cnt[c.id] || 0) > 0 : (totals[c.id] || 0) > 0; if (has) tabs.push({ id: c.id, label: c.name_en }); }
   S.cat = tabs.some(t => t.id === S.cat) ? S.cat : tabs[0].id;
   h += `<div class="an-sec"><h2>Category Statistics</h2><div class="sub">Top ten per category.</div><div class="cat-tabs">${tabs.map(t => `<button data-cat="${t.id}" class="${S.cat === t.id ? 'on' : ''}">${esc(t.label)}</button>`).join('')}</div>`;
   // rows for current tab
@@ -404,12 +434,12 @@ async function renderAnalytics() {
   if (['pattern', 'material', 'detail'].includes(S.cat)) {
     title = tabs.find(t => t.id === S.cat).label;
     items = TAX.nodes.filter(n => n.facet === S.cat && (n.kind === 'value' || (S.cat === 'pattern' && n.kind === 'sub')) && !n.canonical_id && cnt[n.id]).map(n => ({ n, v: cnt[n.id] }));
-    base = S.src === 'fs' ? items.reduce((s, x) => s + x.v, 0) : denom;
+    base = src === 'fs' ? items.reduce((s, x) => s + x.v, 0) : denom;
   } else {
     const cat = TAX.byId[S.cat]; title = cat.name_en;
-    if (S.src === 'fs') { for (const ax of (TAX.children[cat.id] || [])) for (const v of (TAX.children[ax.id] || [])) if (cnt[v.id]) items.push({ n: v, v: cnt[v.id], ax: ax.name_en }); base = cnt[cat.id] || 0; }
+    if (src === 'fs') { for (const ax of (TAX.children[cat.id] || [])) for (const v of (TAX.children[ax.id] || [])) if (cnt[v.id]) items.push({ n: v, v: cnt[v.id], ax: ax.name_en }); base = cnt[cat.id] || 0; }
     else {
-      let q = sb.from('tx_v_tag_counts').select('node_id,photos').eq('source', S.src).eq('focus_node_id', cat.id); if (S.period) q = q.eq('period', S.period);
+      let q = sb.from('tx_v_tag_counts').select('node_id,photos').eq('source', src).eq('focus_node_id', cat.id); if (S.period) q = q.eq('period', S.period);
       const { data } = await q.limit(5000); const agg = {}; for (const r of (data || [])) agg[r.node_id] = (agg[r.node_id] || 0) + r.photos;
       for (const [id, v] of Object.entries(agg)) { const n = TAX.byId[id]; if (!n || n.kind === 'category' || n.facet === 'color') continue; items.push({ n, v }); }
       base = totals[cat.id] || 0;
@@ -418,11 +448,12 @@ async function renderAnalytics() {
   items.sort((a, b) => b.v - a.v); const top10 = items.slice(0, 10); const mx = top10[0]?.v || 1;
   const rowHTML = (x, i) => `<div class="row"><span style="color:var(--mute);font-size:11px">${i + 1}</span><div class="b"><i style="width:${x.v / mx * 100}%"></i><span>${esc(x.n.name_en)}</span></div><div class="n">${fmt(x.v)} (${pct(x.v, base)}%)</div></div>`;
   let thumb = '';
-  if (S.src !== 'fs' && top10[0]) { const { data } = await sb.from('tx_media_tags').select('media_id').eq('node_id', top10[0].n.id).limit(1); if (data && data[0]) { const { data: m } = await sb.from('tx_media').select('thumb_path').eq('id', data[0].media_id).single(); if (m) thumb = `<img src="${pubUrl(m.thumb_path)}" alt="">`; } }
-  h += `<div class="panel"><h3>${esc(title)}</h3>${top10.length ? `<div class="top10"><div>${thumb || '<div style="aspect-ratio:3/4;background:#e6e6e3;border-radius:8px"></div>'}</div><div class="col">${top10.slice(0, 5).map(rowHTML).join('')}</div><div class="col">${top10.slice(5, 10).map((x, i) => rowHTML(x, i + 5)).join('')}</div></div><div class="note">Percentages represent each style's share of all ${esc(title)} items${S.src === 'fs' ? ' (FS 집계, 복수 태그라 합계 100% 초과 가능)' : ''}.</div>` : '<div class="empty">데이터 없음</div>'}</div></div>`;
+  if (src !== 'fs' && top10[0]) { const { data } = await sb.from('tx_media_tags').select('media_id').eq('node_id', top10[0].n.id).limit(1); if (data && data[0]) { const { data: m } = await sb.from('tx_media').select('thumb_path').eq('id', data[0].media_id).single(); if (m) thumb = `<img src="${pubUrl(m.thumb_path)}" alt="">`; } }
+  h += `<div class="panel"><h3>${esc(title)}</h3>${top10.length ? `<div class="top10"><div>${thumb || '<div style="aspect-ratio:3/4;background:#e6e6e3;border-radius:8px"></div>'}</div><div class="col">${top10.slice(0, 5).map(rowHTML).join('')}</div><div class="col">${top10.slice(5, 10).map((x, i) => rowHTML(x, i + 5)).join('')}</div></div><div class="note">Percentages represent each style's share of all ${esc(title)} items${src === 'fs' ? ' (FS 집계, 복수 태그라 합계 100% 초과 가능)' : ''}.</div>` : '<div class="empty">데이터 없음</div>'}</div></div>`;
   an.innerHTML = h;
   an.querySelectorAll('.fambar div').forEach(d => d.onclick = () => { S.fam = d.dataset.fam; renderAnalytics(); });
-  an.querySelectorAll('.cat-tabs button').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; renderAnalytics(); });
+  an.querySelectorAll('.cat-tabs button[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; renderAnalytics(); });
+  an.querySelectorAll('[data-ansrc]').forEach(b => b.onclick = async () => { S.anSrc = b.dataset.ansrc; await loadPeriods(); renderAnalytics(); });
 }
 
 boot();
