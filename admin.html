@@ -164,7 +164,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-23</span>
+  <span class="ver" id="ver">v261022-27</span>
 </header>
 
 <main>
@@ -178,7 +178,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
     </div>
 
     <div class="row" id="upf-instagram">
-      <label>수집월 (파일명에 날짜 없을 때 사용)<input type="month" id="ig-period"></label>
+      <label>수집월 기본값 (사진 칸이 비면 사용)<input type="month" id="ig-period"></label>
       <label>계정 기본값 (파일명에서 못 읽을 때)<input type="text" id="ig-account" placeholder="@account"></label>
       <label>시장<select id="ig-region"><option>GLOBAL</option><option>KR</option><option>CN</option><option>JP</option></select></label>
       <label>카테고리 (이 묶음 전체 · 사진별 수정 가능)<select id="up-cat"></select></label>
@@ -408,7 +408,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-23
+   TAXONOMY AGENT · admin.html  v261022-27
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -416,7 +416,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-23';
+const VER = 'v261022-27';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -510,13 +510,20 @@ function parseName(name, src) {
       const d8 = (rest || '').split('_').find(x => /^20\d{6}$/.test(x)); if (!p.date && d8) p.date = `${d8.slice(0, 4)}-${d8.slice(4, 6)}-${d8.slice(6, 8)}`;
       if (!p.no) p.no = 1; return p;
     }
-    // 형식 B: 계정_YYYYMMDD_번호
-    let t = base.split('_').filter(Boolean);
-    if (!p.no && t.length && /^\d{1,3}$/.test(t[t.length - 1])) p.no = +t.pop();
-    if (t.length && /^\d{8}$/.test(t[t.length - 1])) { const d = t.pop(); p.date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`; }
-    else if (t.length && /^1[5-9]\d{8}$/.test(t[t.length - 1])) { p.date = unixDate(t.pop()); }
+    // 형식 B: 계정_YYYYMMDD_번호 — 구분자(_ - 공백), 날짜 표기(20260911 / 2026-09-11 / 2026.09.11), 뒤에 붙는 숫자·(1)·copy 등 허용
+    const b2 = base.replace(/\s*[-–]?\s*(copy|복사본)\s*\d*$/i, '');
+    const dm = b2.match(/(20\d{2})[-._ ]?(0[1-9]|1[0-2])[-._ ]?(0[1-9]|[12]\d|3[01])(?!\d)/);   // 날짜 토큰 어디에 있든
+    const um = !dm && b2.match(/(?:^|[_\- ])(1[5-9]\d{8})(?![\d])/);                          // 유닉스 타임스탬프
+    const m = dm || um;
+    if (m) {
+      p.date = dm ? `${dm[1]}-${dm[2]}-${dm[3]}` : unixDate(um[1]);
+      const head = b2.slice(0, m.index).replace(/[_\- .]+$/, '');                                // 날짜 앞 = 계정
+      const tail = b2.slice(m.index + m[0].length);
+      const nums = tail.match(/(?<!\d)\d{1,3}(?!\d)/g); if (nums && !p.no) p.no = +nums[0];
+      const acc = head.replace(/^@/, '');
+      p.account = acc && !/^(img|dsc|dscf|pxl|screenshot|kakaotalk|image|photo|스크린샷)$/i.test(acc) ? acc : null;   // 카메라·캡처 파일명은 계정 아님
+    } else p.account = null;   // 날짜가 없는 파일명(IMG_3321, bemyoung.png)은 규칙 밖 → 계정 기본값 사용
     if (!p.no) p.no = 1;
-    p.account = p.date ? (t.join('_') || null) : null;   // 날짜가 없는 파일명(IMG_3321)은 규칙 밖 → 계정 기본값 사용
     return p;
   }
   const tok = base.split('_').filter(Boolean);
@@ -567,9 +574,10 @@ function renderQueue() {
   $('#upStat').textContent = QUEUE.length ? `${QUEUE.length}장 · 대기 ${QUEUE.filter(q => q.status === '대기').length}` : '';
   $('#pv').innerHTML = QUEUE.map((q, i) => {
     const p = q.parsed; let fields = '';
-    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정 (비면 기본값)"><input data-k="date" value="${esc(p.date || '')}" placeholder="게시일 YYYY-MM-DD (선택)"><label style="display:flex;gap:4px;align-items:center;font-size:11px"><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> 셀럽 <input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="이름" style="flex:1"></label>`;
+    const mon = p.month || (p.date ? p.date.slice(0, 7) : '');
+    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정 (비면 기본값)"><input data-k="month" value="${esc(mon)}" placeholder="수집월 YYYY-MM (비면 상단값)"><label><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> ★ 셀럽 착장</label><input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="셀럽 이름 (체크 시)" style="${q.celeb ? '' : 'display:none'}">`;
     else if (UP_SRC === 'runway') fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="season" value="${esc(p.season || '')}" placeholder="시즌(비면 상단값)">`;
-    else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="date" value="${esc(p.date || '')}" placeholder="게시일 YYYY-MM-DD (선택)">`;
+    else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="month" value="${esc(mon)}" placeholder="수집월 YYYY-MM (비면 상단값)">`;
     fields += `<select data-k="cat" style="font-size:11px;padding:2px 4px;border-radius:5px;border:1px solid var(--line)">${catOptions(q.cat ?? upCat())}</select>`;
     const cls = q.status === '중복' ? 'dup' : q.status.startsWith('오류') ? 'err' : q.status === '완료' ? 'done' : '';
     return `<div class="pv ${cls} ${q.celeb ? 'celeb' : ''}" data-i="${i}"><span class="rm" data-rm="${i}" title="목록에서 제거${q.status === '완료' ? ' (업로드된 사진도 삭제)' : ''}">✕</span><img src="${q.url}" loading="lazy"><div class="f">${fields}<div class="st" title="${esc(q.name)}">${esc(q.status)} · ${esc(q.name)}</div></div></div>`;
@@ -581,7 +589,8 @@ $('#pv').onclick = async e => {
   URL.revokeObjectURL(q.url); QUEUE.splice(i, 1); renderQueue();
 };
 $('#pv').onchange = e => { const sel = e.target.closest('select[data-k=cat]'); if (!sel) return; QUEUE[+sel.closest('.pv').dataset.i].cat = sel.value; };
-$('#pv').oninput = e => { const inp = e.target.closest('input'); if (!inp) return; const i = +inp.closest('.pv').dataset.i; if (inp.dataset.k === 'celeb') { QUEUE[i].celeb = inp.checked; inp.closest('.pv').classList.toggle('celeb', inp.checked); return; } if (inp.dataset.k === 'celebName') { QUEUE[i].celebName = inp.value.trim(); return; } let v = inp.value.trim(); if (inp.dataset.k === 'no') v = +v || null; QUEUE[i].parsed[inp.dataset.k] = v || null; };
+$('#pv').oninput = e => { const inp = e.target.closest('input'); if (!inp) return; const i = +inp.closest('.pv').dataset.i; if (inp.dataset.k === 'celeb') { QUEUE[i].celeb = inp.checked; inp.closest('.pv').classList.toggle('celeb', inp.checked); const nm = inp.closest('.pv').querySelector('[data-k=celebName]'); if (nm) nm.style.display = inp.checked ? '' : 'none'; return; } if (inp.dataset.k === 'celebName') { QUEUE[i].celebName = inp.value.trim(); return; } let v = inp.value.trim(); if (inp.dataset.k === 'no') v = +v || null; if (inp.dataset.k === 'month') { const d = normDate(v); const mo = normMonth(v); QUEUE[i].parsed.month = mo; if (d) QUEUE[i].parsed.date = d; else if (!mo) QUEUE[i].parsed.date = null; return; }
+  QUEUE[i].parsed[inp.dataset.k] = v || null; };
 ['#up-cat', '#up-cat-rw', '#up-cat-mk'].forEach(id => { $(id).onchange = () => { QUEUE.forEach(q => { if (q.status === '대기') q.cat = $(id).value; }); renderQueue(); }; });
 $('#ig-celeb').onchange = () => { QUEUE.forEach(q => { if (q.status === '대기') q.celeb = $('#ig-celeb').checked; }); renderQueue(); };
 $('#btnClear').onclick = () => { QUEUE.forEach(q => URL.revokeObjectURL(q.url)); QUEUE = []; renderQueue(); $('#upProg').style.width = '0'; };
@@ -600,7 +609,7 @@ const safeKey = s => String(s || '').normalize('NFKD').replace(/[^\w.-]+/g, '-')
 $('#btnUpload').onclick = async () => {
   if (!sb) return; const items = QUEUE.filter(q => q.status === '대기'); if (!items.length) return;
   // 파일명에서 날짜를 못 읽은 사진은 상단 수집월(시즌)이 꼭 있어야 함 — 비어 있으면 중단
-  const needPeriod = items.some(q => !(q.parsed.date || q.parsed.season)); const pv = UP_SRC === 'instagram' ? $('#ig-period').value : UP_SRC === 'runway' ? $('#rw-season').value : $('#mk-period').value;
+  const needPeriod = items.some(q => !(q.parsed.month || q.parsed.date || q.parsed.season)); const pv = UP_SRC === 'instagram' ? $('#ig-period').value : UP_SRC === 'runway' ? $('#rw-season').value : $('#mk-period').value;
   if (needPeriod && !pv) { toast('파일명에 날짜가 없는 사진이 있습니다 — 상단 수집월(시즌)을 먼저 입력하세요', true); return; }
   $('#btnUpload').disabled = true; let done = 0; const total = items.length; const t0 = Date.now();
   const prog = () => { $('#upProg').style.width = (done / total * 100) + '%'; $('#upStat').textContent = `${done}/${total} · ${Math.round((Date.now() - t0) / 1000)}s`; };
@@ -640,11 +649,14 @@ $('#btnUpload').onclick = async () => {
   if (okItems.length) { const per = {}; okItems.forEach(q => { const m = buildMeta(q, 0); per[m.period] = (per[m.period] || 0) + 1; }); G.src = UP_SRC; G.period = Object.entries(per).sort((a, b) => b[1] - a[1])[0][0]; G.owner = ''; G.date = ''; $$('#galSrc button').forEach(x => x.classList.toggle('on', x.dataset.s === G.src)); showView('gallery'); }
   renderFilters(); loadGallery(true);
 };
+// 날짜/월 표기를 강제 정규화: 20260911 · 2026.9.11 · 2026-09-11 → 2026-09-11, 월은 YYYY-MM
+const normDate = v => { const m = String(v || '').match(/(20\d{2})\D?(\d{1,2})\D?(\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : null; };
+const normMonth = v => { const m = String(v || '').match(/(20\d{2})\D?(\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2, '0')}` : null; };
 function buildMeta(q, n) {
-  const p = q.parsed; const m = { source: UP_SRC, photo_no: p.no || null, is_celeb: !!q.celeb, celeb_name: q.celeb ? (q.celebName || $('#ig-celebName').value.trim() || null) : null, focus_node_ids: (q.cat ?? upCat()) ? [q.cat ?? upCat()] : [] };
-  if (UP_SRC === 'instagram') { m.account = (p.account || $('#ig-account').value.trim().replace(/^@/, '')) || null; m.posted_at = p.date || null; m.period = p.date ? p.date.slice(0, 7) : $('#ig-period').value; m.city = $('#ig-region').value; }
+  const p = q.parsed; if (p.date) p.date = normDate(p.date); const m = { source: UP_SRC, photo_no: p.no || null, is_celeb: !!q.celeb, celeb_name: q.celeb ? (q.celebName || $('#ig-celebName').value.trim() || null) : null, focus_node_ids: (q.cat ?? upCat()) ? [q.cat ?? upCat()] : [] };
+  if (UP_SRC === 'instagram') { m.account = (p.account || $('#ig-account').value.trim().replace(/^@/, '')) || null; m.posted_at = p.date || null; m.period = p.month || (p.date ? p.date.slice(0, 7) : normMonth($('#ig-period').value)); m.city = $('#ig-region').value; }
   else if (UP_SRC === 'runway') { m.period = p.season || $('#rw-season').value; m.brand = p.brand || $('#rw-brand').value.trim() || null; m.city = $('#rw-city').value; }
-  else { m.period = p.date ? p.date.slice(0, 7) : $('#mk-period').value; m.posted_at = p.date || null; m.brand = p.brand || $('#mk-brand').value.trim() || null; m.product_name = p.product || $('#mk-name').value.trim() || null; m.price = +$('#mk-price').value || null; m.product_url = $('#mk-url').value.trim() || null; }
+  else { m.period = p.month || (p.date ? p.date.slice(0, 7) : normMonth($('#mk-period').value)); m.posted_at = p.date || null; m.brand = p.brand || $('#mk-brand').value.trim() || null; m.product_name = p.product || $('#mk-name').value.trim() || null; m.price = +$('#mk-price').value || null; m.product_url = $('#mk-url').value.trim() || null; }
   return m;
 }
 
@@ -777,10 +789,11 @@ $('#lbTagHits').onclick = async e => { const c = e.target.closest('[data-ladd]')
 $('#lbFocusChips').onclick = async e => { const x = e.target.closest('[data-lfx]'); if (!x) return; LB.focus_node_ids = (LB.focus_node_ids || []).filter(f => f !== x.dataset.lfx); await sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id); renderLbFocus(); };
 $('#lbFocusAdd').onclick = () => { const v = $('#lbFocus').value; if (!v) { toast('아래 focus 드롭다운에서 카테고리를 먼저 고르세요'); return; } const cur = LB.focus_node_ids || []; if (cur.includes(v)) return; if (cur.length >= 3) { toast('focus는 3개까지'); return; } LB.focus_node_ids = [...cur, v]; sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id).then(() => renderLbFocus()); };
 $('#lbSave').onclick = async () => {
-  const per = $('#lbPeriod').value.trim(); if (!per) return toast('수집월/시즌은 비울 수 없습니다', true);
+  let per = $('#lbPeriod').value.trim(); if ($('#lbSrc').value !== 'runway') per = normMonth(per) || ''; else per = per.toUpperCase(); if (!per) return toast('수집월(YYYY-MM) / 시즌(27SS)을 올바르게 입력하세요', true);
+  const posted = normDate($('#lbPosted').value); if ($('#lbPosted').value.trim() && !posted) return toast('게시일은 YYYY-MM-DD', true);
   const cat = $('#lbCat').value; const rest = (LB.focus_node_ids || []).slice(1).filter(f => f !== cat);   // 첫 값 = 카테고리, 나머지 focus 유지
   const focus = (cat ? [cat, ...rest] : rest).slice(0, 3);
-  const row = { source: $('#lbSrc').value, period: per, account: $('#lbAccount').value.trim().replace(/^@/, '') || null, brand: $('#lbBrand').value.trim() || null, posted_at: $('#lbPosted').value.trim() || null, product_name: $('#lbProduct').value.trim() || null, focus_node_ids: focus };
+  const row = { source: $('#lbSrc').value, period: per, account: $('#lbAccount').value.trim().replace(/^@/, '') || null, brand: $('#lbBrand').value.trim() || null, posted_at: posted, product_name: $('#lbProduct').value.trim() || null, focus_node_ids: focus };
   const { error } = await sb.from('tx_media').update(row).eq('id', LB.id); if (error) return toast(error.message, true);
   Object.assign(LB, row); toast('저장됨'); renderLbFocus(); renderFilters(); loadGallery(true);
 };
