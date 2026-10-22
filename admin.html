@@ -164,7 +164,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-22</span>
+  <span class="ver" id="ver">v261022-23</span>
 </header>
 
 <main>
@@ -408,7 +408,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-22
+   TAXONOMY AGENT · admin.html  v261022-23
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -416,7 +416,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-22';
+const VER = 'v261022-23';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -567,9 +567,9 @@ function renderQueue() {
   $('#upStat').textContent = QUEUE.length ? `${QUEUE.length}장 · 대기 ${QUEUE.filter(q => q.status === '대기').length}` : '';
   $('#pv').innerHTML = QUEUE.map((q, i) => {
     const p = q.parsed; let fields = '';
-    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정 (비면 기본값)"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD"><input data-k="no" value="${p.no || ''}" placeholder="#"><label style="display:flex;gap:4px;align-items:center;font-size:11px"><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> 셀럽 <input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="이름" style="flex:1"></label>`;
-    else if (UP_SRC === 'runway') fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="season" value="${esc(p.season || '')}" placeholder="시즌(비면 상단값)"><input data-k="no" value="${p.no || ''}" placeholder="#">`;
-    else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="date" value="${esc(p.date || '')}" placeholder="YYYY-MM-DD">`;
+    if (UP_SRC === 'instagram') fields = `<input data-k="account" value="${esc(p.account || '')}" placeholder="계정 (비면 기본값)"><input data-k="date" value="${esc(p.date || '')}" placeholder="게시일 YYYY-MM-DD (선택)"><label style="display:flex;gap:4px;align-items:center;font-size:11px"><input type="checkbox" data-k="celeb" ${q.celeb ? 'checked' : ''}> 셀럽 <input data-k="celebName" value="${esc(q.celebName || '')}" placeholder="이름" style="flex:1"></label>`;
+    else if (UP_SRC === 'runway') fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="season" value="${esc(p.season || '')}" placeholder="시즌(비면 상단값)">`;
+    else fields = `<input data-k="brand" value="${esc(p.brand || '')}" placeholder="브랜드"><input data-k="product" value="${esc(p.product || '')}" placeholder="품명"><input data-k="date" value="${esc(p.date || '')}" placeholder="게시일 YYYY-MM-DD (선택)">`;
     fields += `<select data-k="cat" style="font-size:11px;padding:2px 4px;border-radius:5px;border:1px solid var(--line)">${catOptions(q.cat ?? upCat())}</select>`;
     const cls = q.status === '중복' ? 'dup' : q.status.startsWith('오류') ? 'err' : q.status === '완료' ? 'done' : '';
     return `<div class="pv ${cls} ${q.celeb ? 'celeb' : ''}" data-i="${i}"><span class="rm" data-rm="${i}" title="목록에서 제거${q.status === '완료' ? ' (업로드된 사진도 삭제)' : ''}">✕</span><img src="${q.url}" loading="lazy"><div class="f">${fields}<div class="st" title="${esc(q.name)}">${esc(q.status)} · ${esc(q.name)}</div></div></div>`;
