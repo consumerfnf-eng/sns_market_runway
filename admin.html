@@ -9,7 +9,7 @@
 :root{
   /* FS 팔레트: 흰 배경 · 연회색 카드 · 주황 Pick */
   --paper:#ffffff; --card:#f4f4f2; --ink:#111111; --mute:#6f6f6f; --line:#e6e6e3; --soft:#e9e9e6;
-  --accent:#f05a1e; --accent-soft:#fde6dc; --ok:#2c7a4b; --ok-soft:#e3f2e8; --warn:#9a6b00; --warn-soft:#fff3d6;
+  --accent:#DD2A7B; --accent-soft:#fbe3ee; --ig:linear-gradient(135deg,#515BD4,#8134AF 30%,#DD2A7B 55%,#F58529 80%,#FEDA77); --ok:#2c7a4b; --ok-soft:#e3f2e8; --warn:#9a6b00; --warn-soft:#fff3d6;
   --r:12px; --fs:13px;
 }
 *{box-sizing:border-box}
@@ -52,11 +52,11 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .src-tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
 /* 셀럽 착장: 실버 반짝이 테두리 */
 @keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
-.celeb{position:relative;box-shadow:0 0 0 3px #d9d9d9,0 0 10px 2px rgba(255,255,255,.9),0 0 0 4px #a8a8a8}
-.celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(120deg,#9a9a9a,#f4f4f4 30%,#b8b8b8 50%,#ffffff 70%,#9a9a9a);background-size:200% 100%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
+.celeb{position:relative}
+.celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:var(--ig);background-size:100% 100%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
 .star{position:absolute;top:6px;right:6px;font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));z-index:4;pointer-events:none}
 .card .imgs .ph{position:relative;border-radius:6px}
-.celeb-tag{position:absolute;left:8px;bottom:8px;background:linear-gradient(90deg,#8e8e8e,#e8e8e8,#8e8e8e);color:#111;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
+.celeb-tag{position:absolute;left:8px;bottom:8px;background:var(--ig);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
 /* upload */
 .drop{border:2px dashed #cfc9bb;border-radius:var(--r);padding:28px;text-align:center;color:var(--mute);background:#fbfaf7;margin:12px 0}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
@@ -112,6 +112,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .cb-photos .p img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
 .cb-photos .p.cover{border-color:var(--accent)}
 .cb-photos .p .n{position:absolute;top:4px;left:4px;background:var(--accent);color:#fff;font-size:10px;padding:0 6px;border-radius:999px}
+.plabel{position:absolute;right:6px;top:6px;display:flex;flex-direction:column;gap:3px;align-items:flex-end;z-index:4;pointer-events:none}.plabel span{background:rgba(20,20,20,.55);color:#fff;font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;backdrop-filter:blur(3px);white-space:nowrap}
 .cb-photos .pf{display:flex;gap:3px;flex-wrap:wrap;margin:2px 0 6px}.cb-photos .pf .chip{font-size:10px;padding:1px 6px;cursor:pointer}
 .cb-photos .p .ac{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:10px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .field{display:grid;gap:4px;margin-bottom:10px}
@@ -162,7 +163,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-18</span>
+  <span class="ver" id="ver">v261022-20</span>
 </header>
 
 <main>
@@ -247,7 +248,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="gbar">
     <select id="cSrc"><option value="">전체 소스</option><option value="instagram">INSTAGRAM</option><option value="runway">RUNWAY</option><option value="market">MARKET</option></select>
     <input type="text" id="cSearch" placeholder="타이틀 검색" style="width:220px">
-    <label class="row" style="gap:6px;font-size:12px"><input type="checkbox" id="cEdit"> Edit 모드 (수정·분석 버튼 표시)</label>
+    <label class="row" style="gap:6px;font-size:12px"><input type="checkbox" id="cEdit"> Edit 모드 (수정·분석 버튼 · 카드 드래그 정렬)</label>
     <span style="flex:1"></span>
     <span class="mute small" id="cCount"></span>
   </div>
@@ -392,7 +393,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-18
+   TAXONOMY AGENT · admin.html  v261022-20
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -400,7 +401,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-18';
+const VER = 'v261022-20';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -773,12 +774,13 @@ function setFocus(id) {
 }
 
 async function openCardBuilder(entryId, mediaIds) {
-  CB = { id: entryId, media: [], covers: new Set(), tags: new Map(), hashtags: [], evidence: [], sections: [], focus: null };
+  CB = { id: entryId, media: [], covers: new Set(), tags: new Map(), hashtags: [], evidence: [], sections: [], focus: null, labels: {} };
   $('#cbTitle').textContent = entryId ? '카드 수정' : '카드 만들기'; $('#cbDelete').style.display = entryId ? '' : 'none';
   $('#cbName').value = ''; $('#cbDesc').value = ''; $('#cbFirst').value = ''; $('#cbPick').checked = false; $('#cbHashIn').value = ''; $('#cbTagSearch').value = ''; $('#cbTagHits').innerHTML = '';
   if (entryId) {
     const { data: e } = await sb.from('tx_entries').select('*').eq('id', entryId).single();
-    const { data: em } = await sb.from('tx_entry_media').select('media_id,role,sort_order').eq('entry_id', entryId).order('sort_order');
+    const { data: em } = await sb.from('tx_entry_media').select('media_id,role,sort_order,labels').eq('entry_id', entryId).order('sort_order');
+    CB.labels = {}; (em || []).forEach(r => CB.labels[r.media_id] = r.labels || []);
     const { data: et } = await sb.from('tx_entry_tags').select('*').eq('entry_id', entryId);
     mediaIds = (em || []).map(r => r.media_id); (em || []).filter(r => r.role === 'cover').forEach(r => CB.covers.add(r.media_id));
     $('#cbName').value = e.title; $('#cbDesc').value = e.description || ''; $('#cbSource').value = e.source; $('#cbPeriod').value = e.period; $('#cbFirst').value = e.first_spotted || ''; $('#cbPick').checked = e.is_pick;
@@ -804,7 +806,7 @@ function applyPeriodFromMedia(force) {
 }
 function renderCB() {
   $('#cbPhotoN').textContent = `${CB.media.length}장`; applyPeriodFromMedia(false);
-  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}">${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div>`).join('');
+  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}${(CB.labels[m.id] || []).length ? `<div class="plabel">${CB.labels[m.id].map((t, k) => `<span data-plx="${m.id}|${k}" title="클릭=삭제" style="pointer-events:auto;cursor:pointer">${esc(t)} ✕</span>`).join('')}</div>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}"><span class="chip" data-pladd="${m.id}" title="사진 위 설명 태그 (반투명 박스)">+ 태그</span>${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div>`).join('');
   $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
   $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
   $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><span class="att" data-evimg="${i}" title="${e.image ? '근거 이미지 (클릭=교체)' : '근거 이미지 첨부 (캡처)'}">${e.image ? `<img src="${pubUrl(e.image)}">` : '📎'}</span><button class="sm" data-evx="${i}">✕</button></div>`).join('');
@@ -813,6 +815,8 @@ function renderCB() {
   renderCBColors();
 }
 $('#cbPhotos').onclick = e => {
+  const pa = e.target.closest('[data-pladd]'); if (pa) { const mid = +pa.dataset.pladd; const t = (prompt('사진에 붙일 설명 태그 (예: 폴카 도트)') || '').trim(); if (t) { (CB.labels[mid] ||= []).push(t); renderCB(); } return; }
+  const px = e.target.closest('[data-plx]'); if (px) { const [mid, k] = px.dataset.plx.split('|'); CB.labels[+mid].splice(+k, 1); renderCB(); return; }
   const fx = e.target.closest('[data-pfx]'); if (fx) { const mid = +fx.closest('.pf').dataset.pf; const m = CB.media.find(x => x.id === mid); m.focus_node_ids = (m.focus_node_ids || []).filter(f => f !== fx.dataset.pfx); m._dirty = true; renderCB(); return; }
   const fa = e.target.closest('[data-pfadd]'); if (fa) { openFocusPick(+fa.dataset.pfadd); return; }
   const x = e.target.closest('[data-prm]'); if (x) { const id = +x.dataset.prm; CB.media = CB.media.filter(m => m.id !== id); CB.covers.delete(id); CB.sections.forEach(s => s.media_ids = (s.media_ids || []).filter(i => i !== id)); renderCB(); return; }
@@ -887,7 +891,7 @@ async function saveCard() {
   if (id) { const { error } = await sb.from('tx_entries').update(row).eq('id', id); if (error) { toast(error.message, true); return null; } }
   else { const { data, error } = await sb.from('tx_entries').insert(row).select('id').single(); if (error) { toast(error.message, true); return null; } id = data.id; CB.id = id; }
   await sb.from('tx_entry_media').delete().eq('entry_id', id);
-  const covers = [...CB.covers]; const em = CB.media.map((m, i) => ({ entry_id: id, media_id: m.id, role: CB.covers.has(m.id) ? 'cover' : 'extra', sort_order: CB.covers.has(m.id) ? covers.indexOf(m.id) : 10 + i }));
+  const covers = [...CB.covers]; const em = CB.media.map((m, i) => ({ entry_id: id, media_id: m.id, role: CB.covers.has(m.id) ? 'cover' : 'extra', sort_order: CB.covers.has(m.id) ? covers.indexOf(m.id) : 10 + i, labels: CB.labels[m.id] || [] }));
   let r = await sb.from('tx_entry_media').insert(em); if (r.error) toast(r.error.message, true);
   await sb.from('tx_entry_tags').delete().eq('entry_id', id);
   const et = [...CB.tags.entries()].map(([node_id, t]) => ({ entry_id: id, node_id, origin: t.origin, confirmed: t.confirmed }));
@@ -931,7 +935,8 @@ $('#ppAdd').onclick = () => { const add = PP.items.filter(m => PP.sel.has(m.id) 
 /* ---------------- card viewer ---------------- */
 async function openCardView(id) {
   const { data: e } = await sb.from('tx_v_entries_list').select('*').eq('id', id).single(); if (!e) return;
-  const { data: em } = await sb.from('tx_entry_media').select('media_id,role,sort_order').eq('entry_id', id).order('sort_order');
+  const { data: em } = await sb.from('tx_entry_media').select('media_id,role,sort_order,labels').eq('entry_id', id).order('sort_order');
+  const LAB = {}; (em || []).forEach(r => LAB[r.media_id] = r.labels || []);
   const ids = (em || []).map(r => r.media_id); let media = [];
   if (ids.length) { const { data } = await sb.from('tx_media').select('id,thumb_path,storage_path,account,brand,posted_at,period,product_name,is_celeb,celeb_name,status,filename').in('id', ids); media = ids.map(i => (data || []).find(m => m.id === i)).filter(Boolean); }
   const covers = new Set((em || []).filter(r => r.role === 'cover').map(r => r.media_id));
@@ -941,7 +946,7 @@ async function openCardView(id) {
     <div class="small mute">${esc(e.source)} · ${esc(e.period)} · ${esc(nodeName(e.focus_node_id) || 'focus 미지정')} · 사진 ${media.length}장 (대표 ${covers.size}) · 분석 ${media.filter(m => m.status === 'analyzed').length}장${(e.hashtags || []).length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div>
     ${e.description ? `<div style="margin-top:6px">${esc(e.description)}</div>` : ''}
     <div class="row" style="margin-top:10px"><button class="sm" id="cvEdit">수정 (사진 추가·대표 변경)</button><button class="sm" id="cvAn">분석 실행</button></div>`;
-  $('#cvGrid').innerHTML = media.map(m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`).join('') || '<div class="mute">사진 없음</div>';
+  $('#cvGrid').innerHTML = media.map(m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}${(LAB[m.id] || []).length ? `<div class="plabel">${LAB[m.id].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`).join('') || '<div class="mute">사진 없음</div>';
   $('#cvGrid').onclick = ev => { const ph = ev.target.closest('.ph'); if (!ph) return; const m = media.find(x => x.id === +ph.dataset.id); if (m) openLightbox(m); };
   $('#cvEdit').onclick = () => { $('#mView').classList.remove('on'); openCardBuilder(id, []); };
   $('#cvAn').onclick = async () => { await analyzeMany(ids, analysisFocus(e.focus_node_id), false, [...covers]); openCardView(id); };
@@ -960,9 +965,15 @@ $('#pkList').onclick = async e => { const it = e.target.closest('[data-id]'); if
    ===================================================================== */
 let EDIT_MODE = localStorage.getItem('tx_edit') === '1';
 $('#cSrc').onchange = loadCards; $('#cSearch').oninput = debounce(loadCards, 250);
-$('#cEdit').checked = EDIT_MODE; $('#cEdit').onchange = () => { EDIT_MODE = $('#cEdit').checked; localStorage.setItem('tx_edit', EDIT_MODE ? '1' : '0'); $$('#cards .editonly').forEach(r => r.style.display = EDIT_MODE ? 'flex' : 'none'); };
+$('#cEdit').checked = EDIT_MODE; $('#cEdit').onchange = () => { EDIT_MODE = $('#cEdit').checked; localStorage.setItem('tx_edit', EDIT_MODE ? '1' : '0'); loadCards(); };
+// ---- 카드 드래그 정렬 (Edit 모드, 같은 카테고리 그룹 안에서만) → tx_entries.sort_order 저장
+let DRAG_ID = null;
+$('#cards').addEventListener('dragstart', e => { const c = e.target.closest('.card'); if (!c || !EDIT_MODE) return; DRAG_ID = +c.dataset.id; e.dataTransfer.effectAllowed = 'move'; c.style.opacity = '.4'; });
+$('#cards').addEventListener('dragend', e => { const c = e.target.closest('.card'); if (c) c.style.opacity = ''; });
+$('#cards').addEventListener('dragover', e => { const c = e.target.closest('.card'); if (!c || DRAG_ID == null) return; const from = $(`#cards .card[data-id="${DRAG_ID}"]`); if (!from || from === c || from.dataset.group !== c.dataset.group) return; e.preventDefault(); const r = c.getBoundingClientRect(); const before = (e.clientX - r.left) < r.width / 2; c.parentNode.insertBefore(from, before ? c : c.nextSibling); });
+$('#cards').addEventListener('drop', async e => { e.preventDefault(); if (DRAG_ID == null) return; const from = $(`#cards .card[data-id="${DRAG_ID}"]`); DRAG_ID = null; if (!from) return; const cards = [...from.parentNode.querySelectorAll('.card')]; const ups = cards.map((c, i) => sb.from('tx_entries').update({ sort_order: (i + 1) * 10 }).eq('id', +c.dataset.id)); await Promise.all(ups); toast('순서 저장됨'); });
 async function loadCards() {
-  if (!sb) return; let q = sb.from('tx_v_entries_list').select('*').order('updated_at', { ascending: false }).limit(200);
+  if (!sb) return; let q = sb.from('tx_v_entries_list').select('*').order('sort_order').order('updated_at', { ascending: false }).limit(300);
   if ($('#cSrc').value) q = q.eq('source', $('#cSrc').value); const s = $('#cSearch').value.trim(); if (s) q = q.ilike('title', `%${s}%`);
   let { data, error } = await q;
   if (error) { // 뷰(tx_v_entries_list)가 없거나 스키마 캐시 전이면 기본 테이블로 대체
@@ -982,7 +993,7 @@ async function loadCards() {
     const chips = (tags[e.id] || []).filter(t => t.confirmed).slice(0, 4).map(t => `<span class="chip">${esc(nodeName(t.node_id))}</span>`).join('');
     const cids2 = (e.cover_ids || []); const imgs = (e.cover_thumbs || []).slice(0, 3).map((p, i) => { const cn = CEL[cids2[i]]; return `<div class="ph ${cn ? 'celeb' : ''}"><img src="${pubUrl(p)}">${cn ? `<span class="star">⭐</span><span class="celeb-tag">${esc(cn)}</span>` : ''}</div>`; }).join('') || '<div class="mute small">대표 없음</div>';
     const stat = e.source === 'instagram' ? `${e.posts || 0} posts · ${e.accounts || 0} accounts · ${e.photos || 0} photos` : e.source === 'runway' ? `${e.runway_brands || 0} brands · ${e.photos || 0} looks` : `${e.market_brands || 0} brands · ${e.photos || 0} items`;
-    return `<div class="card" data-id="${e.id}"><div class="chips">${chips}<span class="chip" style="margin-left:auto">${e.source} · ${esc(e.period)}</span></div><h4>${esc(e.title)}${e.is_pick ? ' <span class="chip acc">🔥 HOT</span>' : ''}</h4><div class="small mute">${esc(nodeName(e.focus_node_id) || 'focus 미지정')}${e.hashtags?.length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div><div class="imgs">${imgs}</div><div class="st">${stat}</div><div class="row editonly" style="margin-top:8px;display:${EDIT_MODE ? 'flex' : 'none'}"><button class="sm" data-edit="${e.id}">수정</button><button class="sm" data-an="${e.id}">분석 실행</button></div></div>`;
+    return `<div class="card" data-id="${e.id}" data-group="${esc(e.focus_node_id || '')}" draggable="${EDIT_MODE ? 'true' : 'false'}" style="${EDIT_MODE ? 'cursor:grab' : ''}"><div class="chips">${chips}<span class="chip" style="margin-left:auto">${e.source} · ${esc(e.period)}</span></div><h4>${esc(e.title)}${e.is_pick ? ' <span class="chip acc">🔥 HOT</span>' : ''}</h4><div class="small mute">${esc(nodeName(e.focus_node_id) || 'focus 미지정')}${e.hashtags?.length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div><div class="imgs">${imgs}</div><div class="st">${stat}</div><div class="row editonly" style="margin-top:8px;display:${EDIT_MODE ? 'flex' : 'none'}"><button class="sm" data-edit="${e.id}">수정</button><button class="sm" data-an="${e.id}">분석 실행</button></div></div>`;
   };
   $('#cards').innerHTML = gkeys.map(k => `<div class="cgroup"><h3 style="margin:6px 0 2px;font-size:13px;letter-spacing:.04em">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : 'FOCUS 미지정'} <span class="mute" style="font-weight:400">${groupsC[k].length}</span></h3><div class="cards">${groupsC[k].map(cardHTML).join('')}</div></div>`).join('') || '<span class="mute">카드가 없습니다 — 갤러리에서 사진을 선택해 만드세요</span>';
 }
