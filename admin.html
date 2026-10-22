@@ -53,7 +53,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 /* 셀럽 착장: 실버 반짝이 테두리 */
 @keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 .celeb{position:relative;box-shadow:0 0 0 3px #d9d9d9,0 0 10px 2px rgba(255,255,255,.9),0 0 0 4px #a8a8a8}
-.celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(120deg,#9a9a9a,#f4f4f4 30%,#b8b8b8 50%,#ffffff 70%,#9a9a9a);background-size:200% 100%;animation:shine 2.4s linear infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
+.celeb::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;background:linear-gradient(120deg,#9a9a9a,#f4f4f4 30%,#b8b8b8 50%,#ffffff 70%,#9a9a9a);background-size:200% 100%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:3}
 .star{position:absolute;top:6px;right:6px;font-size:16px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));z-index:4;pointer-events:none}
 .card .imgs .ph{position:relative;border-radius:6px}
 .celeb-tag{position:absolute;left:8px;bottom:8px;background:linear-gradient(90deg,#8e8e8e,#e8e8e8,#8e8e8e);color:#111;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;z-index:4;letter-spacing:.03em}
@@ -107,11 +107,12 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .box{background:var(--card);border-radius:16px;width:min(1100px,100%);padding:20px;position:relative}
 .box .close{position:absolute;top:12px;right:12px}
 .cb-grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
-.cb-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.cb-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px 6px;align-items:start}
 .cb-photos .p{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent}
 .cb-photos .p img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
 .cb-photos .p.cover{border-color:var(--accent)}
 .cb-photos .p .n{position:absolute;top:4px;left:4px;background:var(--accent);color:#fff;font-size:10px;padding:0 6px;border-radius:999px}
+.cb-photos .pf{display:flex;gap:3px;flex-wrap:wrap;margin:2px 0 6px}.cb-photos .pf .chip{font-size:10px;padding:1px 6px;cursor:pointer}
 .cb-photos .p .ac{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:10px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .field{display:grid;gap:4px;margin-bottom:10px}
 .field>span{font-size:11px;color:var(--mute)}
@@ -122,7 +123,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .sec .ph{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 .sec .ph img{width:44px;aspect-ratio:3/4;object-fit:cover;border-radius:4px;border:2px solid transparent;cursor:pointer}
 .sec .ph img.on{border-color:var(--accent)}
-.cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:14px}
+.cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
 .cv-grid .ph{position:relative;border-radius:10px;overflow:hidden;cursor:zoom-in}
 .cv-grid .ph img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:#eee}
 .cv-grid .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:3px 8px}
@@ -134,7 +135,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .sw{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 8px 2px 3px;font-size:11px;background:#fff}
 .sw i{width:16px;height:16px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.1)}
 /* cards list */
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:18px}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
 .card .imgs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:8px 0}
 .card .imgs img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;background:#eee}
@@ -160,7 +161,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-12</span>
+  <span class="ver" id="ver">v261022-14</span>
 </header>
 
 <main>
@@ -249,7 +250,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
     <span style="flex:1"></span>
     <span class="mute small" id="cCount"></span>
   </div>
-  <div class="cards" id="cards"></div>
+  <div id="cards"></div>
 </section>
 
 <!-- ================= SETTINGS ================= -->
@@ -297,7 +298,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
         <div class="field"><span>설명 (2줄)</span><textarea id="cbDesc" rows="2"></textarea></div>
         <div class="field"><span>특징 #해시태그 (영문 소문자 고정 · 쉼표/엔터로 추가 · #halter-neck #halterneck #halter_neck 모두 분류체계 Halterneck으로 인식돼 위 칩에 제안됨)</span>
           <div class="chips" id="cbHash"></div><input type="text" id="cbHashIn" placeholder="#홀터넥 #팝컬러"></div>
-        <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨 / 값 / URL·날짜</span>
+        <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨(랭킹이면 사이트) / 값 / URL·날짜</span>
           <div id="cbEv"></div><button class="sm" id="cbEvAdd">+ 근거 추가</button></div>
         <div class="field"><span>소제목 섹션 (없으면 추가 사진이 자동으로 4장 그리드)</span>
           <div id="cbSecs"></div><button class="sm" id="cbSecAdd">+ 소제목 추가</button></div>
@@ -309,7 +310,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
         </div>
       </div>
       <div>
-        <div class="field"><span>사진 <b id="cbPhotoN"></b> · 클릭해서 대표 지정 (최대 3) · 우클릭/✕로 빼기</span>
+        <div class="field"><span>사진 <b id="cbPhotoN"></b> · 클릭=대표 지정(최대 3) · ✕=빼기 · 사진 아래 <b>focus</b> 칩=이 사진에서 볼 아이템(최대 3, 비면 카드 focus)</span>
           <div class="cb-photos" id="cbPhotos"></div>
           <div class="row" style="margin-top:6px"><button class="sm" id="cbAddPhotos">+ 갤러리에서 사진 추가</button></div></div>
         <div class="field"><span>컬러칩 (focus 아이템, 분석 후 자동)</span><div class="chips" id="cbColors"><span class="mute small">분석 대기</span></div></div>
@@ -319,11 +320,12 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <span id="cbStat" class="mute small" style="flex:1"></span>
       <button id="cbDelete" class="sm" style="display:none">카드 삭제</button>
       <button id="cbSave" class="pri">저장</button>
-      <button id="cbSaveAn" class="acc">저장 + 분석 실행</button>
     </div>
   </div>
 </div>
 
+<!-- ============ FOCUS PICK ============ -->
+<div class="modal" id="mFocus" style="z-index:56"><div class="box" style="width:min(520px,100%)"><button class="close sm" data-close="mFocus">✕</button><h2>이 사진에서 볼 아이템 (최대 3)</h2><div class="chips" id="fpList" style="max-height:60vh;overflow:auto"></div></div></div>
 <!-- ============ PHOTO PICKER (카드에 사진 추가) ============ -->
 <div class="modal" id="mPhotos" style="z-index:55">
   <div class="box" style="width:min(1100px,100%)">
@@ -357,8 +359,10 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
       <div>
         <h2 id="lbTitle"></h2>
         <div class="small mute" id="lbMeta"></div>
-        <h3>분석 결과</h3>
+        <h3>분석 결과 — ✕로 지우고, 아래 검색으로 추가 (사람 수정은 AI가 덮어쓰지 않음)</h3>
         <div id="lbTags"><span class="mute small">아직 분석 안 됨</span></div>
+        <div class="row" style="margin-top:8px"><input type="text" id="lbTagSearch" placeholder="태그 추가 (영문 · 컬러 이름도 가능)" style="width:260px"><div class="chips" id="lbTagHits"></div></div>
+        <div class="row" style="margin-top:6px"><span class="small mute">이 사진 focus:</span><div class="chips" id="lbFocusChips"></div><button class="sm" id="lbFocusAdd">+ focus</button></div>
         <div class="row" style="margin-top:12px">
           <label>focus<select id="lbFocus"></select></label>
           <button class="sm" id="lbAnalyze">분석</button>
@@ -385,7 +389,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-12
+   TAXONOMY AGENT · admin.html  v261022-14
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -393,7 +397,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-12';
+const VER = 'v261022-14';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -621,14 +625,7 @@ async function renderFilters() {
   for (const f of G.facets) { per[f.period] = (per[f.period] || 0) + f.photos; if (f.owner) own[f.owner] = (own[f.owner] || 0) + f.photos; tot += f.photos; an += f.analyzed; }
   const perList = Object.keys(per).sort().reverse(); const ownList = Object.entries(own).sort((a, b) => b[1] - a[1]).slice(0, 80);
   const lab = G.src === 'runway' ? '시즌' : '수집월'; const olab = G.src === 'instagram' ? '계정' : '브랜드';
-  // 날짜(일) 목록 — 런웨이 제외. 선택된 수집월 안에서만 집계 (10만 장 대비)
-  let dateHTML = '';
-  if (G.src !== 'runway') {
-    let dq = sb.from('tx_media').select('posted_at').eq('source', G.src).not('posted_at', 'is', null); if (G.period) dq = dq.eq('period', G.period); if (G.owner) dq = dq.eq(G.src === 'instagram' ? 'account' : 'brand', G.owner);
-    const { data: dd } = await dq.limit(5000); const dc = {}; (dd || []).forEach(r => dc[r.posted_at] = (dc[r.posted_at] || 0) + 1);
-    const dl = Object.keys(dc).sort().reverse().slice(0, 120);
-    dateHTML = `<div class="grp"><div class="t">날짜</div>${dl.map(d => `<div class="it ${G.date === d ? 'on' : ''}" data-f="date" data-v="${d}">${d.slice(5)}<b>${dc[d]}</b></div>`).join('') || '<div class="small mute" style="padding:0 6px">날짜 정보 없음</div>'}</div>`;
-  }
+  const dateHTML = '';
   $('#filters').innerHTML = `
     <div class="grp"><div class="t">전체</div><div class="it ${!G.period && !G.owner && !G.date ? 'on' : ''}" data-f="all">${G.src.toUpperCase()}<b>${tot} · 분석 ${an}</b></div></div>
     <div class="grp"><div class="t">${lab}</div>${perList.map(p => `<div class="it ${G.period === p ? 'on' : ''}" data-f="period" data-v="${esc(p)}">${esc(p)}<b>${per[p]}</b></div>`).join('')}</div>
@@ -640,7 +637,7 @@ $('#filters').onclick = e => { const it = e.target.closest('.it'); if (!it) retu
 async function loadGallery(reset) {
   if (!sb) return;
   if (reset) { G.page = 0; G.items = []; $('#grid').innerHTML = ''; }
-  let q = sb.from('tx_media').select('id,source,period,season,posted_at,account,brand,city,product_name,price,photo_no,thumb_path,storage_path,status,filename,is_celeb,celeb_name').eq('source', G.src);
+  let q = sb.from('tx_media').select('id,source,period,season,posted_at,account,brand,city,product_name,price,photo_no,thumb_path,storage_path,status,filename,is_celeb,celeb_name,focus_node_ids').eq('source', G.src);
   if (G.period) q = q.eq('period', G.period);
   if (G.date) q = q.eq('posted_at', G.date);
   if (G.owner) q = G.src === 'instagram' ? q.eq('account', G.owner) : q.eq('brand', G.owner);
@@ -658,7 +655,7 @@ async function loadGallery(reset) {
   $('#gCount').textContent = `${G.items.length}장 표시`; paintSel();
 }
 function cellHTML(m, inCard) {
-  const cap = m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b> · ${esc(m.posted_at || m.period)} #${m.photo_no || ''}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b> · ${esc(m.city || '')} · ${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b> · ${esc(m.product_name || '')} · ${esc(m.period)}`;
+  const cap = m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b> · ${esc(m.period)} #${m.photo_no || ''}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b> · ${esc(m.city || '')} · ${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b> · ${esc(m.product_name || '')} · ${esc(m.period)}`;
   const bd = m.status === 'analyzed' ? `<span class="bd an">분석됨</span>` : m.status === 'error' ? `<span class="bd" style="color:var(--accent)">오류</span>` : '';
   const cd = inCard ? `<span class="bd cd" style="top:28px">카드</span>` : '';
   return `<div class="cell ${G.sel.has(m.id) ? 'sel' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}" draggable="true">${m.is_celeb ? `<span class="star" style="top:auto;bottom:34px">⭐</span><span class="celeb-tag" style="bottom:34px">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="rm" data-del="${m.id}" title="이 사진 삭제">✕</span><span class="chk">${G.sel.has(m.id) ? '✓' : ''}</span>${bd}${cd}<img src="${pubUrl(m.thumb_path)}" loading="lazy" alt=""><div class="cap">${cap}</div></div>`;
@@ -700,7 +697,7 @@ async function openLightbox(m) {
   LB = m; $('#lbImg').src = pubUrl(m.storage_path);
   $('#lbTitle').textContent = m.source === 'instagram' ? `@${m.account || '?'}` : `${m.brand || '?'}${m.product_name ? ' · ' + m.product_name : ''}`;
   $('#lbMeta').textContent = `${m.source} · ${m.period}${m.season && m.season !== m.period ? ' (' + m.season + ')' : ''} · ${m.posted_at || ''} · #${m.photo_no || ''} · ${m.filename || ''}`;
-  fillFocusSelect($('#lbFocus'), null); $('#mLb').classList.add('on'); renderLbTags();
+  fillFocusSelect($('#lbFocus'), null); $('#mLb').classList.add('on'); renderLbTags(); renderLbFocus();
 }
 async function renderLbTags() {
   const { data } = await sb.from('tx_media_tags').select('node_id,origin,confidence,dominance,focus_node_id').eq('media_id', LB.id);
@@ -711,13 +708,20 @@ async function renderLbTags() {
   let h = a ? `<div class="small mute">${esc(a.model)} · ${esc(a.prompt_version)} · focus ${esc(nodeName(a.focus_node_id))} · ${a.created_at.slice(0, 16).replace('T', ' ')}</div>` : '';
   for (const f of ['product', 'fnf', 'detail', 'material', 'pattern', 'color']) {
     if (!groups[f]) continue;
-    h += `<h3>${f}</h3><div class="tagrow">` + groups[f].sort((x, y) => (y.dominance || 0) - (x.dominance || 0)).map(t => f === 'color' ? `<span class="sw"><i style="background:${t.n.hex || '#ccc'}"></i>${esc(t.n.name_en)} ${t.dominance ? Math.round(t.dominance * 100) + '%' : ''}</span>` : `<span class="chip ${t.origin === 'ai' ? 'ai' : ''}" title="conf ${t.confidence ?? ''}">${esc(t.n.name_en)}</span>`).join('') + '</div>';
+    h += `<h3>${f}</h3><div class="tagrow">` + groups[f].sort((x, y) => (y.dominance || 0) - (x.dominance || 0)).map(t => f === 'color' ? `<span class="sw" data-tag="${t.node_id}" data-origin="${t.origin}"><i style="background:${t.n.hex || '#ccc'}"></i>${esc(t.n.name_en)} ${t.dominance ? Math.round(t.dominance * 100) + '%' : ''}<span class="x" data-tx="${t.node_id}" data-to="${t.origin}" style="margin-left:4px;cursor:pointer;opacity:.6">✕</span></span>` : `<span class="chip ${t.origin === 'ai' ? 'ai' : ''}" title="${t.origin} · conf ${t.confidence ?? ''}">${esc(t.n.name_en)}<span class="x" data-tx="${t.node_id}" data-to="${t.origin}">✕</span></span>`).join('') + '</div>';
   }
   if (a?.result?.notes) h += `<div class="small mute">${esc(a.result.notes)}</div>`;
   $('#lbTags').innerHTML = h;
 }
+function renderLbFocus() { $('#lbFocusChips').innerHTML = (LB.focus_node_ids || []).map(f => `<span class="chip on" data-lfx="${f}">${esc(nodeName(f))} ✕</span>`).join('') || '<span class="small mute">(카드 focus 사용)</span>'; }
+$('#lbTags').onclick = async e => { const x = e.target.closest('[data-tx]'); if (!x) return; const { error } = await sb.from('tx_media_tags').delete().eq('media_id', LB.id).eq('node_id', x.dataset.tx).eq('origin', x.dataset.to); if (error) return toast(error.message, true); renderLbTags(); };
+$('#lbTagSearch').oninput = debounce(() => { const q = $('#lbTagSearch').value.trim().toLowerCase(); if (q.length < 2) { $('#lbTagHits').innerHTML = ''; return; } const hits = TAX.nodes.filter(n => !n.canonical_id && ['value', 'sub', 'category'].includes(n.kind) && (n.name_en.toLowerCase().includes(q) || (n.aliases || []).some(a => a.toLowerCase().includes(q)))).slice(0, 12); $('#lbTagHits').innerHTML = hits.map(n => `<span class="chip" data-ladd="${n.id}">${n.facet === 'color' ? `<i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${n.hex};margin-right:4px"></i>` : ''}${esc(n.name_en)}<small class="mute"> ${esc(n.facet)}</small></span>`).join(''); }, 200);
+$('#lbTagHits').onclick = async e => { const c = e.target.closest('[data-ladd]'); if (!c) return; const n = TAX.byId[c.dataset.ladd]; const focus = (LB.focus_node_ids && LB.focus_node_ids[0]) || null; const { error } = await sb.from('tx_media_tags').upsert({ media_id: LB.id, node_id: n.id, origin: 'human', confidence: 1, dominance: n.facet === 'color' ? 0.5 : null, focus_node_id: focus }, { onConflict: 'media_id,node_id,origin' }); if (error) return toast(error.message, true); await sb.from('tx_media').update({ status: 'analyzed' }).eq('id', LB.id); $('#lbTagSearch').value = ''; $('#lbTagHits').innerHTML = ''; renderLbTags(); };
+$('#lbFocusChips').onclick = async e => { const x = e.target.closest('[data-lfx]'); if (!x) return; LB.focus_node_ids = (LB.focus_node_ids || []).filter(f => f !== x.dataset.lfx); await sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id); renderLbFocus(); };
+$('#lbFocusAdd').onclick = () => { const v = $('#lbFocus').value; if (!v) { toast('아래 focus 드롭다운에서 카테고리를 먼저 고르세요'); return; } const cur = LB.focus_node_ids || []; if (cur.includes(v)) return; if (cur.length >= 3) { toast('focus는 3개까지'); return; } LB.focus_node_ids = [...cur, v]; sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id).then(() => renderLbFocus()); };
 $('#lbAnalyze').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, false); renderLbTags(); };
 $('#lbAnalyzeHi').onclick = async () => { await analyzeMany([LB.id], $('#lbFocus').value || null, true); renderLbTags(); };
+// 사람 수정 보호: AI 재분석이 human 행을 건드리지 않도록 analyzeOne은 origin='ai'만 교체함 (이미 그렇게 동작)
 $('#lbCeleb').onclick = async () => { const on = !LB.is_celeb; let name = LB.celeb_name || ''; if (on) { name = prompt('셀럽 이름', name) ?? name; } const { error } = await sb.from('tx_media').update({ is_celeb: on, celeb_name: on ? (name || null) : null }).eq('id', LB.id); if (error) return toast(error.message, true); LB.is_celeb = on; LB.celeb_name = on ? name : null; toast(on ? '셀럽 착장 지정' : '해제'); loadGallery(true); };
 $('#lbDel').onclick = async () => { if (!confirm('이 사진 삭제?')) return; await sb.from('tx_media').delete().eq('id', LB.id); $('#mLb').classList.remove('on'); renderFilters(); loadGallery(true); };
 
@@ -751,7 +755,7 @@ async function openCardBuilder(entryId, mediaIds) {
     CB.hashtags = e.hashtags || []; CB.evidence = e.evidence || []; CB.sections = e.sections || []; (et || []).forEach(t => CB.tags.set(t.node_id, { origin: t.origin, confirmed: t.confirmed }));
     setFocus(e.focus_node_id);
   }
-  if (mediaIds.length) { const { data } = await sb.from('tx_media').select('id,source,period,posted_at,account,brand,product_name,thumb_path,storage_path,photo_no,is_celeb,celeb_name').in('id', mediaIds); CB.media = mediaIds.map(id => (data || []).find(m => m.id === id)).filter(Boolean); }
+  if (mediaIds.length) { const { data } = await sb.from('tx_media').select('id,source,period,posted_at,account,brand,product_name,thumb_path,storage_path,photo_no,is_celeb,celeb_name,focus_node_ids').in('id', mediaIds); CB.media = mediaIds.map(id => (data || []).find(m => m.id === id)).filter(Boolean); }
   if (!entryId && CB.media.length) {
     const m0 = CB.media[0]; $('#cbSource').value = m0.source; $('#cbPeriod').value = m0.period;
     const sorted = [...CB.media].sort((a, b) => (a.photo_no || 99) - (b.photo_no || 99)); sorted.slice(0, 3).forEach(m => CB.covers.add(m.id));
@@ -762,14 +766,17 @@ async function openCardBuilder(entryId, mediaIds) {
 }
 function renderCB() {
   $('#cbPhotoN').textContent = `${CB.media.length}장`;
-  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.posted_at || '')}</span></div>`).join('');
+  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}">${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div>`).join('');
   $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
   $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
-  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="celeb" ${e.type === 'celeb' ? 'selected' : ''}>셀럽 착용</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select><input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명"><input data-k="value" value="${esc(e.value || '')}" placeholder="값 (예: 좋아요 12.4K, 27SS)"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
+  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="celeb" ${e.type === 'celeb' ? 'selected' : ''}>셀럽 착용</option><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
   $('#cbSecs').innerHTML = CB.sections.map((s, i) => `<div class="sec" data-i="${i}"><div class="row"><input type="text" data-sub value="${esc(s.subtitle || '')}" placeholder="소제목" style="flex:1"><button class="sm" data-secx="${i}">✕</button></div><div class="ph">${CB.media.map(m => `<img src="${pubUrl(m.thumb_path)}" data-mid="${m.id}" class="${(s.media_ids || []).includes(m.id) ? 'on' : ''}">`).join('')}</div></div>`).join('');
   renderCBColors();
 }
-$('#cbPhotos').onclick = e => { const x = e.target.closest('[data-prm]'); if (x) { const id = +x.dataset.prm; CB.media = CB.media.filter(m => m.id !== id); CB.covers.delete(id); CB.sections.forEach(s => s.media_ids = (s.media_ids || []).filter(i => i !== id)); renderCB(); return; }
+$('#cbPhotos').onclick = e => {
+  const fx = e.target.closest('[data-pfx]'); if (fx) { const mid = +fx.closest('.pf').dataset.pf; const m = CB.media.find(x => x.id === mid); m.focus_node_ids = (m.focus_node_ids || []).filter(f => f !== fx.dataset.pfx); m._dirty = true; renderCB(); return; }
+  const fa = e.target.closest('[data-pfadd]'); if (fa) { openFocusPick(+fa.dataset.pfadd); return; }
+  const x = e.target.closest('[data-prm]'); if (x) { const id = +x.dataset.prm; CB.media = CB.media.filter(m => m.id !== id); CB.covers.delete(id); CB.sections.forEach(s => s.media_ids = (s.media_ids || []).filter(i => i !== id)); renderCB(); return; }
   const p = e.target.closest('.p'); if (!p) return; const id = +p.dataset.id; if (CB.covers.has(id)) CB.covers.delete(id); else { if (CB.covers.size >= 3) { toast('대표는 3장까지'); return; } CB.covers.add(id); } renderCB(); };
 $('#cbTags').onclick = e => { const x = e.target.closest('[data-x]'); if (x) { CB.tags.delete(x.dataset.x); renderCB(); return; } const c = e.target.closest('.chip'); if (!c) return; const t = CB.tags.get(c.dataset.id); if (t) { t.confirmed = !t.confirmed; if (t.confirmed) t.origin = 'human'; renderCB(); } };
 $('#cbHash').onclick = e => { const x = e.target.closest('[data-h]'); if (!x) return; CB.hashtags = CB.hashtags.filter(h => h !== x.dataset.h); renderCB(); };
@@ -777,7 +784,7 @@ $('#cbHashIn').onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.pr
 $('#cbHashIn').oninput = () => { const el = $('#cbHashIn'); const lo = el.value.toLowerCase(); if (lo !== el.value) { const p = el.selectionStart; el.value = lo; el.setSelectionRange(p, p); } };
 $('#cbHashIn').onblur = () => { if ($('#cbHashIn').value.trim()) $('#cbHashIn').onkeydown({ key: 'Enter', preventDefault() {} }); };
 $('#cbEvAdd').onclick = () => { CB.evidence.push({ type: 'celeb', label: '', value: '', url: '' }); renderCB(); };
-$('#cbEv').oninput = e => { const row = e.target.closest('.ev'); if (!row) return; CB.evidence[+row.dataset.i][e.target.dataset.k] = e.target.value; };
+$('#cbEv').oninput = e => { const row = e.target.closest('.ev'); if (!row) return; const ev = CB.evidence[+row.dataset.i]; ev[e.target.dataset.k] = e.target.value; if (e.target.dataset.k === 'type') { if (e.target.value === 'ranking' && !['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].includes(ev.label)) ev.label = '무신사'; renderCB(); } };
 $('#cbEv').onclick = e => { const b = e.target.closest('[data-evx]'); if (!b) return; CB.evidence.splice(+b.dataset.evx, 1); renderCB(); };
 $('#cbSecAdd').onclick = () => { CB.sections.push({ subtitle: '', media_ids: [] }); renderCB(); };
 $('#cbSecs').oninput = e => { const s = e.target.closest('.sec'); if (!s || !e.target.hasAttribute('data-sub')) return; CB.sections[+s.dataset.i].subtitle = e.target.value; };
@@ -838,12 +845,23 @@ async function saveCard() {
   await sb.from('tx_entry_tags').delete().eq('entry_id', id);
   const et = [...CB.tags.entries()].map(([node_id, t]) => ({ entry_id: id, node_id, origin: t.origin, confirmed: t.confirmed }));
   if (et.length) { r = await sb.from('tx_entry_tags').insert(et); if (r.error) toast(r.error.message, true); }
+  for (const m of CB.media) if (m._dirty) { await sb.from('tx_media').update({ focus_node_ids: m.focus_node_ids || [] }).eq('id', m.id); m._dirty = false; }
   $('#cbStat').textContent = `저장됨 #${id}`; $('#cbDelete').style.display = ''; $('#cbTitle').textContent = '카드 수정';
   return id;
 }
 $('#cbSave').onclick = async () => { const id = await saveCard(); if (id) { toast(`카드 #${id} 저장됨`); G.sel.clear(); paintSel(); $('#mCard').classList.remove('on'); showView('cards'); loadGallery(true); } };
-$('#cbSaveAn').onclick = async () => { const id = await saveCard(); if (!id) return; G.sel.clear(); paintSel(); await analyzeMany(CB.media.map(m => m.id), CB.focus, false, [...CB.covers]); renderCBColors(); loadGallery(true); $('#mCard').classList.remove('on'); showView('cards'); };
 $('#cbDelete').onclick = async () => { if (!CB.id || !confirm('카드 삭제? (사진은 갤러리에 남습니다)')) return; await sb.from('tx_entries').delete().eq('id', CB.id); $('#mCard').classList.remove('on'); toast('카드 삭제'); loadCards(); loadGallery(true); };
+
+/* ---------------- per-photo focus pick ---------------- */
+let FP_MID = null;
+function openFocusPick(mid) {
+  FP_MID = mid; const m = CB.media.find(x => x.id === mid); const cur = new Set(m.focus_node_ids || []);
+  const cats = TAX.nodes.filter(n => n.kind === 'category' && n.facet === 'product');
+  let h = ''; let g = '';
+  for (const c of cats) { const gn = nodeName(c.parent_id); if (gn !== g) { g = gn; h += `<div style="width:100%;font-size:11px;color:var(--mute);margin:8px 0 2px">${esc(g)}</div>`; } h += `<span class="chip ${cur.has(c.id) ? 'on' : ''}" data-fp="${c.id}">${esc(c.name_en)}</span>`; }
+  $('#fpList').innerHTML = h; $('#mFocus').classList.add('on');
+}
+$('#fpList').onclick = e => { const c = e.target.closest('[data-fp]'); if (!c) return; const m = CB.media.find(x => x.id === FP_MID); const cur = m.focus_node_ids || []; const id = c.dataset.fp; if (cur.includes(id)) m.focus_node_ids = cur.filter(x => x !== id); else { if (cur.length >= 3) { toast('focus는 3개까지'); return; } m.focus_node_ids = [...cur, id]; } m._dirty = true; c.classList.toggle('on'); renderCB(); };
 
 /* ---------------- photo picker (카드 빌더에서 사진 추가) ---------------- */
 let PP = { page: 0, items: [], sel: new Set() };
@@ -857,7 +875,7 @@ async function ppLoad(reset) {
   if ($('#ppPeriod').value) q = q.eq('period', $('#ppPeriod').value); const t = $('#ppQ').value.trim(); if (t) q = q.or(`account.ilike.%${t}%,brand.ilike.%${t}%,product_name.ilike.%${t}%`);
   const { data, error } = await q.order('posted_at', { ascending: false, nullsFirst: false }).order('id', { ascending: false }).range(PP.page * PAGE, PP.page * PAGE + PAGE - 1); if (error) return toast(error.message, true);
   PP.items.push(...(data || [])); PP.page++;
-  $('#ppGrid').insertAdjacentHTML('beforeend', (data || []).map(m => `<div class="cell ${have.has(m.id) ? '' : ''} ${m.is_celeb ? 'celeb' : ''}" data-pp="${m.id}" style="${have.has(m.id) ? 'opacity:.35' : ''}"><span class="chk">${PP.sel.has(m.id) ? '✓' : ''}</span><img src="${pubUrl(m.thumb_path)}" loading="lazy"><div class="cap"><b>${esc(m.account ? '@' + m.account : m.brand || '')}</b> · ${esc(m.posted_at || m.period)}${have.has(m.id) ? ' · 이미 포함' : ''}</div></div>`).join(''));
+  $('#ppGrid').insertAdjacentHTML('beforeend', (data || []).map(m => `<div class="cell ${have.has(m.id) ? '' : ''} ${m.is_celeb ? 'celeb' : ''}" data-pp="${m.id}" style="${have.has(m.id) ? 'opacity:.35' : ''}"><span class="chk">${PP.sel.has(m.id) ? '✓' : ''}</span><img src="${pubUrl(m.thumb_path)}" loading="lazy"><div class="cap"><b>${esc(m.account ? '@' + m.account : m.brand || '')}</b> · ${esc(m.period)}${have.has(m.id) ? ' · 이미 포함' : ''}</div></div>`).join(''));
   $('#ppMore').style.display = (data || []).length < PAGE ? 'none' : ''; $('#ppN').textContent = `${PP.sel.size}장 선택`;
 }
 $('#ppGrid').onclick = e => { const c = e.target.closest('[data-pp]'); if (!c) return; const id = +c.dataset.pp; if (CB.media.some(m => m.id === id)) return; PP.sel.has(id) ? PP.sel.delete(id) : PP.sel.add(id); c.classList.toggle('sel', PP.sel.has(id)); c.querySelector('.chk').textContent = PP.sel.has(id) ? '✓' : ''; $('#ppN').textContent = `${PP.sel.size}장 선택`; };
@@ -876,7 +894,7 @@ async function openCardView(id) {
     <div class="small mute">${esc(e.source)} · ${esc(e.period)} · ${esc(nodeName(e.focus_node_id) || 'focus 미지정')} · 사진 ${media.length}장 (대표 ${covers.size}) · 분석 ${media.filter(m => m.status === 'analyzed').length}장${(e.hashtags || []).length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div>
     ${e.description ? `<div style="margin-top:6px">${esc(e.description)}</div>` : ''}
     <div class="row" style="margin-top:10px"><button class="sm" id="cvEdit">수정 (사진 추가·대표 변경)</button><button class="sm" id="cvAn">분석 실행</button></div>`;
-  $('#cvGrid').innerHTML = media.map(m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.storage_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.posted_at || m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`).join('') || '<div class="mute">사진 없음</div>';
+  $('#cvGrid').innerHTML = media.map(m => `<div class="ph ${covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><img src="${pubUrl(m.thumb_path)}" loading="lazy">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}<span class="cap">${covers.has(m.id) ? '대표 · ' : ''}${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period)}${m.status === 'analyzed' ? ' · 분석됨' : ''}</span></div>`).join('') || '<div class="mute">사진 없음</div>';
   $('#cvGrid').onclick = ev => { const ph = ev.target.closest('.ph'); if (!ph) return; const m = media.find(x => x.id === +ph.dataset.id); if (m) openLightbox(m); };
   $('#cvEdit').onclick = () => { $('#mView').classList.remove('on'); openCardBuilder(id, []); };
   $('#cvAn').onclick = async () => { await analyzeMany(ids, e.focus_node_id || null, false, [...covers]); openCardView(id); };
@@ -910,12 +928,16 @@ async function loadCards() {
   const cids = [...new Set((data || []).flatMap(e => e.cover_ids || []))];
   if (cids.length) { const { data: cm } = await sb.from('tx_media').select('id,is_celeb,celeb_name').in('id', cids); (cm || []).forEach(m => { if (m.is_celeb) CEL[m.id] = m.celeb_name || 'CELEB'; }); }
   $('#cCount').textContent = `${(data || []).length}개`;
-  $('#cards').innerHTML = (data || []).map(e => {
+  const order = id => (TAX.byId[id] || {}).sort_order ?? 1e9;
+  const groupsC = {}; for (const e of (data || [])) (groupsC[e.focus_node_id || ''] ||= []).push(e);
+  const gkeys = Object.keys(groupsC).sort((a, b) => order(a) - order(b));
+  const cardHTML = e => {
     const chips = (tags[e.id] || []).filter(t => t.confirmed).slice(0, 4).map(t => `<span class="chip">${esc(nodeName(t.node_id))}</span>`).join('');
     const cids2 = (e.cover_ids || []); const imgs = (e.cover_thumbs || []).slice(0, 3).map((p, i) => { const cn = CEL[cids2[i]]; return `<div class="ph ${cn ? 'celeb' : ''}"><img src="${pubUrl(p)}">${cn ? `<span class="star">⭐</span><span class="celeb-tag">${esc(cn)}</span>` : ''}</div>`; }).join('') || '<div class="mute small">대표 없음</div>';
     const stat = e.source === 'instagram' ? `${e.posts || 0} posts · ${e.accounts || 0} accounts · ${e.photos || 0} photos` : e.source === 'runway' ? `${e.runway_brands || 0} brands · ${e.photos || 0} looks` : `${e.market_brands || 0} brands · ${e.photos || 0} items`;
     return `<div class="card" data-id="${e.id}"><div class="chips">${chips}<span class="chip" style="margin-left:auto">${e.source} · ${esc(e.period)}</span></div><h4>${esc(e.title)}${e.is_pick ? ' <span class="chip acc">🔥 HOT</span>' : ''}</h4><div class="small mute">${esc(nodeName(e.focus_node_id) || 'focus 미지정')}${e.hashtags?.length ? ' · ' + e.hashtags.map(h => '#' + esc(h)).join(' ') : ''}</div><div class="imgs">${imgs}</div><div class="st">${stat}</div><div class="row editonly" style="margin-top:8px;display:${EDIT_MODE ? 'flex' : 'none'}"><button class="sm" data-edit="${e.id}">수정</button><button class="sm" data-an="${e.id}">분석 실행</button></div></div>`;
-  }).join('') || '<span class="mute">카드가 없습니다 — 갤러리에서 사진을 선택해 만드세요</span>';
+  };
+  $('#cards').innerHTML = gkeys.map(k => `<div class="cgroup"><h3 style="margin:6px 0 2px;font-size:13px;letter-spacing:.04em">${k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : 'FOCUS 미지정'} <span class="mute" style="font-weight:400">${groupsC[k].length}</span></h3><div class="cards">${groupsC[k].map(cardHTML).join('')}</div></div>`).join('') || '<span class="mute">카드가 없습니다 — 갤러리에서 사진을 선택해 만드세요</span>';
 }
 $('#cards').onclick = async e => { const ed = e.target.closest('[data-edit]'); if (ed) return openCardBuilder(+ed.dataset.edit, []);
   if (!e.target.closest('button')) { const c = e.target.closest('.card'); if (c) return openCardView(+c.dataset.id); } const an = e.target.closest('[data-an]'); if (an) { const id = +an.dataset.an; const { data: e2 } = await sb.from('tx_entries').select('focus_node_id').eq('id', id).single(); const { data: em } = await sb.from('tx_entry_media').select('media_id,role').eq('entry_id', id); await analyzeMany((em || []).map(r => r.media_id), e2?.focus_node_id || null, false, (em || []).filter(r => r.role === 'cover').map(r => r.media_id)); loadCards(); } };
@@ -1010,9 +1032,11 @@ async function analyzeOne(m, focusId, hi, key) {
 const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
 async function analyzeMany(ids, focusId, hi, hiIds) {
   const key = CFG.openai_key || ''; if (!key) { toast('설정 탭에 OpenAI 키를 저장하세요', true); return; }
-  const { data: media } = await sb.from('tx_media').select('id,storage_path').in('id', ids); if (!media?.length) return;
-  let done = 0, ok = 0, skip = 0, err = 0; const t0 = Date.now(); toast(`분석 시작 ${media.length}장`);
-  let i = 0; const worker = async () => { while (i < media.length) { const m = media[i++]; try { const r = await analyzeOne(m, focusId, hi || (hiIds || []).includes(m.id), key); r === 'skip' ? skip++ : ok++; } catch (e) { err++; console.error(m.id, e); await sb.from('tx_media').update({ status: 'error' }).eq('id', m.id); if (err === 1) toast('분석 오류: ' + e.message, true); } done++; if (done % 5 === 0) toast(`분석 ${done}/${media.length}`); } };
+  const { data: media0 } = await sb.from('tx_media').select('id,storage_path,focus_node_ids').in('id', ids); if (!media0?.length) return;
+  // 사진별 focus가 있으면 그 목록(최대 3)마다, 없으면 카드 focus(또는 AI 판정) 1회
+  const media = []; for (const m of media0) { const fl = (m.focus_node_ids && m.focus_node_ids.length) ? m.focus_node_ids : [focusId || null]; for (const f of fl) media.push({ ...m, _focus: f }); }
+  let done = 0, ok = 0, skip = 0, err = 0; const t0 = Date.now(); toast(`분석 시작 ${media.length}건 (${media0.length}장)`);
+  let i = 0; const worker = async () => { while (i < media.length) { const m = media[i++]; try { const r = await analyzeOne(m, m._focus, hi || (hiIds || []).includes(m.id), key); r === 'skip' ? skip++ : ok++; } catch (e) { err++; console.error(m.id, e); await sb.from('tx_media').update({ status: 'error' }).eq('id', m.id); if (err === 1) toast('분석 오류: ' + e.message, true); } done++; if (done % 5 === 0) toast(`분석 ${done}/${media.length}`); } };
   await Promise.all([worker(), worker(), worker()]);
   toast(`분석 완료 ${ok} · 건너뜀 ${skip} · 오류 ${err} · ${Math.round((Date.now() - t0) / 1000)}s`, err > 0);
 }
