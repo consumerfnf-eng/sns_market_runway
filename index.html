@@ -98,6 +98,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .bx b{font-size:13px}
 .bx.celeb-bx{border-color:#bdbdbd;background:linear-gradient(135deg,#fafafa,#ececec)}
 .bx.data-bx{border-color:#1f5fd1;color:#1f5fd1}
+.bx{position:relative}.bx .pop{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:40;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.2)}.bx .pop img{max-width:360px;max-height:420px;display:block;border-radius:6px}.bx.has-img:hover .pop{display:block}
 .bx.rank-bx{background:#1f5fd1;color:#fff;border-color:#1f5fd1}.bx.rank-bx small{color:rgba(255,255,255,.8)}.bx.rank-bx b{font-size:16px}
 .bx.empty-bx{color:var(--mute);border-style:dashed}
 .card .hashes{display:flex;gap:6px;flex-wrap:wrap;margin:0;font-size:12px}
@@ -183,7 +184,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261022-12</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261022-14</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -224,7 +225,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261022-12
+   TAXONOMY AGENT · index.html (리포트)  v261022-14
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -379,12 +380,14 @@ function boxesHTML(c) {
   let h = celebTxt || c.celebs ? `<div class="bx celeb-bx"><small>⭐ 셀럽 착용</small><b>${esc(celebTxt || c.celebs + '명')}</b></div>` : `<div class="bx empty-bx"><small>셀럽 착용</small><b>—</b></div>`;
   // 2행: 근거 데이터 전부 (랭킹은 크게 강조)
   const evData = evAll.filter(e => e.type !== 'celeb');
-  h += '<div class="boxes" style="width:100%">';
+  h += '';
   if (evData.length) for (const e of evData) {
     const rank = e.type === 'ranking' || /\d+\s*위/.test(e.value || '');
-    h += `<div class="bx data-bx ${rank ? 'rank-bx' : ''}"><small>${esc(e.type === 'ranking' ? (e.label || '') + ' 랭킹' : (EV_LABEL[e.type] || e.type) + (e.label && e.type !== 'metric' ? ' · ' + e.label : ''))}</small><b>${esc(e.type === 'ranking' ? e.value : [e.type === 'metric' ? e.label : '', e.value].filter(Boolean).join(' '))}</b></div>`;
+    const img = e.image ? pubUrl(e.image) : (/^https?:\/\/.*\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(e.url || '') ? e.url : null);
+    const link = !img && /^https?:/.test(e.url || '') ? e.url : null;
+    h += `<div class="bx data-bx ${rank ? 'rank-bx' : ''} ${img ? 'has-img' : ''}" ${link ? `onclick="window.open('${esc(link)}','_blank');event.stopPropagation()" style="cursor:pointer"` : ''}><small>${esc(e.type === 'ranking' ? (e.label || '') + ' 랭킹' : (EV_LABEL[e.type] || e.type) + (e.label && e.type !== 'metric' ? ' · ' + e.label : ''))}${img ? ' 📎' : link ? ' ↗' : ''}</small><b>${esc(e.type === 'ranking' ? e.value : [e.type === 'metric' ? e.label : '', e.value].filter(Boolean).join(' '))}</b>${img ? `<div class="pop"><img src="${esc(img)}" alt=""></div>` : ''}</div>`;
   } else h += `<div class="bx empty-bx"><small>데이터</small><b>—</b></div>`;
-  return h + '</div>';
+  return h;
 }
 function dataLine(c) {
   const parts = [];
@@ -419,8 +422,6 @@ async function openDetail(id) {
   if (c.description) h += `<div class="dt-sec"><h4>What it is</h4><div>${esc(c.description)}</div></div>`;
   h += `<div class="dt-strip">${[...covers, ...extras].map(img).join('')}</div>`;
   if (tags.length) h += `<div class="dt-sec"><h4>Taxonomy</h4><div class="tagrow">${tags.map(n => `<span class="chip">${esc(n.name_en)}</span>`).join('')}</div></div>`;
-  if ((c.evidence || []).length) h += `<div class="dt-sec"><h4>근거 데이터</h4>${c.evidence.map(e => `<div class="ev"><span class="tp">${({ celeb: '셀럽 착용', ranking: '랭킹', runway: '런웨이', metric: '수치', market: '마켓', note: '메모' })[e.type] || e.type}</span><span>${esc(e.label)}</span><span>${esc(e.value)}</span><span>${e.url && /^https?:/.test(e.url) ? `<a href="${esc(e.url)}" target="_blank" style="text-decoration:underline">링크</a>` : esc(e.url || '')}</span></div>`).join('')}</div>`;
-  if (fsb && fsb.length) h += `<div class="dt-sec"><h4>FS 벤치마크</h4><div class="kpi">${fsb.slice(0, 4).map(r => `<div>FS ${r.season} · ${esc(nodeName(r.node_id))}<b>${fmt(r.item_count)} items</b></div>`).join('')}</div></div>`;
   const secs = (c.sections || []).filter(s => (s.media_ids || []).length);
   for (const s of secs) h += `<div class="dt-sec"><h4>${esc(s.subtitle || '')}</h4><div class="dt-strip">${s.media_ids.map(i => media.find(m => m.id === i)).filter(Boolean).map(img).join('')}</div></div>`;
   h += `<div class="dt-sec"><h4>Color · ${esc(nodeName(c.focus_node_id) || 'focus')}</h4>${(cols || []).length ? cols.map(x => `<span class="sw"><i style="background:${x.hex}"></i>${esc(x.name_en)}<small>${Math.round(x.weight / tot * 100)}%</small></span>`).join('') : '<span style="color:var(--mute);font-size:12px">분석 전</span>'}</div>`;
@@ -447,33 +448,31 @@ async function renderAnalytics() {
     label = `${src.toUpperCase()} · ${S.period || '전체 기간'} · AI 분석 사진 ${denom.toLocaleString()}장 (focus 아이템 기준)`;
   }
   const cnt = {}; for (const r of rows) cnt[r.node_id] = r.photos;
-  // ---- Color families
+  // ---- Color: 카테고리 선택 → 그 카테고리(focus 아이템)에서 많이 보인 색
+  const colorCats = []; if (byFocus) { const cc = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (n && n.facet === 'color' && n.kind === 'value' && f) cc[f] = (cc[f] || 0) + v; } for (const [f, v] of Object.entries(cc)) colorCats.push({ id: f, n: v }); colorCats.sort((a, b) => ((TAX.byId[a.id] || {}).sort_order ?? 1e9) - ((TAX.byId[b.id] || {}).sort_order ?? 1e9)); }
+  S.colorCat = colorCats.some(c => c.id === S.colorCat) ? S.colorCat : '';
+  const ccnt = {}; if (S.colorCat && byFocus) { for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); if (f === S.colorCat) ccnt[nid] = (ccnt[nid] || 0) + v; } } else Object.assign(ccnt, cnt);
   const fams = TAX.nodes.filter(n => n.facet === 'color' && n.kind === 'group');
   const famCnt = {}; const shades = {};
-  for (const f of fams) { let s = 0; shades[f.id] = []; for (const sh of (TAX.children[f.id] || [])) { const v = cnt[sh.id] || 0; if (v) shades[f.id].push({ n: sh, v }); s += v; } famCnt[f.id] = s; }
+  for (const f of fams) { let s = 0; shades[f.id] = []; for (const sh of (TAX.children[f.id] || [])) { const v = ccnt[sh.id] || 0; if (v) shades[f.id].push({ n: sh, v }); s += v; } famCnt[f.id] = s; }
   const famTot = Object.values(famCnt).reduce((a, b) => a + b, 0);
   const famOrder = fams.slice().sort((a, b) => famCnt[b.id] - famCnt[a.id]);
   S.fam = S.fam && famCnt[S.fam] ? S.fam : (famOrder.find(f => f.name_en !== 'Neutrals' && famCnt[f.id]) || famOrder[0] || {}).id;
   const SRC_OPTS = [['instagram', 'Instagram'], ['runway', 'Runway'], ['market', 'Market'], ['fs', 'FS 27SS 벤치마크']];
   const picker = S.src === 'ai' ? `<div class="cat-tabs" style="margin:0 0 14px">${SRC_OPTS.map(([k, l]) => `<button data-ansrc="${k}" class="${S.anSrc === k ? 'on' : ''}">${l}</button>`).join('')}</div>` : '';
   let h = `<div class="an-head"><h2>AI Analytics</h2><span class="mute" style="color:var(--mute)">${esc(label)}</span></div>${picker}`;
-  h += `<div class="an-sec"><h2>Color</h2><div class="sub">See what's trending across color families and their subgroups</div>`;
+  h += `<div class="an-sec"><h2>Color</h2><div class="sub">카테고리를 고르면 그 아이템에서 많이 보인 색 순으로 표시됩니다</div>`;
+  if (colorCats.length) h += `<div class="cat-tabs"><button data-ccat="" class="${S.colorCat ? '' : 'on'}">전체</button>${colorCats.map(c => `<button data-ccat="${c.id}" class="${S.colorCat === c.id ? 'on' : ''}">${esc(nodeName(c.id))} <span style="opacity:.6">${c.n}</span></button>`).join('')}</div>`;
   if (famTot) {
     h += `<div class="fambar">${famOrder.filter(f => famCnt[f.id]).map(f => `<div data-fam="${f.id}" class="${S.fam === f.id ? '' : ''}" style="flex:${famCnt[f.id]};background:${FAM_HEX[f.name_en] || '#999'}">${esc(f.name_en)}<span>${pct(famCnt[f.id], famTot)}%</span></div>`).join('')}</div>`;
     const F = TAX.byId[S.fam]; const list = (shades[S.fam] || []).sort((a, b) => b.v - a.v); const mx = list[0]?.v || 1;
-    h += `<div class="an-grid"><div class="panel"><h3>${esc(F.name_en)} <span style="font-weight:400;color:var(--mute);font-size:12px">${pct(famCnt[S.fam], famTot)}% of all colors · ${famCnt[S.fam]} · ${list.length} subgroups</span></h3>`;
+    h += `<div class="an-grid"><div class="panel"><h3>${S.colorCat ? esc(nodeName(S.colorCat)) + ' · ' : ''}${esc(F.name_en)} <span style="font-weight:400;color:var(--mute);font-size:12px">${pct(famCnt[S.fam], famTot)}% of ${S.colorCat ? esc(nodeName(S.colorCat)) + ' colors' : 'all colors'} · ${famCnt[S.fam]} · ${list.length} subgroups</span></h3>`;
     h += list.map((x, i) => `<div class="shade"><div class="nm"><i style="background:${x.n.hex}"></i>${i + 1}. ${esc(x.n.name_en)}</div><div class="bar"><i style="width:${x.v / mx * 100}%;background:${x.n.hex}"></i></div><div class="n">${x.v}</div><div class="n">${pct(x.v, famCnt[S.fam])}%</div></div>`).join('');
     h += `<div class="note">Subgroup percentages represent each shade's share of all ${esc(F.name_en)} items.</div>`;
-    // 카테고리별 분포 (이 계열이 어떤 아이템에서 나왔나) — AI 분석 소스만
-    if (byFocus) {
-      const catCnt = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (!n || n.facet !== 'color' || n.kind !== 'value' || n.parent_id !== S.fam || !f) continue; catCnt[f] = (catCnt[f] || 0) + v; }
-      const cl = Object.entries(catCnt).sort((a, b) => b[1] - a[1]); const cmx = cl[0]?.[1] || 1; const ctot = cl.reduce((a, b) => a + b[1], 0);
-      if (cl.length) h += `<h3 style="margin-top:16px">${esc(F.name_en)} · 카테고리별</h3>` + cl.map(([f, v]) => `<div class="shade"><div class="nm">${esc(nodeName(f))}</div><div class="bar"><i style="width:${v / cmx * 100}%"></i></div><div class="n">${v}</div><div class="n">${pct(v, ctot)}%</div></div>`).join('') + `<div class="note">각 카테고리(focus 아이템)에서 ${esc(F.name_en)} 계열 색이 잡힌 사진 수.</div>`;
-    }
     h += `</div>`;
     // top shades overall excluding neutrals
     const top = []; for (const f of fams) { if (f.name_en === 'Neutrals') continue; for (const x of shades[f.id]) top.push({ ...x, f }); } top.sort((a, b) => b.v - a.v);
-    h += `<div class="panel"><h3>Top shades</h3><div class="note" style="margin:0 0 6px">Across all families except Neutrals</div>${top.slice(0, 6).map(x => `<div class="trend"><div class="nm"><i style="background:${x.n.hex}"></i><div>${esc(x.n.name_en)}<div style="font-size:11px;color:var(--mute)">${esc(x.f.name_en)} · ${x.v} items</div></div></div><b>${pct(x.v, famTot)}%</b></div>`).join('') || '<div class="empty">데이터 없음</div>'}</div></div>`;
+    h += `<div class="panel"><h3>Top shades${S.colorCat ? ' · ' + esc(nodeName(S.colorCat)) : ''}</h3><div class="note" style="margin:0 0 6px">뉴트럴 제외, 많이 보인 색 순</div>${top.slice(0, 6).map(x => `<div class="trend"><div class="nm"><i style="background:${x.n.hex}"></i><div>${esc(x.n.name_en)}<div style="font-size:11px;color:var(--mute)">${esc(x.f.name_en)} · ${x.v} items</div></div></div><b>${pct(x.v, famTot)}%</b></div>`).join('') || '<div class="empty">데이터 없음</div>'}</div></div>`;
   } else h += '<div class="empty">컬러 데이터 없음 — 분석된 사진이 필요합니다</div>';
   h += `</div>`;
   // ---- Category statistics
@@ -507,6 +506,7 @@ async function renderAnalytics() {
   an.querySelectorAll('.fambar div').forEach(d => d.onclick = () => { S.fam = d.dataset.fam; renderAnalytics(); });
   an.querySelectorAll('.cat-tabs button[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; renderAnalytics(); });
   an.querySelectorAll('[data-ansrc]').forEach(b => b.onclick = async () => { S.anSrc = b.dataset.ansrc; await loadPeriods(); renderAnalytics(); });
+  an.querySelectorAll('[data-ccat]').forEach(b => b.onclick = () => { S.colorCat = b.dataset.ccat; S.fam = null; renderAnalytics(); });
 }
 
 boot();

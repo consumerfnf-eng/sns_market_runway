@@ -117,7 +117,8 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .field{display:grid;gap:4px;margin-bottom:10px}
 .field>span{font-size:11px;color:var(--mute)}
 .chips{display:flex;gap:5px;flex-wrap:wrap}
-.ev{display:grid;grid-template-columns:90px 1fr 1fr 1fr 24px;gap:5px;margin-bottom:5px}
+.ev{display:grid;grid-template-columns:90px 1fr 1fr 1fr 28px 24px;gap:5px;margin-bottom:5px;align-items:center}
+.ev .att{width:28px;height:28px;border-radius:6px;border:1px dashed #bbb;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;overflow:hidden;background:#fff}.ev .att img{width:100%;height:100%;object-fit:cover}
 .ev input,.ev select{padding:4px 6px;font-size:12px}
 .sec{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px}
 .sec .ph{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
@@ -161,7 +162,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-17</span>
+  <span class="ver" id="ver">v261022-18</span>
 </header>
 
 <main>
@@ -299,7 +300,8 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
         <div class="field"><span>특징 #해시태그 (영문 소문자 고정 · 쉼표/엔터로 추가 · #halter-neck #halterneck #halter_neck 모두 분류체계 Halterneck으로 인식돼 위 칩에 제안됨)</span>
           <div class="chips" id="cbHash"></div><input type="text" id="cbHashIn" placeholder="#홀터넥 #팝컬러"></div>
         <div class="field"><span>근거 데이터 (있는 것만) — 유형 / 라벨(랭킹이면 사이트) / 값 / URL·날짜 · 셀럽 착용은 사진에 지정(여기 아님)</span>
-          <div id="cbEv"></div><button class="sm" id="cbEvAdd">+ 근거 추가</button></div>
+          <div id="cbEv"></div><div class="row"><button class="sm" id="cbEvAdd">+ 근거 추가</button><span class="small mute" id="cbEvHint"></span></div></div>
+        <input type="file" id="cbEvFile" accept="image/*" style="display:none">
         <div class="field"><span>소제목 섹션 (없으면 추가 사진이 자동으로 4장 그리드)</span>
           <div id="cbSecs"></div><button class="sm" id="cbSecAdd">+ 소제목 추가</button></div>
         <div class="row">
@@ -390,7 +392,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-17
+   TAXONOMY AGENT · admin.html  v261022-18
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -398,7 +400,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-17';
+const VER = 'v261022-18';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -805,7 +807,8 @@ function renderCB() {
   $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}">${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div>`).join('');
   $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
   $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
-  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><button class="sm" data-evx="${i}">✕</button></div>`).join('');
+  $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><span class="att" data-evimg="${i}" title="${e.image ? '근거 이미지 (클릭=교체)' : '근거 이미지 첨부 (캡처)'}">${e.image ? `<img src="${pubUrl(e.image)}">` : '📎'}</span><button class="sm" data-evx="${i}">✕</button></div>`).join('');
+  $('#cbEvHint').textContent = CB.evidence.some(e => e.image) ? '📎 이미지는 리포트 박스에 마우스를 올리면 보입니다' : '';
   $('#cbSecs').innerHTML = CB.sections.map((s, i) => `<div class="sec" data-i="${i}"><div class="row"><input type="text" data-sub value="${esc(s.subtitle || '')}" placeholder="소제목" style="flex:1"><button class="sm" data-secx="${i}">✕</button></div><div class="ph">${CB.media.map(m => `<img src="${pubUrl(m.thumb_path)}" data-mid="${m.id}" class="${(s.media_ids || []).includes(m.id) ? 'on' : ''}">`).join('')}</div></div>`).join('');
   renderCBColors();
 }
@@ -821,7 +824,14 @@ $('#cbHashIn').oninput = () => { const el = $('#cbHashIn'); const lo = el.value.
 $('#cbHashIn').onblur = () => { if ($('#cbHashIn').value.trim()) $('#cbHashIn').onkeydown({ key: 'Enter', preventDefault() {} }); };
 $('#cbEvAdd').onclick = () => { CB.evidence.push({ type: 'ranking', label: '무신사', value: '', url: '' }); renderCB(); };
 $('#cbEv').oninput = e => { const row = e.target.closest('.ev'); if (!row) return; const ev = CB.evidence[+row.dataset.i]; ev[e.target.dataset.k] = e.target.value; if (e.target.dataset.k === 'type') { if (e.target.value === 'ranking' && !['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].includes(ev.label)) ev.label = '무신사'; renderCB(); } };
-$('#cbEv').onclick = e => { const b = e.target.closest('[data-evx]'); if (!b) return; CB.evidence.splice(+b.dataset.evx, 1); renderCB(); };
+let EV_IMG_I = null;
+$('#cbEv').onclick = e => { const a = e.target.closest('[data-evimg]'); if (a) { EV_IMG_I = +a.dataset.evimg; $('#cbEvFile').value = ''; $('#cbEvFile').click(); return; } const b = e.target.closest('[data-evx]'); if (!b) return; CB.evidence.splice(+b.dataset.evx, 1); renderCB(); };
+$('#cbEvFile').onchange = async () => {
+  const f = $('#cbEvFile').files[0]; if (!f || EV_IMG_I == null) return;
+  try { const bmp = await loadBitmap(f); const r = await resizeTo(bmp, 1200, .85); bmp.close?.(); const path = `evidence/${Date.now()}_${EV_IMG_I}.jpg`;
+    const { error } = await sb.storage.from(BUCKET).upload(path, r.blob, { contentType: 'image/jpeg' }); if (error) throw error;
+    CB.evidence[EV_IMG_I].image = path; renderCB(); toast('근거 이미지 첨부됨 — 저장 필요'); } catch (err) { toast('첨부 실패: ' + err.message, true); }
+};
 $('#cbSecAdd').onclick = () => { CB.sections.push({ subtitle: '', media_ids: [] }); renderCB(); };
 $('#cbSecs').oninput = e => { const s = e.target.closest('.sec'); if (!s || !e.target.hasAttribute('data-sub')) return; CB.sections[+s.dataset.i].subtitle = e.target.value; };
 $('#cbSecs').onclick = e => { const b = e.target.closest('[data-secx]'); if (b) { CB.sections.splice(+b.dataset.secx, 1); renderCB(); return; } const img = e.target.closest('img[data-mid]'); if (!img) return; const s = CB.sections[+img.closest('.sec').dataset.i]; const id = +img.dataset.mid; s.media_ids = s.media_ids || []; s.media_ids.includes(id) ? s.media_ids = s.media_ids.filter(x => x !== id) : s.media_ids.push(id); renderCB(); };
