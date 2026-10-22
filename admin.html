@@ -166,7 +166,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-32</span>
+  <span class="ver" id="ver">v261022-33</span>
 </header>
 
 <main>
@@ -228,7 +228,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
     <aside class="filters panel" id="filters"></aside>
     <div>
       <div class="gbar">
-        <select id="gStatus"><option value="">전체</option><option value="new">미분석</option><option value="analyzed">분석됨</option></select>
+        <select id="gStatus"><option value="">전체</option><option value="new">미분석</option><option value="analyzed">분석됨</option><option value="carded">카드 묶임</option><option value="uncarded">카드 안 묶임</option></select>
         <input type="text" id="gSearch" placeholder="계정 / 브랜드 / 품명 검색" style="width:220px">
         <button class="sm" id="gSelAll">화면 전체 선택</button>
         <button class="sm" id="gSelNone">선택 해제</button>
@@ -413,7 +413,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-32
+   TAXONOMY AGENT · admin.html  v261022-33
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -421,7 +421,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-32';
+const VER = 'v261022-33';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -710,7 +710,8 @@ async function loadGallery(reset) {
   if (G.date) q = q.eq('posted_at', G.date);
   if (G.cat !== null) q = G.cat ? q.contains('focus_node_ids', [G.cat]) : q.eq('focus_node_ids', '{}');
   if (G.owner) q = G.src === 'instagram' ? q.eq('account', G.owner) : q.eq('brand', G.owner);
-  if (G.status) q = q.eq('status', G.status);
+  if (G.status === 'new' || G.status === 'analyzed') q = q.eq('status', G.status);
+  if (G.status === 'carded' || G.status === 'uncarded') { const { data: em } = await sb.from('tx_entry_media').select('media_id').limit(20000); const ids = [...new Set((em || []).map(r => r.media_id))]; if (G.status === 'carded') q = ids.length ? q.in('id', ids) : q.eq('id', -1); else if (ids.length) q = q.not('id', 'in', `(${ids.join(',')})`); }
   if (G.q) q = q.or(`account.ilike.%${G.q}%,brand.ilike.%${G.q}%,product_name.ilike.%${G.q}%,filename.ilike.%${G.q}%`);
   if (G.src === 'instagram') q = q.order('posted_at', { ascending: false, nullsFirst: false }).order('account').order('photo_no'); else q = q.order('period', { ascending: false }).order('brand').order('photo_no');
   q = q.order('id', { ascending: false }).range(G.page * PAGE, G.page * PAGE + PAGE - 1);
@@ -863,7 +864,10 @@ async function openCardBuilder(entryId, mediaIds) {
   if (!entryId && CB.media.length) {
     const m0 = CB.media[0]; $('#cbSource').value = m0.source;
     const sorted = [...CB.media].sort((a, b) => (a.photo_no || 99) - (b.photo_no || 99)); sorted.slice(0, 3).forEach(m => CB.covers.add(m.id));
-    applyPeriodFromMedia(true); setFocus(null);
+    applyPeriodFromMedia(true);
+    // 담긴 사진들의 카테고리(사진 focus 첫 값) 중 가장 많은 것을 카드 focus 기본값으로
+    const fc = {}; CB.media.forEach(m => { const f = (m.focus_node_ids || [])[0]; if (f) fc[f] = (fc[f] || 0) + 1; });
+    const top = Object.entries(fc).sort((a, b) => b[1] - a[1])[0]; setFocus(top ? top[0] : null);
   }
   renderCB(); $('#mCard').classList.add('on'); $('#cbName').focus();
 }
@@ -935,7 +939,16 @@ function matchTerms(text) {
 function suggestFromTitle(title) {
   if (!CB) return; const ids = matchTerms(title); if (!ids.length) return;
   // focus: explicit category, else category owning a matched style value
-  let focus = ids.map(id => TAX.byId[id]).find(n => n.kind === 'category'); if (!focus) { for (const id of ids) { const c = catOf(id); if (c) { focus = c; break; } } }
+  // focus 추정: ① 타이틀에 카테고리 이름이 직접 있으면 그것 ② 스타일 값(Denim 등)이 한 카테고리에만 있으면 그 카테고리, 여러 카테고리에 있으면 사진 카테고리와 맞는 것만 ③ 테마
+  let focus = ids.map(id => TAX.byId[id]).find(n => n.kind === 'category');
+  if (!focus) {
+    const photoCats = new Set(CB.media.map(m => (m.focus_node_ids || [])[0]).filter(Boolean));
+    for (const id of ids) { const n = TAX.byId[id]; if (n.facet !== 'product' || n.kind !== 'value') continue;
+      const same = TAX.nodes.filter(x => x.facet === 'product' && x.kind === 'value' && x.name_en === n.name_en).map(x => catOf(x.id)).filter(Boolean);
+      const cats = [...new Map(same.map(c => [c.id, c])).values()];
+      const pick = cats.length === 1 ? cats[0] : cats.find(c => photoCats.has(c.id));
+      if (pick) { focus = pick; break; } }
+  }
   if (!focus) focus = ids.map(id => TAX.byId[id]).find(n => ['pattern', 'color', 'material', 'detail'].includes(n.facet) && n.kind !== 'group');   // 테마 카드 (Stripes, Lime…)
   if (focus && !CB.focus) setFocus(focus.id);
   for (const id of ids) { const n = TAX.byId[id]; if (n.kind === 'category' || n.kind === 'group' || n.kind === 'axis') continue; if (!CB.tags.has(id)) CB.tags.set(id, { origin: 'title', confirmed: false }); }
