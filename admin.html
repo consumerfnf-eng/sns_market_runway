@@ -107,8 +107,9 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .modal.on{display:flex}
 .box{background:var(--card);border-radius:16px;width:min(1100px,100%);padding:20px;position:relative}
 .box .close{position:absolute;top:12px;right:12px}
-.cb-grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
-.cb-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px 6px;align-items:start}
+.cb-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+.cb-right{position:sticky;top:0;max-height:calc(100vh - 110px);overflow:auto;padding-right:4px}
+.cb-photos{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;align-items:start}.cb-photos .pw{min-width:0}
 .cb-photos .p{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent}
 .cb-photos .p img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
 .cb-photos .p.cover{border-color:var(--accent)}
@@ -124,7 +125,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 .ev input,.ev select{padding:4px 6px;font-size:12px}
 .sec{border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:6px}
 .sec .ph{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-.sec .ph img{width:44px;aspect-ratio:3/4;object-fit:cover;border-radius:4px;border:2px solid transparent;cursor:pointer}
+.sec .ph img{width:72px;aspect-ratio:3/4;object-fit:cover;border-radius:6px;border:3px solid transparent;cursor:pointer;opacity:.55}.sec .ph img.on{opacity:1}
 .sec .ph img.on{border-color:var(--accent)}
 .cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
 #cvGrid{display:block}
@@ -165,7 +166,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-31</span>
+  <span class="ver" id="ver">v261022-32</span>
 </header>
 
 <main>
@@ -321,7 +322,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
           <label><span>🔥 HOT 표시</span><input type="checkbox" id="cbPick"></label>
         </div>
       </div>
-      <div>
+      <div class="cb-right">
         <div class="field"><span>사진 <b id="cbPhotoN"></b> · 클릭=대표 지정(최대 3) · ✕=빼기 · 사진 아래 <b>focus</b> 칩=이 사진에서 볼 아이템(최대 3, 비면 카드 focus)</span>
           <div class="cb-photos" id="cbPhotos"></div>
           <div class="row" style="margin-top:6px"><button class="sm" id="cbAddPhotos">+ 갤러리에서 사진 추가</button></div></div>
@@ -412,7 +413,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-31
+   TAXONOMY AGENT · admin.html  v261022-32
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -420,7 +421,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-31';
+const VER = 'v261022-32';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -877,7 +878,7 @@ function applyPeriodFromMedia(force) {
 }
 function renderCB() {
   $('#cbPhotoN').textContent = `${CB.media.length}장`; applyPeriodFromMedia(false);
-  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}${(CB.labels[m.id] || []).length ? `<div class="plabel">${CB.labels[m.id].map((t, k) => `<span data-plx="${m.id}|${k}" title="클릭=삭제" style="pointer-events:auto;cursor:pointer">${esc(t)} ✕</span>`).join('')}</div>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}"><span class="chip" data-pladd="${m.id}" title="사진 위 설명 태그 (반투명 박스)">+ 태그</span>${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div>`).join('');
+  $('#cbPhotos').innerHTML = CB.media.map(m => `<div class="pw"><div class="p ${CB.covers.has(m.id) ? 'cover' : ''} ${m.is_celeb ? 'celeb' : ''}" data-id="${m.id}"><span class="rm" data-prm="${m.id}" title="카드에서 빼기" style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.9);font-size:10px;display:flex;align-items:center;justify-content:center;z-index:2">✕</span><img src="${pubUrl(m.thumb_path)}">${CB.covers.has(m.id) ? `<span class="n">대표 ${[...CB.covers].indexOf(m.id) + 1}</span>` : ''}${(CB.labels[m.id] || []).length ? `<div class="plabel">${CB.labels[m.id].map((t, k) => `<span data-plx="${m.id}|${k}" title="클릭=삭제" style="pointer-events:auto;cursor:pointer">${esc(t)} ✕</span>`).join('')}</div>` : ''}<span class="ac">${esc(m.account ? '@' + m.account : m.brand || '')} ${esc(m.period || '')}</span></div><div class="pf" data-pf="${m.id}"><span class="chip" data-pladd="${m.id}" title="사진 위 설명 태그 (반투명 박스)">+ 태그</span>${(m.focus_node_ids || []).map(f => `<span class="chip on" data-pfx="${f}" title="빼기">${esc(nodeName(f))} ✕</span>`).join('')}<span class="chip" data-pfadd="${m.id}">+ focus</span></div></div>`).join('');
   $('#cbTags').innerHTML = [...CB.tags.entries()].map(([id, t]) => `<span class="chip ${t.confirmed ? 'on' : 'ai'}" data-id="${id}" title="${esc(id)}">${esc(nodeName(id))}<span class="x" data-x="${id}">✕</span></span>`).join('') || '<span class="mute small">타이틀을 입력하면 제안됩니다</span>';
   $('#cbHash').innerHTML = CB.hashtags.map(h => `<span class="chip acc">#${esc(h)}<span class="x" data-h="${esc(h)}">✕</span></span>`).join('');
   $('#cbEv').innerHTML = CB.evidence.map((e, i) => `<div class="ev" data-i="${i}"><select data-k="type"><option value="ranking" ${e.type === 'ranking' ? 'selected' : ''}>랭킹</option><option value="runway" ${e.type === 'runway' ? 'selected' : ''}>런웨이</option><option value="metric" ${e.type === 'metric' ? 'selected' : ''}>수치</option><option value="market" ${e.type === 'market' ? 'selected' : ''}>마켓</option><option value="note" ${e.type === 'note' ? 'selected' : ''}>메모</option></select>${e.type === 'ranking' ? `<select data-k="label">${['무신사', '29CM', 'KREAM', 'Lyst', 'W컨셉', 'Instagram', '기타'].map(x => `<option ${e.label === x ? 'selected' : ''}>${x}</option>`).join('')}</select>` : `<input data-k="label" value="${esc(e.label || '')}" placeholder="누구 / 브랜드 / 지표명">`}<input data-k="value" value="${esc(e.value || '')}" placeholder="${e.type === 'ranking' ? '순위·상품 (예: 12위 · 울 후드)' : '값 (예: 좋아요 12.4K, 27SS)'}"><input data-k="url" value="${esc(e.url || '')}" placeholder="URL 또는 날짜"><span class="att" data-evimg="${i}" title="${e.image ? '근거 이미지 (클릭=교체)' : '근거 이미지 첨부 (캡처)'}">${e.image ? `<img src="${pubUrl(e.image)}">` : '📎'}</span><button class="sm" data-evx="${i}">✕</button></div>`).join('');
