@@ -163,7 +163,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
   <div class="sp"></div>
   <span class="mute small" id="who"></span>
   <a href="index.html" class="small" style="color:var(--mute)">리포트 보기 →</a>
-  <span class="ver" id="ver">v261022-20</span>
+  <span class="ver" id="ver">v261022-21</span>
 </header>
 
 <main>
@@ -393,7 +393,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · admin.html  v261022-20
+   TAXONOMY AGENT · admin.html  v261022-21
    - 업로드(3소스, 파일명 파싱, 리사이즈·해시·중복차단) / 갤러리(셀렉·카드·분석) / 카드 / 설정
    - Supabase: tx_* 테이블 (01~04 SQL) · 버킷 tx-images
    - AI: OpenAI Responses API · gpt-6-luna (Structured Output, enum = taxonomy)
@@ -401,7 +401,7 @@ h3{font-size:13px;margin:14px 0 6px;color:var(--mute);font-weight:600;letter-spa
 const SUPA_URL = 'https://bfptdiketvahjvwefwmj.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmcHRkaWtldHZhaGp2d2Vmd21qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MzAyMTEsImV4cCI6MjEwODIwNjIxMX0.shywn_QE1lRrK8E2DbAQy1-HMk8gx_SKe4hzYNT646E';
 const BUCKET = 'tx-images';
-const VER = 'v261022-20';
+const VER = 'v261022-21';
 const PAGE = 60;
 
 const $ = s => document.querySelector(s);
@@ -721,18 +721,26 @@ async function renderLbTags() {
   const { data } = await sb.from('tx_media_tags').select('node_id,origin,confidence,dominance,focus_node_id').eq('media_id', LB.id);
   const { data: an } = await sb.from('tx_analyses').select('model,prompt_version,focus_node_id,created_at,result').eq('media_id', LB.id).order('created_at', { ascending: false }).limit(1);
   if (!data || !data.length) { $('#lbTags').innerHTML = '<span class="mute small">아직 분석 안 됨</span>'; return; }
-  const a = an && an[0]; const groups = {};
-  for (const t of data) { const n = TAX.byId[t.node_id]; if (!n) continue; (groups[n.facet] ||= []).push({ ...t, n }); }
-  let h = a ? `<div class="small mute">${esc(a.model)} · ${esc(a.prompt_version)} · focus ${esc(nodeName(a.focus_node_id))} · ${a.created_at.slice(0, 16).replace('T', ' ')}</div>` : '';
-  for (const f of ['product', 'fnf', 'detail', 'material', 'pattern', 'color']) {
-    if (!groups[f]) continue;
-    h += `<h3>${f}</h3><div class="tagrow">` + groups[f].sort((x, y) => (y.dominance || 0) - (x.dominance || 0)).map(t => f === 'color' ? `<span class="sw" data-tag="${t.node_id}" data-origin="${t.origin}"><i style="background:${t.n.hex || '#ccc'}"></i>${esc(t.n.name_en)} ${t.dominance ? Math.round(t.dominance * 100) + '%' : ''}<span class="x" data-tx="${t.node_id}" data-to="${t.origin}" style="margin-left:4px;cursor:pointer;opacity:.6">✕</span></span>` : `<span class="chip ${t.origin === 'ai' ? 'ai' : ''}" title="${t.origin} · conf ${t.confidence ?? ''}">${esc(t.n.name_en)}<span class="x" data-tx="${t.node_id}" data-to="${t.origin}">✕</span></span>`).join('') + '</div>';
+  const a = an && an[0];
+  // focus(아이템)별로 묶어서 표시 — 잘못 잡힌 focus는 묶음째 삭제
+  const byF = {}; for (const t of data) { const n = TAX.byId[t.node_id]; if (!n) continue; (byF[t.focus_node_id || ''] ||= []).push({ ...t, n }); }
+  let h = a ? `<div class="small mute">최근 분석 ${esc(a.model)} · ${esc(a.prompt_version)} · ${a.created_at.slice(0, 16).replace('T', ' ')}</div>` : '';
+  for (const [fk, rows] of Object.entries(byF)) {
+    const groups = {}; for (const t of rows) (groups[t.n.facet] ||= []).push(t);
+    h += `<div style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0"><div class="row" style="justify-content:space-between"><b>focus · ${fk ? esc(nodeName(fk)) : 'AI 판정'}</b><button class="sm" data-fdel="${esc(fk)}" title="이 focus의 AI 결과 전체 삭제">이 결과 삭제</button></div>`;
+    for (const f of ['product', 'fnf', 'detail', 'material', 'pattern', 'color']) {
+      if (!groups[f]) continue;
+      h += `<h3 style="margin:8px 0 4px">${f}</h3><div class="tagrow">` + groups[f].sort((x, y) => (y.dominance || 0) - (x.dominance || 0)).map(t => f === 'color' ? `<span class="sw" data-tag="${t.node_id}" data-origin="${t.origin}"><i style="background:${t.n.hex || '#ccc'}"></i>${esc(t.n.name_en)} ${t.dominance ? Math.round(t.dominance * 100) + '%' : ''}<span class="x" data-tx="${t.node_id}" data-to="${t.origin}" style="margin-left:4px;cursor:pointer;opacity:.6">✕</span></span>` : `<span class="chip ${t.origin === 'ai' ? 'ai' : ''}" title="${t.origin} · conf ${t.confidence ?? ''}">${esc(t.n.name_en)}<span class="x" data-tx="${t.node_id}" data-to="${t.origin}">✕</span></span>`).join('') + '</div>';
+    }
+    h += '</div>';
   }
   if (a?.result?.notes) h += `<div class="small mute">${esc(a.result.notes)}</div>`;
   $('#lbTags').innerHTML = h;
 }
 function renderLbFocus() { $('#lbFocusChips').innerHTML = (LB.focus_node_ids || []).map(f => `<span class="chip on" data-lfx="${f}">${esc(nodeName(f))} ✕</span>`).join('') || '<span class="small mute">(카드 focus 사용)</span>'; }
-$('#lbTags').onclick = async e => { const x = e.target.closest('[data-tx]'); if (!x) return; const { error } = await sb.from('tx_media_tags').delete().eq('media_id', LB.id).eq('node_id', x.dataset.tx).eq('origin', x.dataset.to); if (error) return toast(error.message, true); renderLbTags(); };
+$('#lbTags').onclick = async e => {
+  const fd = e.target.closest('[data-fdel]'); if (fd) { const fk = fd.dataset.fdel; if (!confirm(`focus "${fk ? nodeName(fk) : 'AI 판정'}" 결과를 삭제할까요? (사람이 넣은 태그 포함)`)) return; let q = sb.from('tx_media_tags').delete().eq('media_id', LB.id); q = fk ? q.eq('focus_node_id', fk) : q.is('focus_node_id', null); const { error } = await q; if (error) return toast(error.message, true); let q2 = sb.from('tx_analyses').delete().eq('media_id', LB.id); q2 = fk ? q2.eq('focus_node_id', fk) : q2.is('focus_node_id', null); await q2; toast('삭제됨'); renderLbTags(); return; }
+  const x = e.target.closest('[data-tx]'); if (!x) return; const { error } = await sb.from('tx_media_tags').delete().eq('media_id', LB.id).eq('node_id', x.dataset.tx).eq('origin', x.dataset.to); if (error) return toast(error.message, true); renderLbTags(); };
 $('#lbTagSearch').oninput = debounce(() => { const q = $('#lbTagSearch').value.trim().toLowerCase(); if (q.length < 2) { $('#lbTagHits').innerHTML = ''; return; } const hits = TAX.nodes.filter(n => !n.canonical_id && ['value', 'sub', 'category'].includes(n.kind) && (n.name_en.toLowerCase().includes(q) || (n.aliases || []).some(a => a.toLowerCase().includes(q)))).slice(0, 12); $('#lbTagHits').innerHTML = hits.map(n => `<span class="chip" data-ladd="${n.id}">${n.facet === 'color' ? `<i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${n.hex};margin-right:4px"></i>` : ''}${esc(n.name_en)}<small class="mute"> ${esc(n.facet)}</small></span>`).join(''); }, 200);
 $('#lbTagHits').onclick = async e => { const c = e.target.closest('[data-ladd]'); if (!c) return; const n = TAX.byId[c.dataset.ladd]; const focus = (LB.focus_node_ids && LB.focus_node_ids[0]) || null; const { error } = await sb.from('tx_media_tags').upsert({ media_id: LB.id, node_id: n.id, origin: 'human', confidence: 1, dominance: n.facet === 'color' ? 0.5 : null, focus_node_id: focus }, { onConflict: 'media_id,node_id,origin' }); if (error) return toast(error.message, true); await sb.from('tx_media').update({ status: 'analyzed' }).eq('id', LB.id); $('#lbTagSearch').value = ''; $('#lbTagHits').innerHTML = ''; renderLbTags(); };
 $('#lbFocusChips').onclick = async e => { const x = e.target.closest('[data-lfx]'); if (!x) return; LB.focus_node_ids = (LB.focus_node_ids || []).filter(f => f !== x.dataset.lfx); await sb.from('tx_media').update({ focus_node_ids: LB.focus_node_ids }).eq('id', LB.id); renderLbFocus(); };
@@ -1092,7 +1100,13 @@ async function analyzeMany(ids, focusId, hi, hiIds) {
   const key = CFG.openai_key || ''; if (!key) { toast('설정 탭에 OpenAI 키를 저장하세요', true); return; }
   const { data: media0 } = await sb.from('tx_media').select('id,storage_path,focus_node_ids').in('id', ids); if (!media0?.length) return;
   // 사진별 focus가 있으면 그 목록(최대 3)마다, 없으면 카드 focus(또는 AI 판정) 1회
-  const media = []; for (const m of media0) { const fl = (m.focus_node_ids && m.focus_node_ids.length) ? m.focus_node_ids : [focusId || null]; for (const f of fl) media.push({ ...m, _focus: f }); }
+  const media = []; for (const m of media0) {
+    const fl = (m.focus_node_ids && m.focus_node_ids.length) ? m.focus_node_ids : [focusId || null];
+    // 이번 분석 focus 목록에 없는 과거 AI 결과는 정리 (예: 전에 Sweaters로 잘못 잡힌 것 → Tops로 재분석 시 제거). 사람이 넣은 태그(human)는 유지
+    const keep = fl.filter(Boolean);
+    if (keep.length) { let q = sb.from('tx_media_tags').delete().eq('media_id', m.id).eq('origin', 'ai'); q = q.not('focus_node_id', 'in', `(${keep.join(',')})`); await q; }
+    for (const f of fl) media.push({ ...m, _focus: f });
+  }
   let done = 0, ok = 0, skip = 0, err = 0; const t0 = Date.now(); toast(`분석 시작 ${media.length}건 (${media0.length}장)`);
   let i = 0; const worker = async () => { while (i < media.length) { const m = media[i++]; try { const r = await analyzeOne(m, m._focus, hi || (hiIds || []).includes(m.id), key); r === 'skip' ? skip++ : ok++; } catch (e) { err++; console.error(m.id, e); await sb.from('tx_media').update({ status: 'error' }).eq('id', m.id); if (err === 1) toast('분석 오류: ' + e.message, true); } done++; if (done % 5 === 0) toast(`분석 ${done}/${media.length}`); } };
   await Promise.all([worker(), worker(), worker()]);
