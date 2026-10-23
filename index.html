@@ -211,7 +211,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261023-05</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-06</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -261,7 +261,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261023-05
+   TAXONOMY AGENT · index.html (리포트)  v261023-06
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -379,7 +379,7 @@ async function loadCoverage(reset) {
   $('#covMore').style.display = (data || []).length < PAGE ? 'none' : ''; $('#covN').textContent = `${S.cov.items.length.toLocaleString()} images`;
   if (!S.cov.items.length) $('#covGrid').innerHTML = '<div class="empty">사진이 없습니다</div>';
 }
-const capHTML = m => m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b><i>·</i>${esc(m.period)}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b><i>·</i>${esc(m.city || '')}<i>·</i>${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b><i>·</i>${esc(m.product_name || '')}${m.price ? '<i>·</i>₩' + (+m.price).toLocaleString() : ''}<i>·</i>${esc(m.period)}`;
+const capHTML = m => m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b><i>·</i>${esc(m.period)}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b>${m.city ? '<i>·</i>' + esc(m.city) : ''}<i>·</i>${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b><i>·</i>${esc(m.product_name || '')}${m.price ? '<i>·</i>₩' + (+m.price).toLocaleString() : ''}<i>·</i>${esc(m.period)}`;
 $('#covGrid').onclick = e => { const c = e.target.closest('.cov'); if (!c) return; openLightbox(S.cov.items.find(m => m.id === +c.dataset.id)); };
 async function openLightbox(m) {
   if (!m) return; $('#lbImg').src = pubUrl(m.storage_path); $('#mLb').classList.add('on');
