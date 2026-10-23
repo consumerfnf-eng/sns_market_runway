@@ -187,6 +187,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 /* ---- modal ---- */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:30px 16px}
 .modal.on{display:flex}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:70;cursor:zoom-out;flex-direction:column;gap:10px}.zoom.on{display:flex}.zoom img{max-width:94vw;max-height:90vh;object-fit:contain;border-radius:6px;background:#111}.zoom .zcap{color:#fff;font-size:13px;letter-spacing:.04em}
 .box{background:#fff;border-radius:18px;width:min(1000px,100%);padding:24px;position:relative}
 .box .close{position:absolute;top:14px;right:14px}
 .dt-head .chips{display:flex;gap:6px;margin-bottom:10px}
@@ -224,7 +225,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261023-13</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-14</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -269,12 +270,13 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 <!-- card detail -->
 <div class="modal" id="mDetail"><div class="box"><button class="close" data-close="mDetail">✕</button><div id="detail"></div></div></div>
 <!-- lightbox -->
+<div class="zoom" id="zoom" onclick="this.classList.remove('on')"><img id="zoomImg" alt=""><div class="zcap" id="zoomCap"></div></div>
 <div class="modal" id="mLb"><div class="box"><button class="close" data-close="mLb">✕</button><div class="lb"><div><img id="lbImg" alt=""></div><div id="lbInfo"></div></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261023-13
+   TAXONOMY AGENT · index.html (리포트)  v261023-14
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -396,6 +398,7 @@ async function loadCoverage(reset) {
 }
 const capHTML = m => m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b><i>·</i>${esc(m.period)}` : m.source === 'runway' ? `<b>${esc((m.brand || '?').toUpperCase())}</b>${m.city ? '<i>·</i>' + esc(m.city) : ''}<i>·</i>${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b><i>·</i>${esc(m.product_name || '')}${m.price ? '<i>·</i>₩' + (+m.price).toLocaleString() : ''}<i>·</i>${esc(m.period)}`;
 $('#covGrid').onclick = e => { const c = e.target.closest('.cov'); if (!c) return; openLightbox(S.cov.items.find(m => m.id === +c.dataset.id)); };
+function openZoom(src, cap) { $('#zoomImg').src = src; $('#zoomCap').textContent = cap || ''; $('#zoom').classList.add('on'); }
 async function openLightbox(m) {
   if (!m) return; $('#lbImg').src = pubUrl(m.storage_path); $('#mLb').classList.add('on');
   const { data } = await sb.from('tx_media_tags').select('node_id,dominance,confidence,origin').eq('media_id', m.id);
@@ -531,7 +534,7 @@ async function openDetail(id) {
   const c = CARDS.find(x => x.id === id); if (!c) return; $('#mDetail').classList.add('on'); $('#detail').innerHTML = '<div class="empty">불러오는 중…</div>';
   const { html, media } = await buildDetailHTML(c);
   $('#detail').innerHTML = html;
-  $('#detail').onclick = async e => { const sc = e.target.closest('.stack .sc.side'); if (sc) { e.stopPropagation(); swapStack(sc); return; } const dl = e.target.closest('[data-dl]'); if (dl) { e.stopPropagation(); try { const r = await fetch(dl.dataset.dl); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = dl.dataset.name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000); } catch { window.open(dl.dataset.dl, '_blank'); } return; } const im = e.target.closest('img[data-full]'); if (im) openLightbox(media.find(m => m.id === +im.dataset.id)); };
+  $('#detail').onclick = async e => { const sc = e.target.closest('.stack .sc.side'); if (sc) { e.stopPropagation(); swapStack(sc); return; } const sm = e.target.closest('.stack .sc.main'); if (sm) { e.stopPropagation(); const si = sm.querySelector('img'); openZoom(si.src, (sm.querySelector('.cap') || {}).textContent || ''); return; } const dl = e.target.closest('[data-dl]'); if (dl) { e.stopPropagation(); try { const r = await fetch(dl.dataset.dl); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = dl.dataset.name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000); } catch { window.open(dl.dataset.dl, '_blank'); } return; } const im = e.target.closest('img[data-full]'); if (im) { if (c.source === 'runway') openZoom(im.dataset.full, im.title || ''); else openLightbox(media.find(m => m.id === +im.dataset.id)); } };
 }
 async function buildDetailHTML(c) {
   const id = c.id;
@@ -606,17 +609,19 @@ async function exportReport() {
     const title = `Fashion Analysis · ${S.src.toUpperCase()} · ${periodLabel()} · ${catLabel}`;
     const doc = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${css}
 .rep-head{padding:22px 26px 6px}.rep-head h1{margin:0;font-size:22px}.rep-head .m{color:var(--mute);font-size:12px;margin-top:4px}.rep-sec{padding:10px 26px 30px}.rep-sec h2.t{font-size:16px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
-.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr))}@media print{.modal{display:none!important}.card{break-inside:avoid}}</style></head><body>
+.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr))}@media print{.modal{display:none!important}.card{break-inside:avoid}}.zoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:70;cursor:zoom-out;flex-direction:column;gap:10px}.zoom.on{display:flex}.zoom img{max-width:94vw;max-height:90vh;object-fit:contain;border-radius:6px;background:#111}.zoom .zcap{color:#fff;font-size:13px;letter-spacing:.04em}</style></head><body>
 <div class="rep-head"><h1>Fashion Analysis <small style="font-size:11px;color:var(--mute);font-weight:500">소비자분석팀</small></h1><div class="m">${esc(S.src.toUpperCase())} · 기간 ${esc(periodLabel())} · ${esc(catLabel)}${S.picks ? ' · HOT만' : ''} · 카드 ${list.length}개 · 생성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}</div></div>
 <div class="rep-sec"><h2 class="t">Emerging Trends</h2><div class="cards ${S.src === 'runway' ? 'rw2' : ''}" id="cards">${groupsHTML(groups, gk)}</div></div>
 <div class="rep-sec"><h2 class="t">AI Analytics · 전체</h2><div class="an-wrap">${anAll}</div>${anCat ? `<h2 class="t">AI Analytics · ${esc(catLabel)}</h2><div class="an-wrap">${anCat}</div>` : ''}</div>
 ${details.join('')}
-<div class="modal" id="mLb"><div class="box"><button class="close" data-close="mLb">✕</button><div class="lb"><div><img id="lbImg" alt=""></div><div id="lbInfo"></div></div></div></div>
+<div class="zoom" id="zoom" onclick="this.classList.remove('on')"><img id="zoomImg" alt=""><div class="zcap" id="zoomCap"></div></div><div class="modal" id="mLb"><div class="box"><button class="close" data-close="mLb">✕</button><div class="lb"><div><img id="lbImg" alt=""></div><div id="lbInfo"></div></div></div></div>
 <script>
 document.addEventListener('click', e => {
   const cl = e.target.closest('[data-close]'); if (cl) { document.getElementById(cl.dataset.close).classList.remove('on'); return; }
   const dl = e.target.closest('[data-dl]'); if (dl) { e.stopPropagation(); window.open(dl.dataset.dl, '_blank'); return; }
-  const im = e.target.closest('img[data-full]'); if (im) { document.getElementById('lbImg').src = im.dataset.full; document.getElementById('lbInfo').innerHTML = '<div class="small" style="color:#6f6f6f">' + (im.title || '') + '</div>'; document.getElementById('mLb').classList.add('on'); return; }
+  const zm = (src, cap) => { document.getElementById('zoomImg').src = src; document.getElementById('zoomCap').textContent = cap || ''; document.getElementById('zoom').classList.add('on'); };
+  const sm = e.target.closest('.stack .sc.main'); if (sm) { e.stopPropagation(); zm(sm.querySelector('img').src, (sm.querySelector('.cap') || {}).textContent || ''); return; }
+  const im = e.target.closest('img[data-full]'); if (im) { e.stopPropagation(); zm(im.dataset.full, im.title || ''); return; }
   const c = e.target.closest('.card'); if (c) { const d = document.getElementById('d-' + c.dataset.id); if (d) d.classList.add('on'); }
 });
 document.querySelectorAll('.cat-tabs button,.fambar div').forEach(b => b.style.cursor = 'default');
