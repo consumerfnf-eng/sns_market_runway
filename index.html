@@ -114,40 +114,43 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .pick{background:var(--ig);color:#fff;border:none;border-radius:999px;padding:5px 12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .pick svg{width:11px;height:11px}
 /* ---- runway card — 목업 비율: 좌 36% 출처 스택 + 로고 / 우 수치 박스 + 런웨이 3장(2:3) ---- */
-.cards.rw2{grid-template-columns:1fr}
-@media (min-width:1900px){.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.card.rw{display:grid;grid-template-columns:36fr 60fr;gap:48px;padding:40px 56px 44px;align-items:stretch;background:#f6f6f5;border-radius:22px}
+.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr));container-type:inline-size}
+@media (max-width:1100px){.cards.rw2{grid-template-columns:1fr}}
+.card.rw{display:grid;grid-template-columns:36fr 60fr;gap:20px;padding:14px 16px 12px;align-items:stretch;background:var(--card);border-radius:18px;min-height:calc(162px + ((100cqw - 32px)/3 - 38px)/3*4/3);box-sizing:border-box}
 .card.rw .lhs{min-width:0;display:flex;flex-direction:column}
-.card.rw .sechead{font-size:15px;color:var(--orange);font-weight:700;letter-spacing:.01em;margin-bottom:38px}
-.card.rw .lhs h3{margin:0 0 6px;font-size:22px;letter-spacing:-.01em}
-.card.rw .hashes{margin:0 0 14px}
-.stack{position:relative;height:470px;margin:6px 0 26px}
-.stack .sc{position:absolute;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.10);transition:all .35s ease;cursor:pointer;padding:10px}
-.stack .sc img{width:100%;height:100%;object-fit:contain;background:#fff;display:block;border-radius:6px}
+.card.rw .sechead{font-size:11px;color:var(--orange);font-weight:700;letter-spacing:.02em;margin-bottom:6px}
+.card.rw .lhs h3{margin:0 0 3px;font-size:15px}
+.card.rw .hashes{margin:0 0 6px}
+.stack{position:relative;flex:1;min-height:100px;margin:4px 0 8px}
+.stack .sc{position:absolute;border-radius:9px;overflow:hidden;background:#fff;box-shadow:0 5px 16px rgba(0,0,0,.10);transition:all .35s ease;cursor:pointer;padding:5px}
+.stack .sc img{width:100%;height:100%;object-fit:contain;background:#fff;display:block;border-radius:4px}
 .stack .sc.main{left:0;top:0;width:68%;height:100%;z-index:2}
 .stack .sc.side{z-index:3}
 .stack .sc.side.s1{left:60%;top:14%;width:40%;height:72%}
 .stack .sc.side.s2{display:none}
 .stack .sc.hidden{display:none}
-.stack .cap{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:4px 8px;border-radius:0 0 6px 6px}
-.logos{display:flex;gap:26px;align-items:center;flex-wrap:wrap;min-height:30px;margin-top:auto}
-.logos img{height:28px;max-width:150px;object-fit:contain}
-.logos .nm{font-size:12px;color:var(--mute)}
-.card.rw .rhs{display:flex;flex-direction:column;justify-content:center;min-width:0;gap:30px}
-.metric{display:inline-flex;flex-direction:column;align-items:center;background:#fff;border-radius:12px;padding:16px 26px 14px;align-self:flex-start;min-width:190px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
-.metric b{font:italic 700 44px/1 Georgia,'Times New Roman',serif;color:var(--orange);letter-spacing:-.02em}
-.metric small{font-size:12px;color:var(--orange);margin-top:8px}
-.metric .src{font-size:12px;color:var(--orange);text-decoration:none}
-.rwimgs{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px}
+.stack .cap{position:absolute;left:5px;right:5px;bottom:5px;background:rgba(0,0,0,.45);color:#fff;font-size:9px;padding:2px 6px;border-radius:0 0 4px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logos{display:flex;gap:14px;align-items:center;flex-wrap:nowrap;overflow:hidden;min-height:20px;margin-top:auto}
+.logos img{height:18px;max-width:90px;object-fit:contain}
+.logos .nm{font-size:11px;color:var(--mute)}
+.card.rw .rhs{display:flex;flex-direction:column;justify-content:center;min-width:0;gap:10px}
+.card.rw .rwtop:empty{display:none}.card.rw .rwtop{display:flex;align-items:flex-start;gap:12px}.card.rw .rwtop .foot{margin:0;flex:1;min-width:0;align-self:center;flex-wrap:wrap;min-height:0}.card.rw .rwtop .foot .pl{flex-wrap:wrap;overflow:visible}
+.card.rw .rwwrap{position:relative}.card.rw .rwnav{position:absolute;right:0;bottom:22px;margin:0;background:rgba(255,255,255,.85);border-radius:999px;padding:2px}
+.metric{display:inline-flex;flex-direction:column;align-items:center;background:#fff;border-radius:10px;padding:8px 16px 7px;align-self:flex-start;min-width:120px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.metric b{font:italic 700 26px/1 Georgia,'Times New Roman',serif;color:var(--orange);letter-spacing:-.02em}
+.metric small{font-size:10px;color:var(--orange);margin-top:4px}
+.metric .src{font-size:10px;color:var(--orange);text-decoration:none}
+.rwimgs{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:2px}
 .rwimgs::-webkit-scrollbar{display:none}
-.rwimgs .ph{flex:0 0 calc((100% - 48px)/3);scroll-snap-align:start;position:relative}
+.rwimgs .ph{flex:0 0 calc((100% - 20px)/3);scroll-snap-align:start;position:relative}
 .rwimgs img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;background:#e6e6e3;display:block}
-.rwimgs .bn{font-size:13px;color:var(--ink);margin-top:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rwimgs .bn{font-size:11px;color:var(--ink);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rwnav{display:flex;gap:8px;justify-content:flex-end;align-items:center}
-.rwnav button{width:30px;height:30px;border-radius:50%;padding:0;font-size:15px}
-.card.rw .desc{margin:0 0 18px;-webkit-line-clamp:3}
+.rwnav button{width:22px;height:22px;border-radius:50%;padding:0;font-size:12px;line-height:1}
+.rwnav{margin-top:4px}
+.card.rw .desc{margin:0 0 6px;-webkit-line-clamp:2;font-size:11px}
 .card.rw .foot{margin-top:0}
-@media (max-width:1100px){.card.rw{grid-template-columns:1fr;padding:24px}.stack{height:380px}}
+@media (max-width:1100px){.card.rw{grid-template-columns:1fr}.stack{height:300px;flex:none}}
 /* ---- analytics ---- */
 .an-wrap{max-width:1200px}
 .an-head{display:flex;align-items:baseline;gap:12px;margin:8px 0 14px}
@@ -221,7 +224,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261023-11</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-13</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -271,7 +274,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261023-11
+   TAXONOMY AGENT · index.html (리포트)  v261023-13
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -316,6 +319,7 @@ async function boot() {
   try { const { data: lg } = await sb.from('tx_source_logos').select('*'); (lg || []).forEach(r => LOGOS[r.key] = { name: r.name, src: pubUrl(r.image_path) }); } catch {}
   try { const { data: cfg } = await sb.from('tx_config').select('value').eq('key', 'runway_reports').single(); if (cfg?.value) { const list = cfg.value.split(/\n/).map(l => l.split('|').map(x => x.trim())).filter(a => a[0] && a[1]).map(a => ({ season: a[0].toUpperCase(), url: a[1], title: a[2] || a[0] + ' Runway Trend Report' })); for (const r of list) { const i = RUNWAY_REPORTS.findIndex(x => x.season === r.season); if (i >= 0) RUNWAY_REPORTS[i] = r; else RUNWAY_REPORTS.push(r); } } } catch {}   // 기본값(27SS·2627FW)에 설정 목록을 합침, 같은 시즌은 설정이 우선
   RUNWAY_REPORTS.sort((a, b) => seasonSort(b.season) - seasonSort(a.season));
+  try { const { data: g } = await sb.from('tx_config').select('value').eq('key', 'group_order').single(); const arr = g?.value ? JSON.parse(g.value) : []; GROUP_ORDER = Array.isArray(arr) ? arr : []; } catch {}
   await loadPeriods(); render();
 }
 const nodeName = id => (TAX.byId[id] || {}).name_en || id || '';
@@ -430,7 +434,8 @@ async function loadCards() {
 function facetsOf(c) { const out = new Set(); for (const id of (CARD_TAGS[c.id] || [])) { const n = TAX.byId[id]; if (n) out.add(FACET_LABEL[n.facet] || n.facet); } if (c.focus_node_id) out.add('Key Items'); if ((c.hashtags || []).length) out.add('Themes'); return [...out]; }
 // 그룹 키: 런웨이는 섹션(Fabric…), 나머지는 focus 카테고리
 const groupKey = c => S.src === 'runway' ? 'sec:' + (c.section || '') : (c.focus_node_id || '');
-const gOrder = k => k.startsWith('sec:') ? (SECTIONS.findIndex(x => x[0] === k.slice(4)) + 1 || 99) : ((TAX.byId[k] || {}).sort_order ?? 1e9);
+let GROUP_ORDER = []; // tx_config.group_order (admin 카드 탭에서 드래그로 정한 카테고리 순서)
+const gOrder = k => { const i = GROUP_ORDER.indexOf(k); if (i >= 0) return i; return 1e6 + (k.startsWith('sec:') ? (SECTIONS.findIndex(x => x[0] === k.slice(4)) + 1 || 99) : ((TAX.byId[k] || {}).sort_order ?? 1e9)); };
 const gLabel = k => k.startsWith('sec:') ? ((SECTIONS.find(x => x[0] === k.slice(4)) || [])[1] || '섹션 미지정') : (k ? esc(nodeName(k)) : '미지정');
 function paintCards() {
   $('#cards').classList.toggle('rw2', S.src === 'runway');
@@ -462,7 +467,7 @@ function runwayCardHTML(c) {
   const sa = SRC[c.id]; const st = stackHTML(c); const stackOnly = st.replace(/<div class="logos">[\s\S]*$/, ''); const logosOnly = (st.match(/<div class="logos">[\s\S]*$/) || [''])[0];
   const pills = pillsHTML(c, { noMetric: true });
   return `<div class="card rw" data-id="${c.id}"><div class="lhs"><div class="sechead">Key ${esc((SECTIONS.find(x => x[0] === c.section) || [])[1] || '')}</div><h3>${esc(c.title)}</h3>${hashes}${stackOnly}${c.description ? `<div class="desc">${esc(c.description)}</div>` : ''}${logosOnly}</div>
-    <div class="rhs">${metricHTML(c)}<div><div class="rwimgs" data-rw="${c.id}">${imgs || '<div class="empty">런웨이 사진 없음</div>'}</div>${thumbs.length > 3 ? `<div class="rwnav"><span class="small" style="color:var(--mute);margin-right:4px">${thumbs.length}장</span><button data-rwp="${c.id}">‹</button><button data-rwn="${c.id}">›</button></div>` : ''}</div>${(pills || c.is_pick) ? `<div class="foot"><div class="pl">${pills}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div>` : ''}</div></div>`;
+    <div class="rhs"><div class="rwtop">${metricHTML(c)}${(pills || c.is_pick) ? `<div class="foot"><div class="pl">${pills}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div>` : ''}</div><div class="rwwrap"><div class="rwimgs" data-rw="${c.id}">${imgs || '<div class="empty">런웨이 사진 없음</div>'}</div>${thumbs.length > 3 ? `<div class="rwnav"><span class="small" style="color:var(--mute);margin:0 4px">${thumbs.length}장</span><button data-rwp="${c.id}">‹</button><button data-rwn="${c.id}">›</button></div>` : ''}</div></div></div>`;
 }
 function cardHTML(c) {
     const thumbs = c.all_thumbs || c.cover_thumbs || []; const ids = c.all_ids || c.cover_ids || [];
@@ -601,7 +606,7 @@ async function exportReport() {
     const title = `Fashion Analysis · ${S.src.toUpperCase()} · ${periodLabel()} · ${catLabel}`;
     const doc = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${css}
 .rep-head{padding:22px 26px 6px}.rep-head h1{margin:0;font-size:22px}.rep-head .m{color:var(--mute);font-size:12px;margin-top:4px}.rep-sec{padding:10px 26px 30px}.rep-sec h2.t{font-size:16px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
-.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards.rw2{grid-template-columns:1fr}@media print{.modal{display:none!important}.card{break-inside:avoid}}</style></head><body>
+.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr))}@media print{.modal{display:none!important}.card{break-inside:avoid}}</style></head><body>
 <div class="rep-head"><h1>Fashion Analysis <small style="font-size:11px;color:var(--mute);font-weight:500">소비자분석팀</small></h1><div class="m">${esc(S.src.toUpperCase())} · 기간 ${esc(periodLabel())} · ${esc(catLabel)}${S.picks ? ' · HOT만' : ''} · 카드 ${list.length}개 · 생성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}</div></div>
 <div class="rep-sec"><h2 class="t">Emerging Trends</h2><div class="cards ${S.src === 'runway' ? 'rw2' : ''}" id="cards">${groupsHTML(groups, gk)}</div></div>
 <div class="rep-sec"><h2 class="t">AI Analytics · 전체</h2><div class="an-wrap">${anAll}</div>${anCat ? `<h2 class="t">AI Analytics · ${esc(catLabel)}</h2><div class="an-wrap">${anCat}</div>` : ''}</div>
