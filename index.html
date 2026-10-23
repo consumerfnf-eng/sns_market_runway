@@ -114,27 +114,31 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .pick{background:var(--ig);color:#fff;border:none;border-radius:999px;padding:5px 12px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .pick svg{width:11px;height:11px}
 /* ---- runway card (출처 스택 + 수치 + 런웨이 슬라이더) ---- */
-.card.rw{grid-column:1/-1;display:grid;grid-template-columns:minmax(300px,2fr) 3fr;gap:22px;padding:20px 22px;align-items:start}
+.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card.rw{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px;padding:16px 18px;align-items:stretch}
+.card.rw .rhs{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.card.rw .lhs{min-width:0}
 .card.rw .lhs h3{margin:0 0 8px}
-.stack{position:relative;height:330px;margin:8px 0 10px}
+.stack{position:relative;height:360px;margin:8px 0 8px}
 .stack .sc{position:absolute;top:0;bottom:0;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 6px 22px rgba(0,0,0,.14);transition:all .35s ease;cursor:pointer;border:1px solid var(--line)}
-.stack .sc img{width:100%;height:100%;object-fit:cover;display:block}
-.stack .sc.main{left:0;width:72%;z-index:3}
-.stack .sc.side{width:26%;z-index:2;opacity:.9;transform:scale(.92)}
-.stack .sc.side.s1{left:74%}.stack .sc.side.s2{left:74%;top:48%;transform:scale(.88)}
+.stack .sc img{width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+.stack .sc.main{left:0;width:74%;z-index:3}
+.stack .sc.side{width:24%;z-index:2;opacity:.9;transform:scale(.94)}
+.stack .sc.side.s1{left:76%;bottom:52%}.stack .sc.side.s2{left:76%;top:50%;transform:scale(.94)}
 .stack .sc.hidden{display:none}
 .stack .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:4px 8px}
 .logos{display:flex;gap:16px;align-items:center;flex-wrap:wrap;min-height:28px}
 .logos img{height:22px;max-width:120px;object-fit:contain}
 .logos .nm{font-size:11px;color:var(--mute)}
-.metric{display:inline-block;background:#fff;border-radius:12px;padding:10px 18px;margin:0 0 12px;min-width:150px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.metric b{display:block;font:italic 700 30px/1 Georgia,serif;color:var(--orange)}
-.metric small{display:block;font-size:11px;color:var(--mute);margin-top:4px}
+.metric{display:inline-flex;align-items:baseline;gap:8px;background:#fff;border:1.5px solid var(--orange);border-radius:10px;padding:5px 12px;margin:0 0 10px;align-self:flex-start}
+.metric b{font:italic 700 20px/1 Georgia,serif;color:var(--orange)}
+.metric small{font-size:11px;color:var(--mute)}
 .metric .src{font-size:11px;color:var(--orange)}
 .rwimgs{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;padding-bottom:6px}
-.rwimgs .ph{flex:0 0 calc((100% - 24px)/3);scroll-snap-align:start;position:relative}
+.rwimgs .ph{flex:0 0 calc((100% - 16px)/3);scroll-snap-align:start;position:relative}
+.rwimgs{gap:8px}
 .rwimgs img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;background:#e6e6e3;display:block}
-.rwimgs .bn{font-size:12px;margin-top:6px}
+.rwimgs .bn{font-size:10.5px;color:var(--mute);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rwnav{display:flex;gap:6px;justify-content:flex-end;margin-top:4px}
 .rwnav button{width:28px;height:28px;border-radius:50%;padding:0;font-size:14px}
 .card.rw .sechead{font-size:13px;color:var(--orange);font-weight:700;letter-spacing:.02em;margin-bottom:4px}
@@ -211,7 +215,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261023-06</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261023-08</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -261,7 +265,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261023-06
+   TAXONOMY AGENT · index.html (리포트)  v261023-08
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -379,7 +383,7 @@ async function loadCoverage(reset) {
   $('#covMore').style.display = (data || []).length < PAGE ? 'none' : ''; $('#covN').textContent = `${S.cov.items.length.toLocaleString()} images`;
   if (!S.cov.items.length) $('#covGrid').innerHTML = '<div class="empty">사진이 없습니다</div>';
 }
-const capHTML = m => m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b><i>·</i>${esc(m.period)}` : m.source === 'runway' ? `<b>${esc(m.brand || '?')}</b>${m.city ? '<i>·</i>' + esc(m.city) : ''}<i>·</i>${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b><i>·</i>${esc(m.product_name || '')}${m.price ? '<i>·</i>₩' + (+m.price).toLocaleString() : ''}<i>·</i>${esc(m.period)}`;
+const capHTML = m => m.source === 'instagram' ? `<b>@${esc(m.account || '?')}</b><i>·</i>${esc(m.period)}` : m.source === 'runway' ? `<b>${esc((m.brand || '?').toUpperCase())}</b>${m.city ? '<i>·</i>' + esc(m.city) : ''}<i>·</i>${esc(m.period)}` : `<b>${esc(m.brand || '?')}</b><i>·</i>${esc(m.product_name || '')}${m.price ? '<i>·</i>₩' + (+m.price).toLocaleString() : ''}<i>·</i>${esc(m.period)}`;
 $('#covGrid').onclick = e => { const c = e.target.closest('.cov'); if (!c) return; openLightbox(S.cov.items.find(m => m.id === +c.dataset.id)); };
 async function openLightbox(m) {
   if (!m) return; $('#lbImg').src = pubUrl(m.storage_path); $('#mLb').classList.add('on');
@@ -422,6 +426,7 @@ const groupKey = c => S.src === 'runway' ? 'sec:' + (c.section || '') : (c.focus
 const gOrder = k => k.startsWith('sec:') ? (SECTIONS.findIndex(x => x[0] === k.slice(4)) + 1 || 99) : ((TAX.byId[k] || {}).sort_order ?? 1e9);
 const gLabel = k => k.startsWith('sec:') ? ((SECTIONS.find(x => x[0] === k.slice(4)) || [])[1] || '섹션 미지정') : (k ? esc(nodeName(k)) : '미지정');
 function paintCards() {
+  $('#cards').classList.toggle('rw2', S.src === 'runway');
   let list = CARDS.filter(c => (!S.picks || c.is_pick) && (!S.facet || groupKey(c) === S.facet));
   const groups = {}; for (const c of list) (groups[groupKey(c)] ||= []).push(c);
   const gk = Object.keys(groups).sort((a, b) => gOrder(a) - gOrder(b));
@@ -444,8 +449,8 @@ function stackHTML(c) {
 }
 function runwayCardHTML(c) {
   const thumbs = c.all_thumbs || []; const ids = c.all_ids || []; const labs = c.all_labels || [];
-  const brands = c._brands || {};
-  const imgs = thumbs.map((p, i) => `<div class="ph"><img src="${pubUrl(p)}" loading="lazy" alt=""><div class="bn">${esc(brands[ids[i]] || '')}</div>${(Array.isArray(labs[i]) && labs[i].length) ? `<div class="plabel">${labs[i].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`).join('');
+  const brands = c._brands || {}; const bn = v => String(v || '').replace(/\s*(SS|FW|AW)\s?\d{2}.*$/i, '').replace(/[\s_-]+\d+.*$/, '').trim().toUpperCase();
+  const imgs = thumbs.map((p, i) => `<div class="ph"><img src="${pubUrl(p)}" loading="lazy" alt=""><div class="bn">${esc(bn(brands[ids[i]]))}</div>${(Array.isArray(labs[i]) && labs[i].length) ? `<div class="plabel">${labs[i].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`).join('');
   const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
   return `<div class="card rw" data-id="${c.id}"><div class="lhs"><div class="sechead">Key ${esc((SECTIONS.find(x => x[0] === c.section) || [])[1] || '')}</div><h3>${esc(c.title)}</h3>${hashes}${stackHTML(c)}${c.description ? `<div class="desc">${esc(c.description)}</div>` : ''}</div>
     <div class="rhs">${metricHTML(c)}<div class="rwimgs" data-rw="${c.id}">${imgs || '<div class="empty">런웨이 사진 없음</div>'}</div>${thumbs.length > 3 ? `<div class="rwnav"><button data-rwp="${c.id}">‹</button><button data-rwn="${c.id}">›</button><span class="small" style="color:var(--mute);align-self:center;margin-left:6px">${thumbs.length}장</span></div>` : ''}<div class="foot"><div class="pl">${pillsHTML(c, { noMetric: true })}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div></div>`;
@@ -587,9 +592,9 @@ async function exportReport() {
     const title = `Fashion Analysis · ${S.src.toUpperCase()} · ${periodLabel()} · ${catLabel}`;
     const doc = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>${css}
 .rep-head{padding:22px 26px 6px}.rep-head h1{margin:0;font-size:22px}.rep-head .m{color:var(--mute);font-size:12px;margin-top:4px}.rep-sec{padding:10px 26px 30px}.rep-sec h2.t{font-size:16px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
-.cards{grid-template-columns:repeat(3,minmax(0,1fr))}@media print{.modal{display:none!important}.card{break-inside:avoid}}</style></head><body>
+.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr))}@media print{.modal{display:none!important}.card{break-inside:avoid}}</style></head><body>
 <div class="rep-head"><h1>Fashion Analysis <small style="font-size:11px;color:var(--mute);font-weight:500">소비자분석팀</small></h1><div class="m">${esc(S.src.toUpperCase())} · 기간 ${esc(periodLabel())} · ${esc(catLabel)}${S.picks ? ' · HOT만' : ''} · 카드 ${list.length}개 · 생성 ${new Date().toISOString().slice(0, 16).replace('T', ' ')}</div></div>
-<div class="rep-sec"><h2 class="t">Emerging Trends</h2><div class="cards" id="cards">${groupsHTML(groups, gk)}</div></div>
+<div class="rep-sec"><h2 class="t">Emerging Trends</h2><div class="cards ${S.src === 'runway' ? 'rw2' : ''}" id="cards">${groupsHTML(groups, gk)}</div></div>
 <div class="rep-sec"><h2 class="t">AI Analytics · 전체</h2><div class="an-wrap">${anAll}</div>${anCat ? `<h2 class="t">AI Analytics · ${esc(catLabel)}</h2><div class="an-wrap">${anCat}</div>` : ''}</div>
 ${details.join('')}
 <div class="modal" id="mLb"><div class="box"><button class="close" data-close="mLb">✕</button><div class="lb"><div><img id="lbImg" alt=""></div><div id="lbInfo"></div></div></div></div>
