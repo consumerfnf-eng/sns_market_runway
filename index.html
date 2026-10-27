@@ -113,7 +113,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .card .pickrow{display:flex;justify-content:flex-end;margin-top:12px;min-height:28px}
 .pick{background:#f4511e;color:#fff;border:none;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .pick svg{width:11px;height:11px}
-/* ---- runway card — 목업 비율: 좌 36% 출처 스택 + 로고 / 우 수치 박스 + 런웨이 3장(2:3) ---- */
+/* ---- runway card — 목업 비율: 좌 36% 레퍼런스 스택 + 로고 / 우 수치 박스 + 런웨이 3장(2:3) ---- */
 .cards.rw2{grid-template-columns:repeat(2,minmax(0,1fr));container-type:inline-size}
 @media (max-width:1100px){.cards.rw2{grid-template-columns:1fr}}
 .card.rw{display:grid;grid-template-columns:36fr 60fr;gap:20px;padding:14px 16px 12px;align-items:stretch;background:var(--card);border-radius:18px;min-height:calc(236px + ((100cqw - 32px)/3 - 48px)/3*4/3);box-sizing:border-box}
@@ -129,6 +129,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .stack .sc.side.s1{left:60%;top:14%;width:40%;height:72%}
 .stack .sc.side.s2{display:none}
 .stack .sc.hidden{display:none}
+.dt-ref .stack{height:400px;flex:none;margin:0 0 12px}.dt-ref .logos img{height:24px;max-width:130px}
 .stack.hero .sc.main{width:100%;padding:0;box-shadow:none;background:#e6e6e3}.stack.hero .sc.main img{object-fit:cover;border-radius:9px}
 .stack .cap{position:absolute;left:5px;right:5px;bottom:5px;background:rgba(0,0,0,.45);color:#fff;font-size:9px;padding:2px 6px;border-radius:0 0 4px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .logos{display:flex;gap:14px;align-items:center;flex-wrap:nowrap;overflow:hidden;min-height:20px;margin-top:auto}
@@ -226,7 +227,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261027-03</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261027-05</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -277,7 +278,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261027-03
+   TAXONOMY AGENT · index.html (리포트)  v261027-05
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -334,8 +335,8 @@ async function boot() {
 }
 const nodeName = id => (TAX.byId[id] || {}).name_en || id || '';
 const titleCase = t => String(t || '').toLowerCase().replace(/(^|[^\p{L}\p{N}'’])(\p{L})/gu, (m, p, c) => p + c.toUpperCase());
-// 출처 캡처가 가로형이면 흰 종이 카드를 이미지 높이에 맞춰 줄임 (세로 여백 제거)
-function fitSc(img) { if (img.naturalWidth > img.naturalHeight) { const sc = img.closest('.sc'); if (sc) { sc.style.height = 'auto'; img.style.height = 'auto'; } } }
+// 레퍼런스 캡처가 가로형이면 흰 종이 카드를 이미지 높이에 맞춰 줄임 (세로 여백 제거)
+function fitSc(img) { const sc = img.closest('.sc'); if (!sc || !img.naturalWidth || sc.closest('.stack.hero')) return; const r = img.naturalWidth / img.naturalHeight; if (r > 1) { sc.style.height = 'auto'; img.style.height = 'auto'; } else { const st = sc.closest('.stack'); const h = sc.offsetHeight || st.offsetHeight; const maxW = st.offsetWidth * (sc.classList.contains('main') ? .72 : .5); sc.style.width = Math.min(maxW, Math.round((h - 10) * r + 10)) + 'px'; } }
 const canon = id => (TAX.byId[id] && TAX.byId[id].canonical_id) || id;
 const catOf = id => { let n = TAX.byId[id]; while (n && n.kind !== 'category' && n.parent_id) n = TAX.byId[n.parent_id]; return n && n.kind === 'category' ? n : null; };
 
@@ -466,21 +467,24 @@ function groupsHTML(groups, gk) {
 function metricHTML(c) {
   const m = (c.evidence || []).find(e => e.type === 'metric' && e.value); if (!m) return '';
   const src = m.url && !/^https?:/.test(m.url) ? m.url : ''; const link = /^https?:/.test(m.url || '') ? m.url : '';
-  return `<div class="metric"><b>${esc(m.value)}</b><small>${esc(m.label || '')}</small>${src ? `<span class="src">${esc(src)}</span>` : ''}${link ? `<a class="src" href="${esc(link)}" target="_blank" onclick="event.stopPropagation()">출처 ↗</a>` : ''}</div>`;
+  return `<div class="metric"><b>${esc(m.value)}</b><small>${esc(m.label || '')}</small>${src ? `<span class="src">${esc(src)}</span>` : ''}${link ? `<a class="src" href="${esc(link)}" target="_blank" onclick="event.stopPropagation()">레퍼런스 ↗</a>` : ''}</div>`;
 }
+// 레퍼런스가 없고 따로 올린 좌측 이미지도 없으면 대표 사진 1이 좌측에 쓰임 → 오른쪽 사진 목록에서는 그 사진 제외
+const heroFromCover = c => { const sa = SRC[c.id] || {}; return !(sa.logos || []).some(l => l !== '__hero__') && !(sa.logos || []).includes('__hero__') && (sa.images || []).filter((p, i) => (sa.logos || [])[i] !== '__hero__').length === 0; };
 function stackHTML(c) {
   const sa = SRC[c.id] || {}; const all = (sa.images || []).map((p, i) => ({ p, logo: (sa.logos || [])[i], cap: (sa.captions || [])[i], url: (sa.urls || [])[i] }));
   const items = all.filter(x => x.logo !== '__hero__');
-  if (!items.length) {   // 출처 자료 없음 → 대표 이미지(직접 올린 것) 또는 대표 사진 1
+  if (!items.length) {   // 레퍼런스 없음 → 대표 이미지(직접 올린 것) 또는 대표 사진 1
     const hero = (all.find(x => x.logo === '__hero__') || {}).p || (c.cover_thumbs || c.all_thumbs || [])[0];
-    return hero ? `<div class="stack hero" data-stack="${c.id}"><div class="sc main"><img src="${pubUrl(hero)}" loading="lazy" alt=""></div></div><div class="logos"></div>` : '<div class="stack" style="height:auto;margin:0 0 10px"><div class="small" style="color:var(--mute)">출처 자료 없음</div></div><div class="logos"></div>';
+    return hero ? `<div class="stack hero" data-stack="${c.id}"><div class="sc main"><img src="${pubUrl(hero)}" loading="lazy" alt=""></div></div><div class="logos"></div>` : '<div class="stack" style="height:auto;margin:0 0 10px"><div class="small" style="color:var(--mute)">레퍼런스 없음</div></div><div class="logos"></div>';
   }
   const sc = items.map((x, i) => `<div class="sc ${i === 0 ? 'main' : i === 1 ? 'side s1' : i === 2 ? 'side s2' : 'hidden'}" data-si="${i}"><img src="${pubUrl(x.p)}" loading="lazy" alt="" onload="fitSc(this)">${x.cap ? `<div class="cap">${esc(titleCase(x.cap))}</div>` : ''}</div>`).join('');
   const logos = [...new Set(items.map(x => x.logo).filter(Boolean))].map(k => LOGOS[k] ? `<img src="${LOGOS[k].src}" title="${esc(LOGOS[k].name)}" alt="${esc(LOGOS[k].name)}">` : `<span class="nm">${esc(k)}</span>`).join('');
   return `<div class="stack" data-stack="${c.id}">${sc}</div><div class="logos">${logos}</div>`;
 }
 function runwayCardHTML(c) {
-  const thumbs = c.all_thumbs || []; const ids = c.all_ids || []; const labs = c.all_labels || [];
+  let thumbs = c.all_thumbs || [], ids = c.all_ids || [], labs = c.all_labels || [];
+  if (c.source === 'runway' && heroFromCover(c) && thumbs.length > 1) { thumbs = thumbs.slice(1); ids = ids.slice(1); labs = labs.slice(1); }
   const brands = c._brands || {}; const bn = v => String(v || '').replace(/\s*(SS|FW|AW)\s?\d{2}.*$/i, '').replace(/[\s_-]+\d+.*$/, '').trim().toUpperCase();
   const imgs = thumbs.map((p, i) => `<div class="ph"><img src="${pubUrl(p)}" loading="lazy" alt=""><div class="bn">${esc(bn(brands[ids[i]]))}</div>${(Array.isArray(labs[i]) && labs[i].length) ? `<div class="plabel">${labs[i].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`).join('');
   const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
@@ -546,10 +550,11 @@ $('#cards').onclick = e => {
   const pv = e.target.closest('[data-rwp]'); const nx = e.target.closest('[data-rwn]'); if (pv || nx) { e.stopPropagation(); const id = (pv || nx).dataset.rwp || (pv || nx).dataset.rwn; const el = e.target.closest('.card').querySelector(`[data-rw="${id}"]`); el.scrollBy({ left: (nx ? 1 : -1) * el.clientWidth, behavior: 'smooth' }); return; }
   const c = e.target.closest('.card'); if (c) openDetail(+c.dataset.id);
 };
-// 옆에 접힌 출처 자료 클릭 → 가운데(메인)로, 메인은 옆으로
+// 옆에 접힌 레퍼런스 자료 클릭 → 가운데(메인)로, 메인은 옆으로
 function swapStack(sideEl) {
   const stack = sideEl.closest('.stack'); const main = stack.querySelector('.sc.main'); if (!main) return;
   const cls = sideEl.className.replace('sc ', ''); sideEl.className = 'sc main'; main.className = 'sc ' + cls;
+  [sideEl, main].forEach(x => { x.style.width = ''; x.style.height = ''; const im = x.querySelector('img'); if (im) { im.style.height = ''; if (im.complete) fitSc(im); } });
 }
 
 /* ---------------- card detail (더보기) ---------------- */
@@ -575,10 +580,10 @@ async function buildDetailHTML(c) {
   const tags = (CARD_TAGS[id] || []).map(i => TAX.byId[i]).filter(Boolean);
   const tot = (cols || []).reduce((s, x) => s + +x.weight, 0);
   let h = `<div class="dt-head"><h2>${esc(titleCase(c.title))}</h2>${(c.hashtags || []).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px">${c.hashtags.map(t => `<span style="color:var(--orange);font-weight:600">#${esc(t)}</span>`).join('')}</div>` : ''}<div class="meta">${esc(nodeName(TAX.byId[c.focus_node_id]?.parent_id))} › ${esc(nodeName(c.focus_node_id))} · ${esc(c.source)} · ${c.period_min && c.period_max && c.period_min !== c.period_max ? `${esc(c.period_min)} ~ ${esc(c.period_max)} (주로 ${esc(c.period_top || c.period)}${c.period_top_n ? ', ' + c.period_top_n + '장' : ''})` : esc(c.period)} · First spotted ${esc(c.first_spotted || c.period_min || c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
-  if (c.source === 'runway') { if (!SRC[c.id]) { try { const { data: sa } = await sb.from('tx_v_entry_sources_agg').select('*').eq('entry_id', c.id).single(); if (sa) SRC[c.id] = sa; } catch {} } h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:8px 0 14px"><div>${stackHTML(c)}</div><div>${metricHTML(c)}<div class="boxes">${boxesHTML(c)}</div></div></div>`; }
+  if (c.source === 'runway') { if (!SRC[c.id]) { try { const { data: sa } = await sb.from('tx_v_entry_sources_agg').select('*').eq('entry_id', c.id).single(); if (sa) SRC[c.id] = sa; } catch {} } h += `<div style="display:grid;grid-template-columns:3fr 2fr;gap:22px;margin:8px 0 14px"><div class="dt-ref">${stackHTML(c)}</div><div>${metricHTML(c)}<div class="boxes">${boxesHTML(c)}</div></div></div>`; }
   else h += `<div class="boxes" style="margin:10px 0 14px">${boxesHTML(c)}</div>`;
   if (c.description) h += `<div class="dt-sec"><h4>What it is</h4><div>${esc(c.description)}</div></div>`;
-  h += `<div class="dt-strip">${[...covers, ...extras].map(img).join('')}</div>`;
+  { const list = [...covers, ...extras]; h += `<div class="dt-strip">${(c.source === 'runway' && heroFromCover(c) && list.length > 1 ? list.slice(1) : list).map(img).join('')}</div>`; }
   if (tags.length) h += `<div class="dt-sec"><h4>Taxonomy</h4><div class="tagrow">${tags.map(n => `<span class="chip">${esc(n.name_en)}</span>`).join('')}</div></div>`;
   const secs = (c.sections || []).filter(s => (s.media_ids || []).length);
   for (const s of secs) h += `<div class="dt-sec"><h4>${esc(s.subtitle || '')}</h4><div class="dt-strip">${s.media_ids.map(i => media.find(m => m.id === i)).filter(Boolean).map(img).join('')}</div></div>`;
@@ -649,7 +654,7 @@ document.addEventListener('click', e => {
   const c = e.target.closest('.card'); if (c) { const d = document.getElementById('d-' + c.dataset.id); if (d) d.classList.add('on'); }
 });
 document.querySelectorAll('.cat-tabs button,.fambar div').forEach(b => b.style.cursor = 'default');
-function fitSc(img) { if (img.naturalWidth > img.naturalHeight) { const sc = img.closest('.sc'); if (sc) { sc.style.height = 'auto'; img.style.height = 'auto'; } } } document.querySelectorAll('.stack .sc img').forEach(i => { if (i.complete) fitSc(i); });
+function fitSc(img) { const sc = img.closest('.sc'); if (!sc || !img.naturalWidth || sc.closest('.stack.hero')) return; const r = img.naturalWidth / img.naturalHeight; if (r > 1) { sc.style.height = 'auto'; img.style.height = 'auto'; } else { const st = sc.closest('.stack'); const h = sc.offsetHeight || st.offsetHeight; const maxW = st.offsetWidth * (sc.classList.contains('main') ? .72 : .5); sc.style.width = Math.min(maxW, Math.round((h - 10) * r + 10)) + 'px'; } } document.querySelectorAll('.stack .sc img').forEach(i => { if (i.complete) fitSc(i); });
 <\/script></body></html>`;
     const name = `FashionAnalysis_${S.src}_${(periodLabel() === '전체 기간' ? 'all' : periodLabel()).replace(/[^0-9A-Za-z~-]/g, '')}_${S.facet ? nodeName(S.facet).replace(/\W+/g, '') : 'ALL'}.html`;
     const b = new Blob([doc], { type: 'text/html' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000);
