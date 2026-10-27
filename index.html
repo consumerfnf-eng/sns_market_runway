@@ -225,7 +225,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261026-03</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261027-02</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -276,7 +276,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261026-03
+   TAXONOMY AGENT · index.html (리포트)  v261027-02
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -325,6 +325,9 @@ async function boot() {
   await loadPeriods(); render();
 }
 const nodeName = id => (TAX.byId[id] || {}).name_en || id || '';
+const titleCase = t => String(t || '').toLowerCase().replace(/(^|[^\p{L}\p{N}'’])(\p{L})/gu, (m, p, c) => p + c.toUpperCase());
+// 출처 캡처가 가로형이면 흰 종이 카드를 이미지 높이에 맞춰 줄임 (세로 여백 제거)
+function fitSc(img) { if (img.naturalWidth > img.naturalHeight) { const sc = img.closest('.sc'); if (sc) { sc.style.height = 'auto'; img.style.height = 'auto'; } } }
 const canon = id => (TAX.byId[id] && TAX.byId[id].canonical_id) || id;
 const catOf = id => { let n = TAX.byId[id]; while (n && n.kind !== 'category' && n.parent_id) n = TAX.byId[n.parent_id]; return n && n.kind === 'category' ? n : null; };
 
@@ -460,7 +463,7 @@ function metricHTML(c) {
 function stackHTML(c) {
   const sa = SRC[c.id]; if (!sa || !sa.images?.length) return '<div class="stack" style="height:auto;margin:0 0 10px"><div class="small" style="color:var(--mute)">출처 자료 없음</div></div><div class="logos"></div>';
   const items = sa.images.map((p, i) => ({ p, logo: sa.logos[i], cap: sa.captions[i], url: sa.urls[i] }));
-  const sc = items.map((x, i) => `<div class="sc ${i === 0 ? 'main' : i === 1 ? 'side s1' : i === 2 ? 'side s2' : 'hidden'}" data-si="${i}"><img src="${pubUrl(x.p)}" loading="lazy" alt="">${x.cap ? `<div class="cap">${esc(x.cap)}</div>` : ''}</div>`).join('');
+  const sc = items.map((x, i) => `<div class="sc ${i === 0 ? 'main' : i === 1 ? 'side s1' : i === 2 ? 'side s2' : 'hidden'}" data-si="${i}"><img src="${pubUrl(x.p)}" loading="lazy" alt="" onload="fitSc(this)">${x.cap ? `<div class="cap">${esc(titleCase(x.cap))}</div>` : ''}</div>`).join('');
   const logos = [...new Set(items.map(x => x.logo).filter(Boolean))].map(k => LOGOS[k] ? `<img src="${LOGOS[k].src}" title="${esc(LOGOS[k].name)}" alt="${esc(LOGOS[k].name)}">` : `<span class="nm">${esc(k)}</span>`).join('');
   return `<div class="stack" data-stack="${c.id}">${sc}</div><div class="logos">${logos}</div>`;
 }
@@ -471,7 +474,7 @@ function runwayCardHTML(c) {
   const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
   const sa = SRC[c.id]; const st = stackHTML(c); const stackOnly = st.replace(/<div class="logos">[\s\S]*$/, ''); const logosOnly = (st.match(/<div class="logos">[\s\S]*$/) || [''])[0];
   const pills = pillsHTML(c, { noMetric: true });
-  return `<div class="card rw" data-id="${c.id}"><div class="lhs"><div class="sechead">Key ${esc((SECTIONS.find(x => x[0] === c.section) || [])[1] || '')}</div><h3>${esc(c.title)}</h3>${hashes}${stackOnly}${c.description ? `<div class="desc">${esc(c.description)}</div>` : ''}${logosOnly}</div>
+  return `<div class="card rw" data-id="${c.id}"><div class="lhs"><div class="sechead">Key ${esc((SECTIONS.find(x => x[0] === c.section) || [])[1] || '')}</div><h3>${esc(titleCase(c.title))}</h3>${hashes}${stackOnly}${c.description ? `<div class="desc">${esc(c.description)}</div>` : ''}${logosOnly}</div>
     <div class="rhs"><div class="rwtop">${metricHTML(c)}${(pills || c.is_pick) ? `<div class="foot"><div class="pl">${pills}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div>` : ''}</div><div class="rwwrap"><div class="rwimgs" data-rw="${c.id}">${imgs || '<div class="empty">런웨이 사진 없음</div>'}</div>${thumbs.length > 3 ? `<div class="rwnav"><span class="small" style="color:var(--mute);margin:0 4px">${thumbs.length}장</span><button data-rwp="${c.id}">‹</button><button data-rwn="${c.id}">›</button></div>` : ''}</div></div></div>`;
 }
 const ICO = { posts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="3.5"/></svg>', accounts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>', photos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg>', brands: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M12 11v10M3 7l9 4 9-4"/></svg>' };
@@ -486,7 +489,7 @@ function cardHTML(c) {
     const st = c.source === 'instagram' ? [['posts', c.posts || 0, 'Posts'], ['accounts', c.accounts || 0, 'Accounts'], ['photos', c.photos || 0, 'Photos']] : [['brands', c.market_brands || 0, 'Brands'], ['photos', c.photos || 0, 'Items']];
     const stats = st.map(([k, v, l]) => `<span>${ICO[k]}${v} ${l}</span>`).join('');
     const pills = pillsHTML(c);
-    return `<div class="card" data-id="${c.id}"><div class="chips">${catChips(c)}<span class="chip ghost">${esc(pr)}${thumbs.length > 3 ? ' · ' + thumbs.length + '장 ›' : ''}</span></div><h3>${esc(c.title)}</h3>${hashes}<div class="desc">${c.description ? esc(c.description) : ''}</div><div class="imgs">${imgHTML}</div><div class="stats">${stats}</div><div class="foot"><div class="pl">${pills}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
+    return `<div class="card" data-id="${c.id}"><div class="chips">${catChips(c)}<span class="chip ghost">${esc(pr)}${thumbs.length > 3 ? ' · ' + thumbs.length + '장 ›' : ''}</span></div><h3>${esc(titleCase(c.title))}</h3>${hashes}<div class="desc">${c.description ? esc(c.description) : ''}</div><div class="imgs">${imgHTML}</div><div class="stats">${stats}</div><div class="foot"><div class="pl">${pills}</div>${c.is_pick ? `<span class="pick">🔥 HOT</span>` : ''}</div></div>`;
 }
 const EV_LABEL = { celeb: '셀럽 착용', ranking: '랭킹', runway: 'Runway', metric: '수치', market: 'Market', note: '메모' };
 function pillsHTML(c, opt) {
@@ -559,7 +562,7 @@ async function buildDetailHTML(c) {
   const img = m => `<div class="ph ${m.is_celeb ? 'celeb' : ''}"><img src="${pubUrl(m.thumb_path)}" data-full="${pubUrl(m.storage_path)}" data-id="${m.id}" title="${esc(m.account ? '@' + m.account : m.brand || '')}">${m.is_celeb ? `<span class="star">⭐</span><span class="celeb-tag">${esc(m.celeb_name || 'CELEB')}</span>` : ''}${(LAB[m.id] || []).length ? `<div class="plabel">${LAB[m.id].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}<span class="dl" data-dl="${pubUrl(m.storage_path)}" data-name="${esc((m.account || m.brand || 'photo') + '_' + (m.period || '') + '_' + m.id + '.jpg')}" title="다운로드">⤓</span></div>`;
   const tags = (CARD_TAGS[id] || []).map(i => TAX.byId[i]).filter(Boolean);
   const tot = (cols || []).reduce((s, x) => s + +x.weight, 0);
-  let h = `<div class="dt-head"><h2>${esc(c.title)}</h2>${(c.hashtags || []).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px">${c.hashtags.map(t => `<span style="color:var(--orange);font-weight:600">#${esc(t)}</span>`).join('')}</div>` : ''}<div class="meta">${esc(nodeName(TAX.byId[c.focus_node_id]?.parent_id))} › ${esc(nodeName(c.focus_node_id))} · ${esc(c.source)} · ${c.period_min && c.period_max && c.period_min !== c.period_max ? `${esc(c.period_min)} ~ ${esc(c.period_max)} (주로 ${esc(c.period_top || c.period)}${c.period_top_n ? ', ' + c.period_top_n + '장' : ''})` : esc(c.period)} · First spotted ${esc(c.first_spotted || c.period_min || c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
+  let h = `<div class="dt-head"><h2>${esc(titleCase(c.title))}</h2>${(c.hashtags || []).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13px">${c.hashtags.map(t => `<span style="color:var(--orange);font-weight:600">#${esc(t)}</span>`).join('')}</div>` : ''}<div class="meta">${esc(nodeName(TAX.byId[c.focus_node_id]?.parent_id))} › ${esc(nodeName(c.focus_node_id))} · ${esc(c.source)} · ${c.period_min && c.period_max && c.period_min !== c.period_max ? `${esc(c.period_min)} ~ ${esc(c.period_max)} (주로 ${esc(c.period_top || c.period)}${c.period_top_n ? ', ' + c.period_top_n + '장' : ''})` : esc(c.period)} · First spotted ${esc(c.first_spotted || c.period_min || c.period)} · Updated ${c.updated_at.slice(0, 10)}</div></div>`;
   if (c.source === 'runway') { if (!SRC[c.id]) { try { const { data: sa } = await sb.from('tx_v_entry_sources_agg').select('*').eq('entry_id', c.id).single(); if (sa) SRC[c.id] = sa; } catch {} } h += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:8px 0 14px"><div>${stackHTML(c)}</div><div>${metricHTML(c)}<div class="boxes">${boxesHTML(c)}</div></div></div>`; }
   else h += `<div class="boxes" style="margin:10px 0 14px">${boxesHTML(c)}</div>`;
   if (c.description) h += `<div class="dt-sec"><h4>What it is</h4><div>${esc(c.description)}</div></div>`;
@@ -633,6 +636,7 @@ document.addEventListener('click', e => {
   const c = e.target.closest('.card'); if (c) { const d = document.getElementById('d-' + c.dataset.id); if (d) d.classList.add('on'); }
 });
 document.querySelectorAll('.cat-tabs button,.fambar div').forEach(b => b.style.cursor = 'default');
+function fitSc(img) { if (img.naturalWidth > img.naturalHeight) { const sc = img.closest('.sc'); if (sc) { sc.style.height = 'auto'; img.style.height = 'auto'; } } } document.querySelectorAll('.stack .sc img').forEach(i => { if (i.complete) fitSc(i); });
 <\/script></body></html>`;
     const name = `FashionAnalysis_${S.src}_${(periodLabel() === '전체 기간' ? 'all' : periodLabel()).replace(/[^0-9A-Za-z~-]/g, '')}_${S.facet ? nodeName(S.facet).replace(/\W+/g, '') : 'ALL'}.html`;
     const b = new Blob([doc], { type: 'text/html' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 5000);
