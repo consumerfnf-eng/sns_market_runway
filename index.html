@@ -227,7 +227,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261027-05</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261029-02</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -278,7 +278,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261027-05
+   TAXONOMY AGENT · index.html (리포트)  v261029-02
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -448,12 +448,12 @@ async function loadCards() {
 }
 function facetsOf(c) { const out = new Set(); for (const id of (CARD_TAGS[c.id] || [])) { const n = TAX.byId[id]; if (n) out.add(FACET_LABEL[n.facet] || n.facet); } if (c.focus_node_id) out.add('Key Items'); if ((c.hashtags || []).length) out.add('Themes'); return [...out]; }
 // 그룹 키: 런웨이는 섹션(Fabric…), 나머지는 focus 카테고리
-const groupKey = c => { if (S.src === 'runway') return 'sec:' + (c.section || ''); const f = c.focus_node_id || ''; if (!f) return ''; if (f.startsWith('facet:')) return f; const n = TAX.byId[f]; if (n && !(n.kind === 'category' && n.facet === 'product')) return 'facet:' + n.facet; return f; };
+const groupKey = c => { if (S.src === 'runway') return 'sec:' + (c.section || ''); const f = c.focus_node_id || ''; if (!f) return ''; if (f.startsWith('facet:')) return f; const n = TAX.byId[f]; if (n && !(n.kind === 'category' && n.facet === 'product')) return 'facet:' + n.facet; if (n && n.parent_id === 'product.footwear') return 'grp:footwear'; if (n && ACC_GROUPS.includes(n.parent_id)) return 'grp:acc'; return f; };
 let GROUP_ORDER = []; // tx_config.group_order (admin 카드 탭에서 드래그로 정한 카테고리 순서)
-const ACC_GROUPS = ['product.bags', 'product.footwear', 'product.general-access', 'product.jewelry']; // 가방·신발·잡화·주얼리 카테고리 카드 → ACCESSORIES 한 그룹
+const ACC_GROUPS = ['product.bags', 'product.general-access', 'product.jewelry']; // 가방·신발·잡화·주얼리 카테고리 카드 → ACCESSORIES 한 그룹
 const THEME_ORDER = ['facet:color', 'facet:pattern', 'facet:material', 'facet:detail'];
-const gOrder = k => { const i = GROUP_ORDER.indexOf(k); if (i >= 0) return i; if (k.startsWith('facet:')) { const t = THEME_ORDER.indexOf(k); return 2e6 + (t < 0 ? 9 : t); } if (k === 'grp:acc') return 1.5e6; return 1e6 + (k.startsWith('sec:') ? (SECTIONS.findIndex(x => x[0] === k.slice(4)) + 1 || 99) : ((TAX.byId[k] || {}).sort_order ?? 1e9)); };
-const gLabel = k => k.startsWith('sec:') ? ((SECTIONS.find(x => x[0] === k.slice(4)) || [])[1] || '섹션 미지정') : k.startsWith('facet:') ? (THEME_NAME[k] || k) : k === 'grp:acc' ? 'Accessories' : (k ? esc(nodeName(k)) : '미지정');
+const gOrder = k => { const i = GROUP_ORDER.indexOf(k); if (i >= 0) return i; if (k.startsWith('facet:')) { const t = THEME_ORDER.indexOf(k); return 2e6 + (t < 0 ? 9 : t); } if (k === 'grp:footwear') return 1.4e6; if (k === 'grp:acc') return 1.5e6; return 1e6 + (k.startsWith('sec:') ? (SECTIONS.findIndex(x => x[0] === k.slice(4)) + 1 || 99) : ((TAX.byId[k] || {}).sort_order ?? 1e9)); };
+const gLabel = k => k.startsWith('sec:') ? ((SECTIONS.find(x => x[0] === k.slice(4)) || [])[1] || '섹션 미지정') : k.startsWith('facet:') ? (THEME_NAME[k] || k) : k === 'grp:footwear' ? 'Footwear' : k === 'grp:acc' ? 'Accessories' : (k ? esc(nodeName(k)) : '미지정');
 function paintCards() {
   $('#cards').classList.toggle('rw2', S.src === 'runway');
   let list = CARDS.filter(c => (!S.picks || c.is_pick) && (!S.facet || groupKey(c) === S.facet));
@@ -462,7 +462,7 @@ function paintCards() {
   $('#cards').innerHTML = groupsHTML(groups, gk);
 }
 function groupsHTML(groups, gk) {
-  return gk.map(k => `<div style="grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:6px">${k.startsWith('sec:') ? '<span style="color:var(--orange)">Key ' + gLabel(k) + '</span>' : (k.startsWith('facet:') || k === 'grp:acc') ? esc(gLabel(k)) : k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : '미지정'} <span style="color:var(--mute);font-weight:400">${groups[k].length}</span></div>${groups[k].map(c => c.source === 'runway' ? runwayCardHTML(c) : cardHTML(c)).join('')}`).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
+  return gk.map(k => `<div style="grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:.04em;margin-top:6px">${k.startsWith('sec:') ? '<span style="color:var(--orange)">Key ' + gLabel(k) + '</span>' : (k.startsWith('facet:') || k.startsWith('grp:')) ? esc(gLabel(k)) : k ? esc(nodeName(TAX.byId[k]?.parent_id)) + ' › ' + esc(nodeName(k)) : '미지정'} <span style="color:var(--mute);font-weight:400">${groups[k].length}</span></div>${groups[k].map(c => c.source === 'runway' ? runwayCardHTML(c) : cardHTML(c)).join('')}`).join('') || '<div class="empty">카드가 없습니다 — admin에서 갤러리 사진을 선택해 카드를 만드세요</div>';
 }
 function metricHTML(c) {
   const m = (c.evidence || []).find(e => e.type === 'metric' && e.value); if (!m) return '';
