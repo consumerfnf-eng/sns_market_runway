@@ -228,7 +228,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261030-01</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261102-01</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -279,7 +279,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261030-01
+   TAXONOMY AGENT · index.html (리포트)  v261102-01
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -491,13 +491,25 @@ function stackHTML(c) {
 function runwayCardHTML(c) {
   let thumbs = c.all_thumbs || [], ids = c.all_ids || [], labs = c.all_labels || [];
   if (c.source === 'runway' && heroFromCover(c) && thumbs.length > 1) { thumbs = thumbs.slice(1); ids = ids.slice(1); labs = labs.slice(1); }
-  const brands = c._brands || {}; const CITY_CODES = new Set(['PRS', 'PAR', 'MLN', 'MIL', 'NYC', 'NY', 'LDN', 'LON', 'LA', 'TKY', 'TYO', 'SEL', 'SEO', 'CPH', 'BER', 'SHA', 'SH', 'SYD', 'FLR', 'MAD']);
-  const isSub = (abbr, text) => { let i = 0; for (const ch of text) if (ch === abbr[i]) i++; return i === abbr.length; };
-  // 브랜드 표기: 시즌·번호 꼬리 제거 → 뒤쪽 도시 코드(PRS/MLN…)와 브랜드 약어(CVN←CARVEN, GHST←GABRIELA HEARST) 제거
-  const bn = v => { let t = String(v || '').replace(/\s*(SS|FW|AW)\s?\d{2}.*$/i, '').replace(/[\s_-]+\d+.*$/, '').trim().toUpperCase().split(/\s+/).filter(Boolean);
-    while (t.length >= 2 && CITY_CODES.has(t[t.length - 1])) t.pop();
-    while (t.length >= 2) { const last = t[t.length - 1], rest = t.slice(0, -1); if (last.length <= 4 && !rest.includes(last) && isSub(last, rest.join(''))) t.pop(); else break; }
-    return t.join(' '); };
+  const brands = c._brands || {}; // 런웨이 브랜드명 정리: 시즌 토큰(SS27/27SS) · 뒤쪽 도시 코드(PRS/MLN/NYC…) · 촬영 코드(DET/BMX/FUL…) · 브랜드 약어(HER←HERMÈS, CVN←CARVEN, 모음 없는 3글자) 제거
+const BRAND_CITY_CODES = new Set(['PRS', 'PAR', 'MLN', 'MIL', 'NYC', 'NY', 'LDN', 'LON', 'LA', 'TKY', 'TYO', 'SEL', 'SEO', 'CPH', 'BER', 'SHA', 'SH', 'SYD', 'FLR', 'MAD']);
+const BRAND_SHOT_CODES = new Set(['DET', 'BMX', 'FUL', 'BCK', 'FRT', 'CLS', 'CLO', 'ACC', 'BAG', 'SHO', 'SHU', 'ATM', 'BTY', 'MOD', 'RW', 'RWY']);
+const brandIsSub = (abbr, text) => { let i = 0; for (const ch of text) if (ch === abbr[i]) i++; return i === abbr.length; };
+function cleanBrandX(v) {
+  let t = String(v || '').replace(/[_\-]+/g, ' ').trim().toUpperCase().split(/\s+/).filter(Boolean);
+  t = t.filter(x => !/^(SS|FW|AW|PF|RS)\d{2,4}$|^\d{2,4}(SS|FW|AW)$/i.test(x) && !/^\d{1,3}$/.test(x));
+  while (t.length >= 2) {
+    const last = t[t.length - 1], rest = t.slice(0, -1), restJ = rest.join('');
+    const dup = rest.includes(last);
+    if (dup && t.length >= 3 && rest[rest.length - 1] === last) { t.pop(); continue; }   // THE ROW ROW → THE ROW
+    if (dup) break;                                                                          // MIU MIU 유지
+    if (BRAND_CITY_CODES.has(last) || BRAND_SHOT_CODES.has(last)) { t.pop(); continue; }
+    if (last.length <= 4 && (brandIsSub(last, restJ) || !/[AEIOUYÀÁÂÄÈÉÊËÌÍÎÏÒÓÔÖÙÚÛÜ]/.test(last))) { t.pop(); continue; }
+    break;
+  }
+  return t.join(' ');
+}
+  const bn = v => cleanBrandX(String(v || '').replace(/\s*(SS|FW|AW)\s?\d{2}.*$/i, ''));
   const imgs = thumbs.map((p, i) => `<div class="ph"><img src="${pubUrl(p)}" loading="lazy" alt=""><div class="bn">${esc(bn(brands[ids[i]]))}</div>${(Array.isArray(labs[i]) && labs[i].length) ? `<div class="plabel">${labs[i].map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`).join('');
   const hashes = (c.hashtags || []).length ? `<div class="hashes">${c.hashtags.slice(0, 2).map(h => `<span>#${esc(h)}</span>`).join('')}</div>` : '';
   const sa = SRC[c.id]; const st = stackHTML(c); const stackOnly = st.replace(/<div class="logos">[\s\S]*$/, ''); const logosOnly = (st.match(/<div class="logos">[\s\S]*$/) || [''])[0];
