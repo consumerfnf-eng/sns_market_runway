@@ -167,6 +167,9 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 .fambar div span{font-weight:500;font-size:10px}
 .fambar div.dim{opacity:.45}
 .an-grid{display:grid;grid-template-columns:1fr 300px;gap:14px}
+.an-grid3{display:grid;grid-template-columns:300px 1fr 280px;gap:14px}@media (max-width:1100px){.an-grid3{grid-template-columns:1fr}}
+.donutwrap{display:flex;gap:14px;align-items:center}.donut{width:150px;height:150px;flex:0 0 150px}.donut .seg{cursor:pointer;transition:stroke-width .15s,opacity .15s}.donut .seg.dim{opacity:.55}.donut .seg:hover{opacity:1}
+.legend{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.legend .lg{display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;padding:2px 6px;border-radius:6px;white-space:nowrap}.legend .lg i{width:10px;height:10px;border-radius:3px;flex:none}.legend .lg b{margin-left:auto;font-weight:600;color:var(--mute)}.legend .lg.on{background:#fff;font-weight:700}.legend .lg.on b{color:var(--ink)}
 .panel{background:var(--card);border-radius:16px;padding:16px}
 .panel h3{margin:0 0 8px;font-size:14px}
 .panel .note{font-size:11px;color:var(--mute);margin-top:8px}
@@ -228,7 +231,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
     <button data-s="market">Market</button>
     <button data-s="ai">AI Analytics</button>
   </nav>
-  <div class="right"><span id="ver">v261102-01</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
+  <div class="right"><span id="ver">v261104-01</span><a class="admin" href="admin.html"><button class="admin">+ 수집 / 관리</button></a></div>
 </header>
 
 <div class="subbar">
@@ -279,7 +282,7 @@ aside .search{width:100%;margin:4px 0 8px;font-size:12px}
 
 <script>
 /* =====================================================================
-   TAXONOMY AGENT · index.html (리포트)  v261102-01
+   TAXONOMY AGENT · index.html (리포트)  v261104-01
    Coverage(갤러리) · Emerging Trends(3열 카드) · Analytics(컬러 바 + Top10)
    소스: Runway / Instagram / Market / FS Benchmark(엑셀 수치)
    ===================================================================== */
@@ -677,7 +680,7 @@ document.addEventListener('click', e => {
   const im = e.target.closest('img[data-full]'); if (im) { e.stopPropagation(); zm(im.dataset.full, im.title || ''); return; }
   const c = e.target.closest('.card'); if (c) { const d = document.getElementById('d-' + c.dataset.id); if (d) d.classList.add('on'); }
 });
-document.querySelectorAll('.cat-tabs button,.fambar div').forEach(b => b.style.cursor = 'default');
+document.querySelectorAll('.cat-tabs button,.fambar div,[data-fam]').forEach(b => b.style.cursor = 'default');
 function fitSc(img) { const sc = img.closest('.sc'); if (!sc || !img.naturalWidth || sc.closest('.stack.hero')) return; const r = img.naturalWidth / img.naturalHeight; if (r > 1) { sc.style.height = 'auto'; img.style.height = 'auto'; } else { const st = sc.closest('.stack'); const h = sc.offsetHeight || st.offsetHeight; const maxW = st.offsetWidth * (sc.classList.contains('main') ? .72 : .5); sc.style.width = Math.min(maxW, Math.round((h - 10) * r + 10)) + 'px'; } } document.querySelectorAll('.stack .sc img').forEach(i => { if (i.complete) fitSc(i); });
 <\/script></body></html>`;
     const name = `FashionAnalysis_${S.src}_${(periodLabel() === '전체 기간' ? 'all' : periodLabel()).replace(/[^0-9A-Za-z~-]/g, '')}_${S.facet ? nodeName(S.facet).replace(/\W+/g, '') : 'ALL'}.html`;
@@ -696,6 +699,10 @@ async function renderAnalytics() {
   const h = await buildAnalyticsHTML();
   return h;
 }
+// Analytics 카테고리 탭 묶기: 가방 세부(Clutch·Pouch·Tote…) → Bags, 신발 세부 → Footwear, 잡화·주얼리 → Accessories
+const anCatKey = f => { const n = TAX.byId[f]; if (!n) return f; if (n.parent_id === 'product.bags') return 'grp:bags'; if (n.parent_id === 'product.footwear') return 'grp:footwear'; if (n.parent_id === 'product.general-access' || n.parent_id === 'product.jewelry') return 'grp:acc'; return f; };
+const anCatLabel = k => k === 'grp:bags' ? 'Bags' : k === 'grp:footwear' ? 'Footwear' : k === 'grp:acc' ? 'Accessories' : nodeName(k);
+const anCatOrder = k => k.startsWith('grp:') ? 1e8 + ['grp:footwear', 'grp:bags', 'grp:acc'].indexOf(k) : ((TAX.byId[k] || {}).sort_order ?? 1e9);
 async function buildAnalyticsHTML() {
   const src = S.src === 'ai' ? S.anSrc : S.src;
   let rows = [], totals = {}, denom = 0, label = ''; let byFocus = null;
@@ -712,9 +719,9 @@ async function buildAnalyticsHTML() {
   }
   const cnt = {}; for (const r of rows) cnt[r.node_id] = r.photos;
   // ---- Color: 카테고리 선택 → 그 카테고리(focus 아이템)에서 많이 보인 색
-  const colorCats = []; if (byFocus) { const cc = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (n && n.facet === 'color' && n.kind === 'value' && f) cc[f] = (cc[f] || 0) + v; } for (const [f, v] of Object.entries(cc)) colorCats.push({ id: f, n: v }); colorCats.sort((a, b) => ((TAX.byId[a.id] || {}).sort_order ?? 1e9) - ((TAX.byId[b.id] || {}).sort_order ?? 1e9)); }
+  const colorCats = []; if (byFocus) { const cc = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (n && n.facet === 'color' && n.kind === 'value' && f) { const ck = anCatKey(f); cc[ck] = (cc[ck] || 0) + v; } } for (const [f, v] of Object.entries(cc)) colorCats.push({ id: f, n: v }); colorCats.sort((a, b) => anCatOrder(a.id) - anCatOrder(b.id)); }
   S.colorCat = colorCats.some(c => c.id === S.colorCat) ? S.colorCat : '';
-  const ccnt = {}; if (S.colorCat && byFocus) { for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); if (f === S.colorCat) ccnt[nid] = (ccnt[nid] || 0) + v; } } else Object.assign(ccnt, cnt);
+  const ccnt = {}; if (S.colorCat && byFocus) { for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); if (f && anCatKey(f) === S.colorCat) ccnt[nid] = (ccnt[nid] || 0) + v; } } else Object.assign(ccnt, cnt);
   const fams = TAX.nodes.filter(n => n.facet === 'color' && n.kind === 'group');
   const famCnt = {}; const shades = {};
   for (const f of fams) { let s = 0; shades[f.id] = []; for (const sh of (TAX.children[f.id] || [])) { const v = ccnt[sh.id] || 0; if (v) shades[f.id].push({ n: sh, v }); s += v; } famCnt[f.id] = s; }
@@ -725,17 +732,22 @@ async function buildAnalyticsHTML() {
   const picker = S.src === 'ai' ? `<div class="cat-tabs" style="margin:0 0 14px">${SRC_OPTS.map(([k, l]) => `<button data-ansrc="${k}" class="${S.anSrc === k ? 'on' : ''}">${l}</button>`).join('')}</div>` : '';
   let h = `<div class="an-head"><h2>AI Analytics</h2><span class="mute" style="color:var(--mute)">${esc(label)}</span></div>${picker}`;
   h += `<div class="an-sec"><h2>Color</h2><div class="sub">카테고리를 고르면 그 아이템에서 많이 보인 색 순으로 표시됩니다</div>`;
-  if (colorCats.length) h += `<div class="cat-tabs"><button data-ccat="" class="${S.colorCat ? '' : 'on'}">전체</button>${colorCats.map(c => `<button data-ccat="${c.id}" class="${S.colorCat === c.id ? 'on' : ''}">${esc(nodeName(c.id))} <span style="opacity:.6">${c.n}</span></button>`).join('')}</div>`;
+  if (colorCats.length) h += `<div class="cat-tabs"><button data-ccat="" class="${S.colorCat ? '' : 'on'}">전체</button>${colorCats.map(c => `<button data-ccat="${c.id}" class="${S.colorCat === c.id ? 'on' : ''}">${esc(anCatLabel(c.id))} <span style="opacity:.6">${c.n}</span></button>`).join('')}</div>`;
   if (famTot) {
-    h += `<div class="fambar">${famOrder.filter(f => famCnt[f.id]).map(f => `<div data-fam="${f.id}" class="${S.fam === f.id ? '' : ''}" style="flex:${famCnt[f.id]};background:${FAM_HEX[f.name_en] || '#999'}">${esc(f.name_en)}<span>${pct(famCnt[f.id], famTot)}%</span></div>`).join('')}</div>`;
+    // 원형 그래프(패밀리 비중, 클릭하면 오른쪽 바 그래프 전환) · 바 그래프(선택 패밀리의 색상) · 순위
     const F = TAX.byId[S.fam]; const list = (shades[S.fam] || []).sort((a, b) => b.v - a.v); const mx = list[0]?.v || 1;
-    h += `<div class="an-grid"><div class="panel"><h3>${S.colorCat ? esc(nodeName(S.colorCat)) + ' · ' : ''}${esc(F.name_en)} <span style="font-weight:400;color:var(--mute);font-size:12px">${pct(famCnt[S.fam], famTot)}% of ${S.colorCat ? esc(nodeName(S.colorCat)) + ' colors' : 'all colors'} · ${famCnt[S.fam]} · ${list.length} subgroups</span></h3>`;
-    h += list.map((x, i) => `<div class="shade"><div class="nm"><i style="background:${x.n.hex}"></i>${i + 1}. ${esc(x.n.name_en)}</div><div class="bar"><i style="width:${x.v / mx * 100}%;background:${x.n.hex}"></i></div><div class="n">${x.v}</div><div class="n">${pct(x.v, famCnt[S.fam])}%</div></div>`).join('');
-    h += `<div class="note">Subgroup percentages represent each shade's share of all ${esc(F.name_en)} items.</div>`;
+    const segs = famOrder.filter(f => famCnt[f.id]); let acc = 0; const R = 64, CX = 80, CY = 80, SW = 26;
+    const arc = (a0, a1) => { const big = a1 - a0 > Math.PI ? 1 : 0; const p = a => [CX + R * Math.cos(a), CY + R * Math.sin(a)]; const [x0, y0] = p(a0), [x1, y1] = p(a1); return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${R} ${R} 0 ${big} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; };
+    const paths = segs.map(f => { const a0 = -Math.PI / 2 + acc / famTot * 2 * Math.PI; acc += famCnt[f.id]; const a1 = -Math.PI / 2 + acc / famTot * 2 * Math.PI - .02; return `<path d="${arc(a0, Math.max(a0 + .01, a1))}" stroke="${FAM_HEX[f.name_en] || '#999'}" stroke-width="${S.fam === f.id ? SW + 8 : SW}" fill="none" data-fam="${f.id}" class="seg ${S.fam === f.id ? '' : 'dim'}"><title>${esc(f.name_en)} ${pct(famCnt[f.id], famTot)}%</title></path>`; }).join('');
+    const donut = `<svg viewBox="0 0 160 160" class="donut">${paths}<text x="80" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="#111">${esc(F.name_en)}</text><text x="80" y="94" text-anchor="middle" font-size="12" fill="#6f6f6f">${pct(famCnt[S.fam], famTot)}%</text></svg>`;
+    const legend = segs.map(f => `<div class="lg ${S.fam === f.id ? 'on' : ''}" data-fam="${f.id}"><i style="background:${FAM_HEX[f.name_en] || '#999'}"></i>${esc(f.name_en)}<b>${pct(famCnt[f.id], famTot)}%</b></div>`).join('');
+    h += `<div class="an-grid3"><div class="panel"><h3>Color family${S.colorCat ? ' · ' + esc(anCatLabel(S.colorCat)) : ''}</h3><div class="note" style="margin:0 0 6px">조각을 클릭하면 오른쪽 색상 그래프가 바뀝니다</div><div class="donutwrap">${donut}<div class="legend">${legend}</div></div></div>`;
+    h += `<div class="panel"><h3>${esc(F.name_en)} <span style="font-weight:400;color:var(--mute);font-size:12px">${pct(famCnt[S.fam], famTot)}% · ${famCnt[S.fam]} · ${list.length} shades</span></h3>`;
+    h += list.map((x, i) => `<div class="shade"><div class="nm"><i style="background:${x.n.hex}"></i>${i + 1}. ${esc(x.n.name_en)}</div><div class="bar"><i style="width:${x.v / mx * 100}%;background:${x.n.hex}"></i></div><div class="n">${x.v}</div><div class="n">${pct(x.v, famCnt[S.fam])}%</div></div>`).join('') || '<div class="empty">데이터 없음</div>';
     h += `</div>`;
     // top shades overall excluding neutrals
     const top = []; for (const f of fams) { if (f.name_en === 'Neutrals') continue; for (const x of shades[f.id]) top.push({ ...x, f }); } top.sort((a, b) => b.v - a.v);
-    h += `<div class="panel"><h3>Top shades${S.colorCat ? ' · ' + esc(nodeName(S.colorCat)) : ''}</h3><div class="note" style="margin:0 0 6px">뉴트럴 제외, 많이 보인 색 순</div>${top.slice(0, 6).map(x => `<div class="trend"><div class="nm"><i style="background:${x.n.hex}"></i><div>${esc(x.n.name_en)}<div style="font-size:11px;color:var(--mute)">${esc(x.f.name_en)} · ${x.v} items</div></div></div><b>${pct(x.v, famTot)}%</b></div>`).join('') || '<div class="empty">데이터 없음</div>'}</div></div>`;
+    h += `<div class="panel"><h3>Top shades${S.colorCat ? ' · ' + esc(anCatLabel(S.colorCat)) : ''}</h3><div class="note" style="margin:0 0 6px">뉴트럴 제외, 많이 보인 색 순</div>${top.slice(0, 6).map(x => `<div class="trend"><div class="nm"><i style="background:${x.n.hex}"></i><div>${esc(x.n.name_en)}<div style="font-size:11px;color:var(--mute)">${esc(x.f.name_en)} · ${x.v} items</div></div></div><b>${pct(x.v, famTot)}%</b></div>`).join('') || '<div class="empty">데이터 없음</div>'}</div></div>`;
   } else h += '<div class="empty">컬러 데이터 없음 — 분석된 사진이 필요합니다</div>';
   h += `</div>`;
   // ---- Category statistics
@@ -749,12 +761,12 @@ async function buildAnalyticsHTML() {
   if (['pattern', 'material', 'detail'].includes(S.cat)) {
     title = tabs.find(t => t.id === S.cat).label;
     // 카테고리 선택 줄 (전체 / 데이터 있는 카테고리) — 패턴·소재·디테일이 어떤 아이템에서 나왔는지
-    const fcats = []; if (byFocus) { const cc = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (n && n.facet === S.cat && f) cc[f] = (cc[f] || 0) + v; } for (const [f, v] of Object.entries(cc)) fcats.push({ id: f, n: v }); fcats.sort((a, b) => ((TAX.byId[a.id] || {}).sort_order ?? 1e9) - ((TAX.byId[b.id] || {}).sort_order ?? 1e9)); }
+    const fcats = []; if (byFocus) { const cc = {}; for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); const n = TAX.byId[nid]; if (n && n.facet === S.cat && f) { const ck = anCatKey(f); cc[ck] = (cc[ck] || 0) + v; } } for (const [f, v] of Object.entries(cc)) fcats.push({ id: f, n: v }); fcats.sort((a, b) => anCatOrder(a.id) - anCatOrder(b.id)); }
     S.facetCat = fcats.some(c => c.id === S.facetCat) ? S.facetCat : '';
-    if (fcats.length) subTabs = `<div class="cat-tabs" style="margin:-4px 0 12px"><span class="note" style="margin:0 6px 0 0;align-self:center">카테고리별</span><button data-fcat="" class="${S.facetCat ? '' : 'on'}">전체</button>${fcats.map(c => `<button data-fcat="${c.id}" class="${S.facetCat === c.id ? 'on' : ''}">${esc(nodeName(c.id))} <span style="opacity:.6">${c.n}</span></button>`).join('')}</div>`;
-    const fcnt = {}; if (S.facetCat && byFocus) { for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); if (f === S.facetCat) fcnt[nid] = (fcnt[nid] || 0) + v; } } else Object.assign(fcnt, cnt);
+    if (fcats.length) subTabs = `<div class="cat-tabs" style="margin:-4px 0 12px"><span class="note" style="margin:0 6px 0 0;align-self:center">카테고리별</span><button data-fcat="" class="${S.facetCat ? '' : 'on'}">전체</button>${fcats.map(c => `<button data-fcat="${c.id}" class="${S.facetCat === c.id ? 'on' : ''}">${esc(anCatLabel(c.id))} <span style="opacity:.6">${c.n}</span></button>`).join('')}</div>`;
+    const fcnt = {}; if (S.facetCat && byFocus) { for (const [k, v] of Object.entries(byFocus)) { const [nid, f] = k.split('|'); if (f && anCatKey(f) === S.facetCat) fcnt[nid] = (fcnt[nid] || 0) + v; } } else Object.assign(fcnt, cnt);
     items = TAX.nodes.filter(n => n.facet === S.cat && (n.kind === 'value' || (S.cat === 'pattern' && n.kind === 'sub')) && !n.canonical_id && fcnt[n.id]).map(n => ({ n, v: fcnt[n.id] }));
-    base = src === 'fs' ? items.reduce((s, x) => s + x.v, 0) : (S.facetCat ? (totals[S.facetCat] || 0) : denom);
+    base = src === 'fs' ? items.reduce((s, x) => s + x.v, 0) : (S.facetCat ? Object.entries(totals).filter(([f]) => anCatKey(f) === S.facetCat).reduce((a, [, v]) => a + v, 0) : denom);
     if (S.facetCat) title += ' · ' + nodeName(S.facetCat);
   } else {
     const cat = TAX.byId[S.cat]; title = cat.name_en;
@@ -773,7 +785,7 @@ async function buildAnalyticsHTML() {
   if (src !== 'fs' && top10[0]) { try { const pl = periodList(); let mq = sb.from('tx_media').select('id,thumb_path').eq('source', src).eq('status', 'analyzed').order('id', { ascending: false }).limit(400); if (pl) mq = mq.in('period', pl); const { data: ms } = await mq; const ids = (ms || []).map(m => m.id); if (ids.length) { const { data } = await sb.from('tx_media_tags').select('media_id').eq('node_id', top10[0].n.id).in('media_id', ids).limit(1); const m = data && data[0] ? (ms || []).find(x => x.id === data[0].media_id) : null; if (m) thumb = `<img src="${pubUrl(m.thumb_path)}" alt="">`; } } catch {} }
   h += subTabs + `<div class="panel"><h3>${esc(title)}</h3>${top10.length ? `<div class="top10"><div>${thumb || '<div style="aspect-ratio:3/4;background:#e6e6e3;border-radius:8px"></div>'}</div><div class="col">${top10.slice(0, 5).map(rowHTML).join('')}</div><div class="col">${top10.slice(5, 10).map((x, i) => rowHTML(x, i + 5)).join('')}</div></div><div class="note">Percentages represent each style's share of all ${esc(title)} items${src === 'fs' ? ' (FS 집계, 복수 태그라 합계 100% 초과 가능)' : ''}.</div>` : '<div class="empty">데이터 없음</div>'}</div></div>`;
   an.innerHTML = h;
-  an.querySelectorAll('.fambar div').forEach(d => d.onclick = () => { S.fam = d.dataset.fam; renderAnalytics(); });
+  an.querySelectorAll('.fambar div,[data-fam]').forEach(d => d.onclick = () => { S.fam = d.dataset.fam; renderAnalytics(); });
   an.querySelectorAll('.cat-tabs button[data-cat]').forEach(b => b.onclick = () => { S.cat = b.dataset.cat; renderAnalytics(); });
   an.querySelectorAll('[data-fcat]').forEach(b => b.onclick = () => { S.facetCat = b.dataset.fcat; renderAnalytics(); });
   an.querySelectorAll('[data-ansrc]').forEach(b => b.onclick = async () => { S.anSrc = b.dataset.ansrc; await loadPeriods(); renderAnalytics(); });
